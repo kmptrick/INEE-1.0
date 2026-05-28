@@ -38,6 +38,16 @@ type LineForm = { serviceId: string; description: string; quantity: string; unit
 const emptyLine = (): LineForm => ({ serviceId: '', description: '', quantity: '1', unitPrice: '', unite: '' });
 const emptyForm = () => ({ companyId: '', vatRate: '17', vatMention: '', dueDate: '', notes: '', lines: [emptyLine()] });
 
+function ActionBtn({ label, color, bg, border, onClick, disabled }: { label: string; color: string; bg: string; border: string; onClick: () => void; disabled?: boolean }) {
+  return (
+    <button onClick={onClick} disabled={disabled}
+      className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+      style={{ color, background: bg, border: `1px solid ${border}`, opacity: disabled ? 0.5 : 1 }}>
+      {label}
+    </button>
+  );
+}
+
 export default function InvoicesPage() {
   const [list, setList] = useState<Invoice[]>([]);
   const [compList, setCompList] = useState<Company[]>([]);
@@ -48,9 +58,35 @@ export default function InvoicesPage() {
   const [saving, setSaving] = useState(false);
   const [fullInvoices, setFullInvoices] = useState<Record<string, Invoice>>({});
 
+  // Detail / action modal
+  const [viewItem, setViewItem] = useState<Invoice | null>(null);
+  const [actioning, setActioning] = useState(false);
+
   const load = (s?: string) => { setLoading(true); invoicing.invoices.list(s || undefined).then(setList).finally(() => setLoading(false)); };
   useEffect(() => { load(); companies.list().then(setCompList); }, []);
   useEffect(() => { list.forEach(inv => { if (!fullInvoices[inv.id]) invoicing.invoices.get(inv.id).then(full => setFullInvoices(p => ({ ...p, [inv.id]: full }))); }); }, [list]);
+
+  const openView = (inv: Invoice) => setViewItem(fullInvoices[inv.id] ?? inv);
+
+  const updateStatus = async (inv: Invoice, status: string) => {
+    setActioning(true);
+    try {
+      const updated = await invoicing.invoices.update(inv.id, {
+        status,
+        vatRate: inv.vatRate,
+        vatMention: inv.vatMention,
+        notes: inv.notes,
+        lines: (inv.lines ?? []).map(l => ({
+          ...(l.serviceId ? { serviceId: l.serviceId } : {}),
+          description: l.description, quantity: l.quantity, unitPrice: l.unitPrice,
+          ...(l.unite ? { unite: l.unite } : {}),
+        })),
+      } as any);
+      setFullInvoices(p => ({ ...p, [inv.id]: updated }));
+      setViewItem(updated);
+      load(filter || undefined);
+    } finally { setActioning(false); }
+  };
 
   const setField = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
   const setLine = (i: number, k: string, v: string) => setForm(f => { const l = [...f.lines]; l[i] = { ...l[i], [k]: v }; return { ...f, lines: l }; });
@@ -59,8 +95,7 @@ export default function InvoicesPage() {
 
   const onClientChange = (companyId: string) => {
     const client = compList.find(c => c.id === companyId) ?? null;
-    const baseRate = parseFloat(form.vatRate) || 17;
-    const vat = computeVat(client, baseRate);
+    const vat = computeVat(client, parseFloat(form.vatRate) || 17);
     setForm(f => ({ ...f, companyId, vatRate: String(vat.rate), vatMention: vat.mention ?? '' }));
   };
 
@@ -79,14 +114,11 @@ export default function InvoicesPage() {
     try {
       const data: any = {
         vatRate: parseFloat(form.vatRate) || 0,
-        vatMention: form.vatMention || undefined,
-        notes: form.notes,
+        vatMention: form.vatMention || undefined, notes: form.notes,
         lines: form.lines.map(l => ({
           ...(l.serviceId ? { serviceId: l.serviceId } : {}),
-          description: l.description,
-          quantity: parseFloat(l.quantity) || 1,
-          unitPrice: parseFloat(l.unitPrice) || 0,
-          ...(l.unite ? { unite: l.unite } : {}),
+          description: l.description, quantity: parseFloat(l.quantity) || 1,
+          unitPrice: parseFloat(l.unitPrice) || 0, ...(l.unite ? { unite: l.unite } : {}),
         })),
       };
       if (form.companyId) data.companyId = form.companyId;
@@ -103,8 +135,7 @@ export default function InvoicesPage() {
     company: inv.company ? { name: inv.company.name } : undefined,
     lines: (inv.lines ?? []).map(l => ({ description: l.description, quantity: l.quantity, unitPrice: l.unitPrice, total: l.total })),
     subtotal: inv.subtotal, vatRate: inv.vatRate, vatAmount: inv.vatAmount, total: inv.total,
-    vatMention: inv.vatMention,
-    filename: `${inv.number}.pdf`,
+    vatMention: inv.vatMention, filename: `${inv.number}.pdf`,
   });
 
   return (
@@ -118,7 +149,9 @@ export default function InvoicesPage() {
           const full = fullInvoices[inv.id] ?? inv;
           const ss = STATUS_ST[inv.status] ?? { bg: '#F5F5F5', color: '#888' };
           return (
-            <tr key={inv.id} style={{ borderTop: i > 0 ? `1px solid ${T.rowDiv}` : undefined }}>
+            <tr key={inv.id} onClick={() => openView(inv)} style={{ borderTop: i > 0 ? `1px solid ${T.rowDiv}` : undefined, cursor: 'pointer' }}
+              onMouseEnter={e => (e.currentTarget.style.background = T.copperBg)}
+              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
               <td className="px-4 py-3 font-mono text-xs font-bold" style={{ color: T.dark }}>{inv.number}</td>
               <Td>{inv.company?.name ?? '—'}</Td>
               <td className="px-4 py-3 text-right text-sm" style={{ color: T.dark }}>{fmt(inv.subtotal)}</td>
@@ -126,12 +159,98 @@ export default function InvoicesPage() {
               <td className="px-4 py-3 text-right text-sm font-bold" style={{ color: T.dark }}>{fmt(inv.total)}</td>
               <td className="px-4 py-3 text-right text-sm font-semibold" style={{ color: '#16A34A' }}>{fmt(inv.paidAmount)}</td>
               <td className="px-4 py-3 text-center"><StatusBadge label={STATUS_FR[inv.status] ?? inv.status} bg={ss.bg} color={ss.color} /></td>
-              <td className="px-4 py-3 text-center"><PdfDownloadButton {...buildPdfProps(full)} /></td>
+              <td className="px-4 py-3 text-center" onClick={e => e.stopPropagation()}>
+                <PdfDownloadButton {...buildPdfProps(full)} />
+              </td>
             </tr>
           );
         })}
       </DataTable>
 
+      {/* ── Detail / Actions modal ── */}
+      {viewItem && (
+        <Modal title={`Facture ${viewItem.number}`} open={!!viewItem} onClose={() => setViewItem(null)}>
+          <div className="space-y-4">
+            {/* Status + actions */}
+            <div className="flex flex-wrap items-center gap-2 pb-3" style={{ borderBottom: `1px solid ${T.border}` }}>
+              {(() => { const ss = STATUS_ST[viewItem.status] ?? { bg: '#F5F5F5', color: '#888' }; return <StatusBadge label={STATUS_FR[viewItem.status] ?? viewItem.status} bg={ss.bg} color={ss.color} />; })()}
+              <div className="flex flex-wrap gap-2 ml-auto">
+                {viewItem.status === 'DRAFT' && (
+                  <ActionBtn label="Marquer envoyée" color="#1D6FD8" bg="#EFF6FF" border="#BFDBFE" onClick={() => updateStatus(viewItem, 'SENT')} disabled={actioning} />
+                )}
+                {(viewItem.status === 'SENT' || viewItem.status === 'OVERDUE') && (
+                  <ActionBtn label="Marquer payée" color="#16A34A" bg="#F0FDF4" border="#BBF7D0" onClick={() => updateStatus(viewItem, 'PAID')} disabled={actioning} />
+                )}
+                {viewItem.status === 'SENT' && (
+                  <ActionBtn label="Marquer en retard" color="#DC2626" bg="#FEF2F2" border="#FECACA" onClick={() => updateStatus(viewItem, 'OVERDUE')} disabled={actioning} />
+                )}
+                {(viewItem.status === 'DRAFT' || viewItem.status === 'SENT') && (
+                  <ActionBtn label="Annuler" color={T.muted} bg="#F5F5F5" border={T.border} onClick={() => updateStatus(viewItem, 'CANCELLED')} disabled={actioning} />
+                )}
+              </div>
+            </div>
+
+            {/* Info */}
+            <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
+              <div><span style={{ color: T.muted }}>Client : </span><span className="font-semibold" style={{ color: T.dark }}>{viewItem.company?.name ?? '—'}</span></div>
+              <div><span style={{ color: T.muted }}>Échéance : </span><span className="font-semibold" style={{ color: T.dark }}>{fmtDate(viewItem.dueDate) ?? '—'}</span></div>
+              <div><span style={{ color: T.muted }}>TVA : </span><span className="font-semibold" style={{ color: T.dark }}>{viewItem.vatRate}%</span></div>
+              <div><span style={{ color: T.muted }}>Montant payé : </span><span className="font-semibold" style={{ color: '#16A34A' }}>{fmt(viewItem.paidAmount)}</span></div>
+            </div>
+
+            {/* Lines */}
+            {(viewItem.lines ?? []).length > 0 && (
+              <div className="rounded-lg overflow-hidden" style={{ border: `1px solid ${T.border}` }}>
+                <table className="w-full text-xs">
+                  <thead style={{ background: T.head }}>
+                    <tr>
+                      <th className="text-left px-3 py-2 font-semibold" style={{ color: T.muted }}>Description</th>
+                      <th className="text-center px-3 py-2 font-semibold" style={{ color: T.muted }}>Qté</th>
+                      <th className="text-right px-3 py-2 font-semibold" style={{ color: T.muted }}>Prix HT</th>
+                      <th className="text-right px-3 py-2 font-semibold" style={{ color: T.muted }}>Total HT</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {viewItem.lines!.map((l, i) => (
+                      <tr key={i} style={{ borderTop: `1px solid ${T.rowDiv}` }}>
+                        <td className="px-3 py-2" style={{ color: T.dark }}>{l.description}</td>
+                        <td className="px-3 py-2 text-center" style={{ color: T.muted }}>{l.quantity}</td>
+                        <td className="px-3 py-2 text-right" style={{ color: T.muted }}>{fmt(l.unitPrice)}</td>
+                        <td className="px-3 py-2 text-right font-semibold" style={{ color: T.dark }}>{fmt(l.total)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Totals */}
+            <div className="flex justify-end">
+              <div className="w-52 space-y-1 text-sm">
+                <div className="flex justify-between"><span style={{ color: T.muted }}>HT</span><span style={{ color: T.dark }}>{fmt(viewItem.subtotal)}</span></div>
+                <div className="flex justify-between"><span style={{ color: T.muted }}>TVA {viewItem.vatRate}%</span><span style={{ color: T.muted }}>{fmt(viewItem.vatAmount)}</span></div>
+                <div className="flex justify-between font-bold pt-1" style={{ borderTop: `1px solid ${T.border}`, color: T.dark }}>
+                  <span>Total TTC</span><span>{fmt(viewItem.total)}</span>
+                </div>
+                {viewItem.paidAmount > 0 && (
+                  <div className="flex justify-between font-semibold" style={{ color: '#16A34A' }}>
+                    <span>Reste à payer</span><span>{fmt(viewItem.total - viewItem.paidAmount)}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {viewItem.vatMention && (
+              <div className="rounded-lg px-3 py-2 text-xs" style={{ background: '#FFFBEB', border: '1px solid #FDE68A' }}>
+                <span className="font-semibold" style={{ color: '#92400E' }}>Mention légale TVA : </span>
+                <span style={{ color: '#78350F' }}>{viewItem.vatMention}</span>
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
+
+      {/* ── Nouvelle facture ── */}
       <Modal title="Nouvelle facture" open={open} onClose={() => setOpen(false)}>
         <form onSubmit={handleSubmit} className="space-y-4">
           <FormField label="Client">

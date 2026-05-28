@@ -32,10 +32,21 @@ const FILTERS = [
 
 const fmt = (n: number) => new Intl.NumberFormat('fr-LU', { style: 'currency', currency: 'EUR' }).format(n);
 const today = () => new Date().toLocaleDateString('fr-LU');
+const fmtDate = (d?: string) => d ? new Date(d).toLocaleDateString('fr-LU') : '—';
 
 type LineForm = { serviceId: string; description: string; quantity: string; unitPrice: string; unite: string };
 const emptyLine = (): LineForm => ({ serviceId: '', description: '', quantity: '1', unitPrice: '', unite: '' });
 const emptyForm = () => ({ companyId: '', vatRate: '17', vatMention: '', notes: '', lines: [emptyLine()] });
+
+function ActionBtn({ label, color, bg, border, onClick, disabled }: { label: string; color: string; bg: string; border: string; onClick: () => void; disabled?: boolean }) {
+  return (
+    <button onClick={onClick} disabled={disabled}
+      className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+      style={{ color, background: bg, border: `1px solid ${border}`, opacity: disabled ? 0.5 : 1 }}>
+      {label}
+    </button>
+  );
+}
 
 export default function QuotesPage() {
   const [list, setList] = useState<Quote[]>([]);
@@ -47,9 +58,49 @@ export default function QuotesPage() {
   const [saving, setSaving] = useState(false);
   const [fullQuotes, setFullQuotes] = useState<Record<string, Quote>>({});
 
+  // Detail / action modal
+  const [viewItem, setViewItem] = useState<Quote | null>(null);
+  const [actioning, setActioning] = useState(false);
+  const [convertOpen, setConvertOpen] = useState(false);
+  const [convertDueDate, setConvertDueDate] = useState('');
+  const [converting, setConverting] = useState(false);
+
   const load = (s?: string) => { setLoading(true); invoicing.quotes.list(s || undefined).then(setList).finally(() => setLoading(false)); };
   useEffect(() => { load(); companies.list().then(setCompList); }, []);
   useEffect(() => { list.forEach(q => { if (!fullQuotes[q.id]) invoicing.quotes.get(q.id).then(full => setFullQuotes(p => ({ ...p, [q.id]: full }))); }); }, [list]);
+
+  const openView = (q: Quote) => setViewItem(fullQuotes[q.id] ?? q);
+
+  const updateStatus = async (q: Quote, status: string) => {
+    setActioning(true);
+    try {
+      const updated = await invoicing.quotes.update(q.id, {
+        status,
+        vatRate: q.vatRate,
+        vatMention: q.vatMention,
+        notes: q.notes,
+        lines: (q.lines ?? []).map(l => ({
+          ...(l.serviceId ? { serviceId: l.serviceId } : {}),
+          description: l.description, quantity: l.quantity, unitPrice: l.unitPrice,
+          ...(l.unite ? { unite: l.unite } : {}),
+        })),
+      } as any);
+      setFullQuotes(p => ({ ...p, [q.id]: updated }));
+      setViewItem(updated);
+      load(filter || undefined);
+    } finally { setActioning(false); }
+  };
+
+  const convertToInvoice = async () => {
+    if (!viewItem) return;
+    setConverting(true);
+    try {
+      await invoicing.invoices.fromQuote(viewItem.id, convertDueDate || undefined);
+      setConvertOpen(false);
+      setViewItem(null);
+      load(filter || undefined);
+    } finally { setConverting(false); }
+  };
 
   const setField = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
   const setLine = (i: number, k: string, v: string) => setForm(f => { const l = [...f.lines]; l[i] = { ...l[i], [k]: v }; return { ...f, lines: l }; });
@@ -58,8 +109,7 @@ export default function QuotesPage() {
 
   const onClientChange = (companyId: string) => {
     const client = compList.find(c => c.id === companyId) ?? null;
-    const baseRate = parseFloat(form.vatRate) || 17;
-    const vat = computeVat(client, baseRate);
+    const vat = computeVat(client, parseFloat(form.vatRate) || 17);
     setForm(f => ({ ...f, companyId, vatRate: String(vat.rate), vatMention: vat.mention ?? '' }));
   };
 
@@ -78,14 +128,11 @@ export default function QuotesPage() {
     try {
       const data: any = {
         vatRate: parseFloat(form.vatRate) || 0,
-        vatMention: form.vatMention || undefined,
-        notes: form.notes,
+        vatMention: form.vatMention || undefined, notes: form.notes,
         lines: form.lines.map(l => ({
           ...(l.serviceId ? { serviceId: l.serviceId } : {}),
-          description: l.description,
-          quantity: parseFloat(l.quantity) || 1,
-          unitPrice: parseFloat(l.unitPrice) || 0,
-          ...(l.unite ? { unite: l.unite } : {}),
+          description: l.description, quantity: parseFloat(l.quantity) || 1,
+          unitPrice: parseFloat(l.unitPrice) || 0, ...(l.unite ? { unite: l.unite } : {}),
         })),
       };
       if (form.companyId) data.companyId = form.companyId;
@@ -101,8 +148,7 @@ export default function QuotesPage() {
     company: q.company ? { name: q.company.name } : undefined,
     lines: (q.lines ?? []).map(l => ({ description: l.description, quantity: l.quantity, unitPrice: l.unitPrice, total: l.total })),
     subtotal: q.subtotal, vatRate: q.vatRate, vatAmount: q.vatAmount, total: q.total,
-    vatMention: q.vatMention,
-    filename: `${q.number}.pdf`,
+    vatMention: q.vatMention, filename: `${q.number}.pdf`,
   });
 
   return (
@@ -116,19 +162,118 @@ export default function QuotesPage() {
           const full = fullQuotes[q.id] ?? q;
           const ss = STATUS_ST[q.status] ?? { bg: '#F5F5F5', color: '#888' };
           return (
-            <tr key={q.id} style={{ borderTop: i > 0 ? `1px solid ${T.rowDiv}` : undefined }}>
+            <tr key={q.id} onClick={() => openView(q)} style={{ borderTop: i > 0 ? `1px solid ${T.rowDiv}` : undefined, cursor: 'pointer' }}
+              onMouseEnter={e => (e.currentTarget.style.background = T.copperBg)}
+              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
               <td className="px-4 py-3 font-mono text-xs font-bold" style={{ color: T.dark }}>{q.number}</td>
               <Td>{q.company?.name ?? '—'}</Td>
               <td className="px-4 py-3 text-right text-sm" style={{ color: T.dark }}>{fmt(q.subtotal)}</td>
               <td className="px-4 py-3 text-right text-sm" style={{ color: T.muted }}>{fmt(q.vatAmount)}</td>
               <td className="px-4 py-3 text-right text-sm font-bold" style={{ color: T.dark }}>{fmt(q.total)}</td>
               <td className="px-4 py-3 text-center"><StatusBadge label={STATUS_FR[q.status] ?? q.status} bg={ss.bg} color={ss.color} /></td>
-              <td className="px-4 py-3 text-center"><PdfDownloadButton {...buildPdfProps(full)} /></td>
+              <td className="px-4 py-3 text-center" onClick={e => e.stopPropagation()}>
+                <PdfDownloadButton {...buildPdfProps(full)} />
+              </td>
             </tr>
           );
         })}
       </DataTable>
 
+      {/* ── Detail / Actions modal ── */}
+      {viewItem && (
+        <Modal title={`Devis ${viewItem.number}`} open={!!viewItem} onClose={() => setViewItem(null)}>
+          <div className="space-y-4">
+            {/* Status + actions */}
+            <div className="flex flex-wrap items-center gap-2 pb-3" style={{ borderBottom: `1px solid ${T.border}` }}>
+              {(() => { const ss = STATUS_ST[viewItem.status] ?? { bg: '#F5F5F5', color: '#888' }; return <StatusBadge label={STATUS_FR[viewItem.status] ?? viewItem.status} bg={ss.bg} color={ss.color} />; })()}
+              <div className="flex flex-wrap gap-2 ml-auto">
+                {viewItem.status === 'DRAFT' && (
+                  <ActionBtn label="Marquer envoyé" color="#1D6FD8" bg="#EFF6FF" border="#BFDBFE" onClick={() => updateStatus(viewItem, 'SENT')} disabled={actioning} />
+                )}
+                {viewItem.status === 'SENT' && (<>
+                  <ActionBtn label="Accepter" color="#16A34A" bg="#F0FDF4" border="#BBF7D0" onClick={() => updateStatus(viewItem, 'ACCEPTED')} disabled={actioning} />
+                  <ActionBtn label="Refuser" color="#DC2626" bg="#FEF2F2" border="#FECACA" onClick={() => updateStatus(viewItem, 'REJECTED')} disabled={actioning} />
+                  <ActionBtn label="Expiré" color="#C2410C" bg="#FFF7ED" border="#FED7AA" onClick={() => updateStatus(viewItem, 'EXPIRED')} disabled={actioning} />
+                </>)}
+                {viewItem.status === 'ACCEPTED' && (
+                  <ActionBtn label="Convertir en facture" color="#FFF" bg={T.copper} border={T.copper} onClick={() => { setConvertDueDate(''); setConvertOpen(true); }} disabled={actioning} />
+                )}
+                {viewItem.status === 'DRAFT' && (
+                  <ActionBtn label="Remettre en brouillon" color={T.muted} bg="#F5F5F5" border={T.border} onClick={() => updateStatus(viewItem, 'DRAFT')} disabled={actioning} />
+                )}
+              </div>
+            </div>
+
+            {/* Info */}
+            <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
+              <div><span style={{ color: T.muted }}>Client : </span><span className="font-semibold" style={{ color: T.dark }}>{viewItem.company?.name ?? '—'}</span></div>
+              <div><span style={{ color: T.muted }}>TVA : </span><span className="font-semibold" style={{ color: T.dark }}>{viewItem.vatRate}%</span></div>
+            </div>
+
+            {/* Lines */}
+            {(viewItem.lines ?? []).length > 0 && (
+              <div className="rounded-lg overflow-hidden" style={{ border: `1px solid ${T.border}` }}>
+                <table className="w-full text-xs">
+                  <thead style={{ background: T.head }}>
+                    <tr>
+                      <th className="text-left px-3 py-2 font-semibold" style={{ color: T.muted }}>Description</th>
+                      <th className="text-center px-3 py-2 font-semibold" style={{ color: T.muted }}>Qté</th>
+                      <th className="text-right px-3 py-2 font-semibold" style={{ color: T.muted }}>Prix HT</th>
+                      <th className="text-right px-3 py-2 font-semibold" style={{ color: T.muted }}>Total HT</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {viewItem.lines!.map((l, i) => (
+                      <tr key={i} style={{ borderTop: `1px solid ${T.rowDiv}` }}>
+                        <td className="px-3 py-2" style={{ color: T.dark }}>{l.description}</td>
+                        <td className="px-3 py-2 text-center" style={{ color: T.muted }}>{l.quantity}</td>
+                        <td className="px-3 py-2 text-right" style={{ color: T.muted }}>{fmt(l.unitPrice)}</td>
+                        <td className="px-3 py-2 text-right font-semibold" style={{ color: T.dark }}>{fmt(l.total)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Totals */}
+            <div className="flex justify-end">
+              <div className="w-52 space-y-1 text-sm">
+                <div className="flex justify-between"><span style={{ color: T.muted }}>HT</span><span style={{ color: T.dark }}>{fmt(viewItem.subtotal)}</span></div>
+                <div className="flex justify-between"><span style={{ color: T.muted }}>TVA {viewItem.vatRate}%</span><span style={{ color: T.muted }}>{fmt(viewItem.vatAmount)}</span></div>
+                <div className="flex justify-between font-bold pt-1" style={{ borderTop: `1px solid ${T.border}`, color: T.dark }}>
+                  <span>Total TTC</span><span>{fmt(viewItem.total)}</span>
+                </div>
+              </div>
+            </div>
+
+            {viewItem.vatMention && (
+              <div className="rounded-lg px-3 py-2 text-xs" style={{ background: '#FFFBEB', border: '1px solid #FDE68A' }}>
+                <span className="font-semibold" style={{ color: '#92400E' }}>Mention légale TVA : </span>
+                <span style={{ color: '#78350F' }}>{viewItem.vatMention}</span>
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
+
+      {/* ── Convertir en facture ── */}
+      <Modal title="Convertir en facture" open={convertOpen} onClose={() => setConvertOpen(false)}>
+        <div className="space-y-4">
+          <p className="text-sm" style={{ color: T.muted }}>Le devis <strong style={{ color: T.dark }}>{viewItem?.number}</strong> sera converti en facture.</p>
+          <FormField label="Date d&apos;échéance (optionnel)">
+            <input type="date" className={inputClass} value={convertDueDate} onChange={e => setConvertDueDate(e.target.value)} />
+          </FormField>
+          <div className="flex gap-3 pt-1">
+            <button onClick={() => setConvertOpen(false)} className="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium" style={{ border: `1px solid ${T.border}`, color: T.muted }}>Annuler</button>
+            <button onClick={convertToInvoice} disabled={converting} className="flex-1 px-4 py-2.5 rounded-lg text-sm font-semibold text-white" style={{ background: T.copper }}>
+              {converting ? 'Conversion...' : 'Convertir'}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ── Nouveau devis ── */}
       <Modal title="Nouveau devis" open={open} onClose={() => setOpen(false)}>
         <form onSubmit={handleSubmit} className="space-y-4">
           <FormField label="Client">
