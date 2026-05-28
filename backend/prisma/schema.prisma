@@ -1,0 +1,329 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── AUTH & USERS ─────────────────────────────────────────────────────────────
+
+model User {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  password         String
+  firstName        String
+  lastName         String
+  role             Role      @default(MEMBER)
+  twoFactorEnabled Boolean   @default(false)
+  twoFactorSecret  String?
+  avatar           String?
+  isActive         Boolean   @default(true)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  contacts      Contact[]
+  deals         Deal[]
+  tasks         Task[]
+  timeEntries   TimeEntry[]
+  invoices      Invoice[]
+  quotes        Quote[]
+  commissions   Commission[]
+  calendarEvents CalendarEvent[]
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  MEMBER
+}
+
+// ─── CRM ──────────────────────────────────────────────────────────────────────
+
+model Contact {
+  id           String   @id @default(cuid())
+  firstName    String
+  lastName     String
+  email        String?
+  phone        String?
+  mobile       String?
+  jobTitle     String?
+  notes        String?
+  tags         String[]
+  companyId    String?
+  company      Company? @relation(fields: [companyId], references: [id])
+  assignedToId String?
+  assignedTo   User?    @relation(fields: [assignedToId], references: [id])
+  deals        Deal[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Company {
+  id          String    @id @default(cuid())
+  name        String
+  email       String?
+  phone       String?
+  website     String?
+  address     String?
+  city        String?
+  country     String?
+  vatNumber   String?
+  notes       String?
+  tags        String[]
+  contacts    Contact[]
+  deals       Deal[]
+  invoices    Invoice[]
+  quotes      Quote[]
+  commissions Commission[]
+  projects    Project[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// ─── PIPELINE / DEALS ─────────────────────────────────────────────────────────
+
+model Pipeline {
+  id        String   @id @default(cuid())
+  name      String
+  stages    Stage[]
+  createdAt DateTime @default(now())
+}
+
+model Stage {
+  id         String   @id @default(cuid())
+  name       String
+  order      Int
+  pipelineId String
+  pipeline   Pipeline @relation(fields: [pipelineId], references: [id])
+  deals      Deal[]
+}
+
+model Deal {
+  id                String     @id @default(cuid())
+  title             String
+  value             Float      @default(0)
+  currency          String     @default("EUR")
+  probability       Int        @default(0)
+  status            DealStatus @default(OPEN)
+  stageId           String?
+  stage             Stage?     @relation(fields: [stageId], references: [id])
+  contactId         String?
+  contact           Contact?   @relation(fields: [contactId], references: [id])
+  companyId         String?
+  company           Company?   @relation(fields: [companyId], references: [id])
+  assignedToId      String?
+  assignedTo        User?      @relation(fields: [assignedToId], references: [id])
+  expectedCloseDate DateTime?
+  notes             String?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+}
+
+enum DealStatus {
+  OPEN
+  WON
+  LOST
+}
+
+// ─── PROJECTS & TASKS ─────────────────────────────────────────────────────────
+
+model Project {
+  id          String        @id @default(cuid())
+  name        String
+  description String?
+  status      ProjectStatus @default(ACTIVE)
+  startDate   DateTime?
+  endDate     DateTime?
+  budget      Float?
+  companyId   String?
+  company     Company?      @relation(fields: [companyId], references: [id])
+  tasks       Task[]
+  timeEntries TimeEntry[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+enum ProjectStatus {
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+}
+
+model Task {
+  id           String     @id @default(cuid())
+  title        String
+  description  String?
+  status       TaskStatus @default(TODO)
+  priority     Priority   @default(MEDIUM)
+  dueDate      DateTime?
+  projectId    String?
+  project      Project?   @relation(fields: [projectId], references: [id])
+  assignedToId String?
+  assignedTo   User?      @relation(fields: [assignedToId], references: [id])
+  timeEntries  TimeEntry[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  REVIEW
+  DONE
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model TimeEntry {
+  id          String   @id @default(cuid())
+  description String?
+  startTime   DateTime
+  endTime     DateTime?
+  duration    Int?
+  billable    Boolean  @default(true)
+  projectId   String?
+  project     Project? @relation(fields: [projectId], references: [id])
+  taskId      String?
+  task        Task?    @relation(fields: [taskId], references: [id])
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+}
+
+// ─── FACTURATION ──────────────────────────────────────────────────────────────
+
+model Quote {
+  id          String      @id @default(cuid())
+  number      String      @unique
+  status      QuoteStatus @default(DRAFT)
+  issueDate   DateTime    @default(now())
+  expiryDate  DateTime?
+  companyId   String?
+  company     Company?    @relation(fields: [companyId], references: [id])
+  createdById String?
+  createdBy   User?       @relation(fields: [createdById], references: [id])
+  lines       QuoteLine[]
+  subtotal    Float       @default(0)
+  vatRate     Float       @default(17)
+  vatAmount   Float       @default(0)
+  total       Float       @default(0)
+  notes       String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+enum QuoteStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+model QuoteLine {
+  id          String @id @default(cuid())
+  quoteId     String
+  quote       Quote  @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  description String
+  quantity    Float  @default(1)
+  unitPrice   Float
+  total       Float
+}
+
+model Invoice {
+  id          String        @id @default(cuid())
+  number      String        @unique
+  status      InvoiceStatus @default(DRAFT)
+  issueDate   DateTime      @default(now())
+  dueDate     DateTime?
+  companyId   String?
+  company     Company?      @relation(fields: [companyId], references: [id])
+  createdById String?
+  createdBy   User?         @relation(fields: [createdById], references: [id])
+  lines       InvoiceLine[]
+  subtotal    Float         @default(0)
+  vatRate     Float         @default(17)
+  vatAmount   Float         @default(0)
+  total       Float         @default(0)
+  paidAmount  Float         @default(0)
+  notes       String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+model InvoiceLine {
+  id          String  @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  description String
+  quantity    Float   @default(1)
+  unitPrice   Float
+  total       Float
+}
+
+// ─── COMMISSIONS (spécifique INEE) ────────────────────────────────────────────
+
+model Commission {
+  id               String           @id @default(cuid())
+  reference        String           @unique
+  status           CommissionStatus @default(PENDING)
+  brokerName       String
+  brokerId         String?
+  broker           User?            @relation(fields: [brokerId], references: [id])
+  companyId        String?
+  company          Company?         @relation(fields: [companyId], references: [id])
+  dealValue        Float
+  commissionRate   Float
+  commissionAmount Float
+  currency         String           @default("EUR")
+  paymentDate      DateTime?
+  notes            String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+}
+
+enum CommissionStatus {
+  PENDING
+  APPROVED
+  PAID
+  CANCELLED
+}
+
+// ─── CALENDRIER ───────────────────────────────────────────────────────────────
+
+model CalendarEvent {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  allDay      Boolean   @default(false)
+  location    String?
+  type        EventType @default(MEETING)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  createdAt   DateTime  @default(now())
+}
+
+enum EventType {
+  MEETING
+  CALL
+  TASK
+  OTHER
+}
