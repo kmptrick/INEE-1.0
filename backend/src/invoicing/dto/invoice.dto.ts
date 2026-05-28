@@ -1,0 +1,48 @@
+import { IsString, IsOptional, IsNumber, IsArray, ValidateNested, IsDateString, Min } from 'class-validator';
+import { Type } from 'class-transformer';
+
+export class InvoiceLineDto {
+  @IsString()
+  description: string;
+
+  @IsNumber() @Min(0)
+  quantity: number;
+
+  @IsNumber() @Min(0)
+  unitPrice: number;
+}
+
+export class CreateInvoiceDto {
+  @IsOptional() @IsString()
+  companyId?: string;
+
+  @IsOptional() @IsDateString()
+  dueDate?: string;
+
+  @IsOptional() @IsNumber() @Min(0)
+  vatRate?: number;
+
+  @IsOptional() @IsString()
+  notes?: string;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => InvoiceLineDto)
+  lines: InvoiceLineDto[];
+}
+
+export class UpdateInvoiceDto extends CreateInvoiceDto {
+  @IsOptional() @IsString()
+  status?: string;
+
+  @IsOptional() @IsNumber() @Min(0)
+  paidAmount?: number;
+}
+
+export class CreateInvoiceFromQuoteDto {
+  @IsString()
+  quoteId: string;
+
+  @IsOptional() @IsDateString()
+  dueDate?: string;
+}

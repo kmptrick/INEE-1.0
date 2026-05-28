@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { CrmModule } from './crm/crm.module';
 import { CommissionsModule } from './commissions/commissions.module';
+import { InvoicingModule } from './invoicing/invoicing.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { CommissionsModule } from './commissions/commissions.module';
     AuthModule,
     CrmModule,
     CommissionsModule,
+    InvoicingModule,
   ],
   controllers: [AppController],
   providers: [AppService],
