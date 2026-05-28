@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/auth-context';
 
 const nav = [
   { href: '/dashboard',              label: 'Tableau de bord', icon: '⊞' },
-  { href: '/dashboard/companies',    label: 'Sociétés',        icon: '🏢' },
+  { href: '/dashboard/companies',    label: 'Clients',         icon: '🏢' },
   { href: '/dashboard/contacts',     label: 'Contacts',        icon: '👤' },
   { href: '/dashboard/deals',        label: 'Affaires',        icon: '🤝' },
   { href: '/dashboard/commissions',  label: 'Commissions',     icon: '💰' },

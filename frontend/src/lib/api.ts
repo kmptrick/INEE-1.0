@@ -109,7 +109,22 @@ export const invoicing = {
 
 // Types
 export interface User { id: string; email: string; firstName: string; lastName: string; role: string; }
-export interface Company { id: string; name: string; email?: string; phone?: string; city?: string; country?: string; vatNumber?: string; _count?: { contacts: number; deals: number }; }
+export interface Company {
+  id: string;
+  clientType: 'SOCIETE' | 'PARTICULIER';
+  name: string;
+  denomination?: string;
+  formeJuridique?: string;
+  prenom?: string;
+  nom?: string;
+  email?: string;
+  phone?: string;
+  city?: string;
+  country?: string;
+  vatNumber?: string;
+  notes?: string;
+  _count?: { contacts: number; deals: number };
+}
 export interface Contact { id: string; firstName: string; lastName: string; email?: string; phone?: string; jobTitle?: string; company?: { id: string; name: string }; }
 export interface Deal { id: string; title: string; value: number; currency: string; status: string; probability: number; company?: { id: string; name: string }; contact?: { id: string; firstName: string; lastName: string }; stage?: { id: string; name: string }; }
 export interface Service { id: string; idPrestation: string; categorie: string; description: string; prixHT: number; unite?: string; remarques?: string; isActive: boolean; }

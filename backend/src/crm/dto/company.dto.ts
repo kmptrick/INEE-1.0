@@ -1,8 +1,25 @@
-import { IsString, IsOptional, IsEmail, IsUrl, IsArray } from 'class-validator';
+import { IsString, IsOptional, IsEmail, IsArray, IsEnum } from 'class-validator';
+
+export enum ClientType {
+  SOCIETE = 'SOCIETE',
+  PARTICULIER = 'PARTICULIER',
+}
 
 export class CreateCompanyDto {
-  @IsString()
-  name: string;
+  @IsOptional() @IsEnum(ClientType)
+  clientType?: ClientType;
+
+  @IsOptional() @IsString()
+  denomination?: string;
+
+  @IsOptional() @IsString()
+  formeJuridique?: string;
+
+  @IsOptional() @IsString()
+  prenom?: string;
+
+  @IsOptional() @IsString()
+  nom?: string;
 
   @IsOptional() @IsEmail()
   email?: string;

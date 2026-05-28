@@ -61,18 +61,28 @@ model Contact {
   updatedAt    DateTime @updatedAt
 }
 
+enum ClientType {
+  SOCIETE
+  PARTICULIER
+}
+
 model Company {
-  id          String    @id @default(cuid())
-  name        String
-  email       String?
-  phone       String?
-  website     String?
-  address     String?
-  city        String?
-  country     String?
-  vatNumber   String?
-  notes       String?
-  tags        String[]
+  id              String     @id @default(cuid())
+  clientType      ClientType @default(SOCIETE)
+  name            String
+  denomination    String?
+  formeJuridique  String?
+  prenom          String?
+  nom             String?
+  email           String?
+  phone           String?
+  website         String?
+  address         String?
+  city            String?
+  country         String?
+  vatNumber       String?
+  notes           String?
+  tags            String[]
   contacts    Contact[]
   deals       Deal[]
   invoices    Invoice[]
