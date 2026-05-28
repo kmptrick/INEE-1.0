@@ -1,0 +1,38 @@
+services:
+  backend:
+    build: ./backend
+    container_name: inee-backend
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      DATABASE_URL: postgresql://inee_user:IneeSecure2026!@inee-postgres:5432/inee_db
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: 7d
+      PORT: 3001
+      NODE_ENV: production
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+    depends_on:
+      - postgres
+    networks:
+      - inee-network
+
+  postgres:
+    image: postgres:16
+    container_name: inee-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: inee_db
+      POSTGRES_USER: inee_user
+      POSTGRES_PASSWORD: IneeSecure2026!
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - inee-network
+
+volumes:
+  postgres_data:
+
+networks:
+  inee-network:
+    driver: bridge
