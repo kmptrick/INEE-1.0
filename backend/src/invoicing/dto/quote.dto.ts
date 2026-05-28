@@ -29,6 +29,9 @@ export class CreateQuoteDto {
   vatRate?: number;
 
   @IsOptional() @IsString()
+  vatMention?: string;
+
+  @IsOptional() @IsString()
   notes?: string;
 
   @IsArray()

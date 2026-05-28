@@ -95,12 +95,13 @@ export interface IneeDocumentProps {
   vatRate: number;
   vatAmount: number;
   total: number;
+  vatMention?: string;
   notes?: string;
 }
 
 export function IneeDocumentPdf({
   type, number, date, dueDate, status, company, lines,
-  subtotal, vatRate, vatAmount, total, notes,
+  subtotal, vatRate, vatAmount, total, vatMention, notes,
 }: IneeDocumentProps) {
   const statusColor: Record<string, string> = {
     DRAFT: COLORS.gray, SENT: '#1D6FD8', ACCEPTED: '#1A7A3C', PAID: '#1A7A3C',
@@ -195,6 +196,14 @@ export function IneeDocumentPdf({
             <Text style={s.grandValue}>{fmt(total)}</Text>
           </View>
         </View>
+
+        {/* Mention légale TVA */}
+        {vatMention && (
+          <View style={{ marginBottom: 16, padding: 8, backgroundColor: '#FFFBEB', borderRadius: 4, borderWidth: 0.5, borderColor: '#FDE68A' }}>
+            <Text style={{ fontSize: 8, color: '#92400E', fontWeight: 'bold', marginBottom: 2 }}>MENTION LÉGALE TVA</Text>
+            <Text style={{ fontSize: 8, color: '#78350F' }}>{vatMention}</Text>
+          </View>
+        )}
 
         {/* Notes */}
         {notes && (

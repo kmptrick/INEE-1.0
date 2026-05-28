@@ -6,6 +6,7 @@ import { Modal } from '@/components/Modal';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
 import { PageHeader, AddButton, FilterBar, DataTable, Td, StatusBadge, FormActions } from '@/components/PageShell';
 import { ServicePicker } from '@/components/ServicePicker';
+import { computeVat, LU_VAT_RATES } from '@/lib/vat-rules';
 import type { IneeDocumentProps } from '@/components/IneeDocumentPdf';
 
 const PdfDownloadButton = dynamic(
@@ -34,7 +35,7 @@ const today = () => new Date().toLocaleDateString('fr-LU');
 
 type LineForm = { serviceId: string; description: string; quantity: string; unitPrice: string; unite: string };
 const emptyLine = (): LineForm => ({ serviceId: '', description: '', quantity: '1', unitPrice: '', unite: '' });
-const emptyForm = () => ({ companyId: '', vatRate: '17', notes: '', lines: [emptyLine()] });
+const emptyForm = () => ({ companyId: '', vatRate: '17', vatMention: '', notes: '', lines: [emptyLine()] });
 
 export default function QuotesPage() {
   const [list, setList] = useState<Quote[]>([]);
@@ -55,11 +56,20 @@ export default function QuotesPage() {
   const addLine = () => setForm(f => ({ ...f, lines: [...f.lines, emptyLine()] }));
   const removeLine = (i: number) => setForm(f => ({ ...f, lines: f.lines.filter((_, idx) => idx !== i) }));
 
+  const onClientChange = (companyId: string) => {
+    const client = compList.find(c => c.id === companyId) ?? null;
+    const baseRate = parseFloat(form.vatRate) || 17;
+    const vat = computeVat(client, baseRate);
+    setForm(f => ({ ...f, companyId, vatRate: String(vat.rate), vatMention: vat.mention ?? '' }));
+  };
+
   const pickService = (i: number, s: Service) => {
     setForm(f => {
       const lines = [...f.lines];
       lines[i] = { serviceId: s.id, description: s.description, quantity: '1', unitPrice: String(s.prixHT), unite: s.unite ?? '' };
-      return { ...f, lines };
+      const client = compList.find(c => c.id === f.companyId) ?? null;
+      const vat = computeVat(client, s.vatRate ?? 17);
+      return { ...f, lines, vatRate: String(vat.rate), vatMention: vat.mention ?? '' };
     });
   };
 
@@ -67,7 +77,8 @@ export default function QuotesPage() {
     e.preventDefault(); setSaving(true);
     try {
       const data: any = {
-        vatRate: parseFloat(form.vatRate) || 17,
+        vatRate: parseFloat(form.vatRate) || 0,
+        vatMention: form.vatMention || undefined,
         notes: form.notes,
         lines: form.lines.map(l => ({
           ...(l.serviceId ? { serviceId: l.serviceId } : {}),
@@ -82,11 +93,15 @@ export default function QuotesPage() {
     } finally { setSaving(false); }
   };
 
+  const selectedClient = compList.find(c => c.id === form.companyId) ?? null;
+  const vatResult = computeVat(selectedClient, parseFloat(form.vatRate) || 17);
+
   const buildPdfProps = (q: Quote): IneeDocumentProps & { filename: string } => ({
     type: 'DEVIS', number: q.number, date: today(), status: q.status,
     company: q.company ? { name: q.company.name } : undefined,
     lines: (q.lines ?? []).map(l => ({ description: l.description, quantity: l.quantity, unitPrice: l.unitPrice, total: l.total })),
     subtotal: q.subtotal, vatRate: q.vatRate, vatAmount: q.vatAmount, total: q.total,
+    vatMention: q.vatMention,
     filename: `${q.number}.pdf`,
   });
 
@@ -96,7 +111,7 @@ export default function QuotesPage() {
       <FilterBar filters={FILTERS} active={filter} onChange={v => { setFilter(v); load(v || undefined); }} />
 
       <DataTable loading={loading} empty="Aucun devis"
-        headers={[{ label: 'Numéro' }, { label: 'Client' }, { label: 'HT', align: 'right' }, { label: 'TVA 17%', align: 'right' }, { label: 'TTC', align: 'right' }, { label: 'Statut', align: 'center' }, { label: '', align: 'center' }]}>
+        headers={[{ label: 'Numéro' }, { label: 'Client' }, { label: 'HT', align: 'right' }, { label: 'TVA', align: 'right' }, { label: 'TTC', align: 'right' }, { label: 'Statut', align: 'center' }, { label: '', align: 'center' }]}>
         {list.map((q, i) => {
           const full = fullQuotes[q.id] ?? q;
           const ss = STATUS_ST[q.status] ?? { bg: '#F5F5F5', color: '#888' };
@@ -117,14 +132,27 @@ export default function QuotesPage() {
       <Modal title="Nouveau devis" open={open} onClose={() => setOpen(false)}>
         <form onSubmit={handleSubmit} className="space-y-4">
           <FormField label="Client">
-            <select className={selectClass} value={form.companyId} onChange={e => setField('companyId', e.target.value)}>
-              <option value="">— Aucune —</option>
+            <select className={selectClass} value={form.companyId} onChange={e => onClientChange(e.target.value)}>
+              <option value="">— Aucun —</option>
               {compList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </FormField>
-          <FormField label="TVA (%)">
-            <input type="number" min="0" max="100" step="0.1" className={inputClass} value={form.vatRate} onChange={e => setField('vatRate', e.target.value)} />
-          </FormField>
+
+          <div className="rounded-lg px-3 py-2.5 text-xs" style={{ background: vatResult.mention ? '#FEF3C7' : '#F0FDF4', border: `1px solid ${vatResult.mention ? '#FDE68A' : '#BBF7D0'}` }}>
+            <span className="font-semibold" style={{ color: T.dark }}>{vatResult.label}</span>
+            {vatResult.mention && <span className="block mt-0.5" style={{ color: '#92400E' }}>Mention : «{vatResult.mention}»</span>}
+            {vatResult.regime === 'EU_B2B' && selectedClient && !selectedClient.vatNumber && (
+              <span className="block mt-0.5 font-semibold" style={{ color: '#DC2626' }}>N° TVA client requis pour l&apos;autoliquidation</span>
+            )}
+          </div>
+
+          {vatResult.regime === 'LU' && (
+            <FormField label="Taux de TVA">
+              <select className={selectClass} value={form.vatRate} onChange={e => setField('vatRate', e.target.value)}>
+                {LU_VAT_RATES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+              </select>
+            </FormField>
+          )}
 
           <div>
             <div className="flex items-center justify-between mb-2">

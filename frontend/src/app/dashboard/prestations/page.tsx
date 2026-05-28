@@ -2,12 +2,13 @@
 import { useEffect, useState } from 'react';
 import { services, Service } from '@/lib/api';
 import { Modal } from '@/components/Modal';
-import { FormField, inputClass, T } from '@/components/FormField';
+import { FormField, inputClass, selectClass, T } from '@/components/FormField';
+import { LU_VAT_RATES } from '@/lib/vat-rules';
 import { PageHeader, AddButton, DataTable, Td, FormActions } from '@/components/PageShell';
 
 const UNITES = ['/h', '/mois', '/déclaration', '/facture', '/employé/mois', '/session', '/personne', '/groupe', '/module', '/post', '/envoi', '/consultation', '/jour', 'forfait'];
 
-const emptyForm = { idPrestation: '', categorie: '', description: '', prixHT: '', unite: '', remarques: '' };
+const emptyForm = { idPrestation: '', categorie: '', description: '', prixHT: '', vatRate: '17', unite: '', remarques: '' };
 
 export default function PrestationsPage() {
   const [list, setList] = useState<Service[]>([]);
@@ -33,14 +34,14 @@ export default function PrestationsPage() {
   const openCreate = () => { setEditTarget(null); setForm(emptyForm); setOpen(true); };
   const openEdit = (s: Service) => {
     setEditTarget(s);
-    setForm({ idPrestation: s.idPrestation, categorie: s.categorie, description: s.description, prixHT: String(s.prixHT), unite: s.unite ?? '', remarques: s.remarques ?? '' });
+    setForm({ idPrestation: s.idPrestation, categorie: s.categorie, description: s.description, prixHT: String(s.prixHT), vatRate: String(s.vatRate ?? 17), unite: s.unite ?? '', remarques: s.remarques ?? '' });
     setOpen(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); setSaving(true);
     try {
-      const data = { idPrestation: form.idPrestation, categorie: form.categorie, description: form.description, prixHT: parseFloat(form.prixHT) || 0, unite: form.unite || undefined, remarques: form.remarques || undefined };
+      const data = { idPrestation: form.idPrestation, categorie: form.categorie, description: form.description, prixHT: parseFloat(form.prixHT) || 0, vatRate: parseFloat(form.vatRate) || 17, unite: form.unite || undefined, remarques: form.remarques || undefined };
       if (editTarget) await services.update(editTarget.id, data);
       else await services.create(data);
       setOpen(false);
@@ -93,6 +94,7 @@ export default function PrestationsPage() {
           { label: 'Catégorie' },
           { label: 'Description' },
           { label: 'Prix HT', align: 'right' },
+          { label: 'TVA', align: 'center' },
           { label: 'Unité' },
           { label: 'Remarques' },
           { label: '', align: 'right' },
@@ -103,6 +105,7 @@ export default function PrestationsPage() {
             <td className="px-4 py-3 text-xs font-semibold" style={{ color: T.muted }}>{s.categorie}</td>
             <Td bold>{s.description}</Td>
             <td className="px-4 py-3 text-right text-sm font-bold" style={{ color: T.dark }}>{fmt(s.prixHT)}</td>
+            <td className="px-4 py-3 text-center text-xs font-semibold" style={{ color: T.copper }}>{(s.vatRate ?? 17)}%</td>
             <td className="px-4 py-3 text-xs" style={{ color: T.muted }}>{s.unite ?? '—'}</td>
             <td className="px-4 py-3 text-xs max-w-[180px] truncate" style={{ color: T.muted }} title={s.remarques ?? ''}>{s.remarques ?? '—'}</td>
             <td className="px-4 py-3 text-right">
@@ -152,6 +155,11 @@ export default function PrestationsPage() {
           </FormField>
           <FormField label="Prix HT (€)" required>
             <input type="number" min="0" step="0.01" className={inputClass} value={form.prixHT} onChange={e => set('prixHT', e.target.value)} required />
+          </FormField>
+          <FormField label="TVA par défaut (LU)">
+            <select className={selectClass} value={form.vatRate} onChange={e => set('vatRate', e.target.value)}>
+              {LU_VAT_RATES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+            </select>
           </FormField>
           <FormField label="Remarques">
             <input className={inputClass} value={form.remarques} onChange={e => set('remarques', e.target.value)} placeholder="Selon volume, Selon complexité..." />

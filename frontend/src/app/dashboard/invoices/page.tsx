@@ -6,6 +6,7 @@ import { Modal } from '@/components/Modal';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
 import { PageHeader, AddButton, FilterBar, DataTable, Td, StatusBadge, FormActions } from '@/components/PageShell';
 import { ServicePicker } from '@/components/ServicePicker';
+import { computeVat, LU_VAT_RATES } from '@/lib/vat-rules';
 import type { IneeDocumentProps } from '@/components/IneeDocumentPdf';
 
 const PdfDownloadButton = dynamic(
@@ -35,7 +36,7 @@ const fmtDate = (d?: string) => d ? new Date(d).toLocaleDateString('fr-LU') : un
 
 type LineForm = { serviceId: string; description: string; quantity: string; unitPrice: string; unite: string };
 const emptyLine = (): LineForm => ({ serviceId: '', description: '', quantity: '1', unitPrice: '', unite: '' });
-const emptyForm = () => ({ companyId: '', vatRate: '17', dueDate: '', notes: '', lines: [emptyLine()] });
+const emptyForm = () => ({ companyId: '', vatRate: '17', vatMention: '', dueDate: '', notes: '', lines: [emptyLine()] });
 
 export default function InvoicesPage() {
   const [list, setList] = useState<Invoice[]>([]);
@@ -56,11 +57,20 @@ export default function InvoicesPage() {
   const addLine = () => setForm(f => ({ ...f, lines: [...f.lines, emptyLine()] }));
   const removeLine = (i: number) => setForm(f => ({ ...f, lines: f.lines.filter((_, idx) => idx !== i) }));
 
+  const onClientChange = (companyId: string) => {
+    const client = compList.find(c => c.id === companyId) ?? null;
+    const baseRate = parseFloat(form.vatRate) || 17;
+    const vat = computeVat(client, baseRate);
+    setForm(f => ({ ...f, companyId, vatRate: String(vat.rate), vatMention: vat.mention ?? '' }));
+  };
+
   const pickService = (i: number, s: Service) => {
     setForm(f => {
       const lines = [...f.lines];
       lines[i] = { serviceId: s.id, description: s.description, quantity: '1', unitPrice: String(s.prixHT), unite: s.unite ?? '' };
-      return { ...f, lines };
+      const client = compList.find(c => c.id === f.companyId) ?? null;
+      const vat = computeVat(client, s.vatRate ?? 17);
+      return { ...f, lines, vatRate: String(vat.rate), vatMention: vat.mention ?? '' };
     });
   };
 
@@ -68,7 +78,8 @@ export default function InvoicesPage() {
     e.preventDefault(); setSaving(true);
     try {
       const data: any = {
-        vatRate: parseFloat(form.vatRate) || 17,
+        vatRate: parseFloat(form.vatRate) || 0,
+        vatMention: form.vatMention || undefined,
         notes: form.notes,
         lines: form.lines.map(l => ({
           ...(l.serviceId ? { serviceId: l.serviceId } : {}),
@@ -84,11 +95,15 @@ export default function InvoicesPage() {
     } finally { setSaving(false); }
   };
 
+  const selectedClient = compList.find(c => c.id === form.companyId) ?? null;
+  const vatResult = computeVat(selectedClient, parseFloat(form.vatRate) || 17);
+
   const buildPdfProps = (inv: Invoice): IneeDocumentProps & { filename: string } => ({
     type: 'FACTURE', number: inv.number, date: today(), dueDate: fmtDate(inv.dueDate), status: inv.status,
     company: inv.company ? { name: inv.company.name } : undefined,
     lines: (inv.lines ?? []).map(l => ({ description: l.description, quantity: l.quantity, unitPrice: l.unitPrice, total: l.total })),
     subtotal: inv.subtotal, vatRate: inv.vatRate, vatAmount: inv.vatAmount, total: inv.total,
+    vatMention: inv.vatMention,
     filename: `${inv.number}.pdf`,
   });
 
@@ -120,15 +135,29 @@ export default function InvoicesPage() {
       <Modal title="Nouvelle facture" open={open} onClose={() => setOpen(false)}>
         <form onSubmit={handleSubmit} className="space-y-4">
           <FormField label="Client">
-            <select className={selectClass} value={form.companyId} onChange={e => setField('companyId', e.target.value)}>
-              <option value="">— Aucune —</option>
+            <select className={selectClass} value={form.companyId} onChange={e => onClientChange(e.target.value)}>
+              <option value="">— Aucun —</option>
               {compList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </FormField>
-          <div className="grid grid-cols-2 gap-3">
-            <FormField label="TVA (%)"><input type="number" min="0" max="100" step="0.1" className={inputClass} value={form.vatRate} onChange={e => setField('vatRate', e.target.value)} /></FormField>
-            <FormField label="Échéance"><input type="date" className={inputClass} value={form.dueDate} onChange={e => setField('dueDate', e.target.value)} /></FormField>
+
+          <div className="rounded-lg px-3 py-2.5 text-xs" style={{ background: vatResult.mention ? '#FEF3C7' : '#F0FDF4', border: `1px solid ${vatResult.mention ? '#FDE68A' : '#BBF7D0'}` }}>
+            <span className="font-semibold" style={{ color: T.dark }}>{vatResult.label}</span>
+            {vatResult.mention && <span className="block mt-0.5" style={{ color: '#92400E' }}>Mention : «{vatResult.mention}»</span>}
+            {vatResult.regime === 'EU_B2B' && selectedClient && !selectedClient.vatNumber && (
+              <span className="block mt-0.5 font-semibold" style={{ color: '#DC2626' }}>N° TVA client requis pour l&apos;autoliquidation</span>
+            )}
           </div>
+
+          {vatResult.regime === 'LU' && (
+            <FormField label="Taux de TVA">
+              <select className={selectClass} value={form.vatRate} onChange={e => setField('vatRate', e.target.value)}>
+                {LU_VAT_RATES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+              </select>
+            </FormField>
+          )}
+
+          <FormField label="Echéance"><input type="date" className={inputClass} value={form.dueDate} onChange={e => setField('dueDate', e.target.value)} /></FormField>
 
           <div>
             <div className="flex items-center justify-between mb-2">

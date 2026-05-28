@@ -226,6 +226,7 @@ model Quote {
   vatRate     Float       @default(17)
   vatAmount   Float       @default(0)
   total       Float       @default(0)
+  vatMention  String?
   notes       String?
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
@@ -268,6 +269,7 @@ model Invoice {
   vatAmount   Float         @default(0)
   total       Float         @default(0)
   paidAmount  Float         @default(0)
+  vatMention  String?
   notes       String?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
@@ -302,6 +304,7 @@ model Service {
   categorie    String
   description  String
   prixHT       Float
+  vatRate      Float         @default(17)
   unite        String?
   remarques    String?
   isActive     Boolean       @default(true)

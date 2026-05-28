@@ -127,10 +127,10 @@ export interface Company {
 }
 export interface Contact { id: string; firstName: string; lastName: string; email?: string; phone?: string; jobTitle?: string; company?: { id: string; name: string }; }
 export interface Deal { id: string; title: string; value: number; currency: string; status: string; probability: number; company?: { id: string; name: string }; contact?: { id: string; firstName: string; lastName: string }; stage?: { id: string; name: string }; }
-export interface Service { id: string; idPrestation: string; categorie: string; description: string; prixHT: number; unite?: string; remarques?: string; isActive: boolean; }
+export interface Service { id: string; idPrestation: string; categorie: string; description: string; prixHT: number; vatRate?: number; unite?: string; remarques?: string; isActive: boolean; }
 export interface Commission { id: string; reference: string; brokerName: string; dealValue: number; commissionRate: number; commissionAmount: number; currency: string; status: string; notes?: string; company?: { id: string; name: string }; }
-export interface Quote { id: string; number: string; status: string; subtotal: number; vatRate: number; vatAmount: number; total: number; company?: { id: string; name: string }; lines?: QuoteLine[]; }
-export interface Invoice { id: string; number: string; status: string; subtotal: number; vatRate: number; vatAmount: number; total: number; paidAmount: number; dueDate?: string; company?: { id: string; name: string }; lines?: InvoiceLine[]; }
+export interface Quote { id: string; number: string; status: string; subtotal: number; vatRate: number; vatAmount: number; total: number; vatMention?: string; company?: { id: string; name: string }; lines?: QuoteLine[]; }
+export interface Invoice { id: string; number: string; status: string; subtotal: number; vatRate: number; vatAmount: number; total: number; paidAmount: number; dueDate?: string; vatMention?: string; company?: { id: string; name: string }; lines?: InvoiceLine[]; }
 export interface QuoteLine { id: string; serviceId?: string; description: string; quantity: number; unitPrice: number; unite?: string; total: number; }
 export interface InvoiceLine { id: string; serviceId?: string; description: string; quantity: number; unitPrice: number; unite?: string; total: number; }
 export interface PipelineStats { status: string; _sum: { value: number }; _count: number; }
