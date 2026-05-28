@@ -9,6 +9,7 @@ import { CrmModule } from './crm/crm.module';
 import { CommissionsModule } from './commissions/commissions.module';
 import { InvoicingModule } from './invoicing/invoicing.module';
 import { ServicesModule } from './services/services.module';
+import { ProjectsModule } from './projects/projects.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { ServicesModule } from './services/services.module';
     CommissionsModule,
     InvoicingModule,
     ServicesModule,
+    ProjectsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

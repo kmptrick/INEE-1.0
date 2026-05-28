@@ -12,6 +12,7 @@ const nav = [
   { href: '/dashboard/commissions',  label: 'Commissions',     icon: '💰' },
   { href: '/dashboard/quotes',       label: 'Devis',           icon: '📄' },
   { href: '/dashboard/invoices',     label: 'Factures',        icon: '🧾' },
+  { href: '/dashboard/projects',      label: 'Projets',         icon: '📁' },
   { href: '/dashboard/prestations',  label: 'Prestations',     icon: '📋' },
 ];
 

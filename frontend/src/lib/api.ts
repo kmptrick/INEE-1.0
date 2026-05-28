@@ -71,6 +71,19 @@ export const commissions = {
   stats: () => api.get<CommissionStats>('/commissions/stats'),
 };
 
+export const projects = {
+  list: (status?: string) => api.get<Project[]>(`/projects${status ? `?status=${status}` : ''}`),
+  get: (id: string) => api.get<Project>(`/projects/${id}`),
+  create: (data: Partial<Project>) => api.post<Project>('/projects', data),
+  update: (id: string, data: Partial<Project>) => api.put<Project>(`/projects/${id}`, data),
+  delete: (id: string) => api.delete(`/projects/${id}`),
+  tasks: {
+    create: (projectId: string, data: Partial<Task>) => api.post<Task>(`/projects/${projectId}/tasks`, data),
+    update: (projectId: string, taskId: string, data: Partial<Task>) => api.put<Task>(`/projects/${projectId}/tasks/${taskId}`, data),
+    delete: (projectId: string, taskId: string) => api.delete(`/projects/${projectId}/tasks/${taskId}`),
+  },
+};
+
 export const services = {
   list: (search?: string, categorie?: string) => {
     const params = new URLSearchParams();
@@ -133,6 +146,20 @@ export interface Quote { id: string; number: string; status: string; subtotal: n
 export interface Invoice { id: string; number: string; status: string; subtotal: number; vatRate: number; vatAmount: number; total: number; paidAmount: number; dueDate?: string; vatMention?: string; notes?: string; company?: { id: string; name: string }; lines?: InvoiceLine[]; }
 export interface QuoteLine { id: string; serviceId?: string; description: string; quantity: number; unitPrice: number; unite?: string; total: number; }
 export interface InvoiceLine { id: string; serviceId?: string; description: string; quantity: number; unitPrice: number; unite?: string; total: number; }
+export interface Project {
+  id: string; name: string; description?: string; status: string;
+  startDate?: string; endDate?: string; budget?: number;
+  company?: { id: string; name: string };
+  tasks?: Task[];
+  _count?: { tasks: number };
+}
+export interface Task {
+  id: string; title: string; description?: string;
+  status: 'TODO' | 'IN_PROGRESS' | 'REVIEW' | 'DONE';
+  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+  dueDate?: string; projectId?: string;
+  assignedTo?: { id: string; firstName: string; lastName: string };
+}
 export interface PipelineStats { status: string; _sum: { value: number }; _count: number; }
 export interface CommissionStats { totalDeals: number; totalCommissions: number; totalCount: number; pendingAmount: number; paidAmount: number; }
 export interface InvoicingStats { invoiceStats: any[]; quoteStats: any[]; overdueInvoices: any[]; }

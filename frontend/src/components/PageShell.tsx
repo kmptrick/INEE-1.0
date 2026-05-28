@@ -91,7 +91,7 @@ export function StatusBadge({ label, bg, color }: { label: string; bg: string; c
   );
 }
 
-export function FormActions({ onCancel, saving }: { onCancel: () => void; saving: boolean }) {
+export function FormActions({ onCancel, saving, label }: { onCancel: () => void; saving: boolean; label?: string }) {
   return (
     <div className="flex gap-3 pt-2">
       <button type="button" onClick={onCancel}
@@ -102,7 +102,7 @@ export function FormActions({ onCancel, saving }: { onCancel: () => void; saving
       <button type="submit" disabled={saving}
         className="flex-1 px-4 py-2.5 rounded-lg text-sm font-semibold text-white transition-all"
         style={{ background: T.copper, opacity: saving ? 0.7 : 1, boxShadow: '0 1px 4px rgba(200,128,58,0.3)' }}>
-        {saving ? 'Enregistrement...' : 'Créer'}
+        {saving ? 'Enregistrement...' : (label ?? 'Créer')}
       </button>
     </div>
   );
