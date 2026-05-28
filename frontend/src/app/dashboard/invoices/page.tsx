@@ -175,6 +175,7 @@ export default function InvoicesPage() {
             <div className="flex flex-wrap items-center gap-2 pb-3" style={{ borderBottom: `1px solid ${T.border}` }}>
               {(() => { const ss = STATUS_ST[viewItem.status] ?? { bg: '#F5F5F5', color: '#888' }; return <StatusBadge label={STATUS_FR[viewItem.status] ?? viewItem.status} bg={ss.bg} color={ss.color} />; })()}
               <div className="flex flex-wrap gap-2 ml-auto">
+                <PdfDownloadButton {...buildPdfProps(viewItem)} />
                 {viewItem.status === 'DRAFT' && (
                   <ActionBtn label="Marquer envoyée" color="#1D6FD8" bg="#EFF6FF" border="#BFDBFE" onClick={() => updateStatus(viewItem, 'SENT')} disabled={actioning} />
                 )}
