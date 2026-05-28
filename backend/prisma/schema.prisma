@@ -230,12 +230,15 @@ enum QuoteStatus {
 }
 
 model QuoteLine {
-  id          String @id @default(cuid())
+  id          String   @id @default(cuid())
   quoteId     String
-  quote       Quote  @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  quote       Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  serviceId   String?
+  service     Service? @relation(fields: [serviceId], references: [id])
   description String
-  quantity    Float  @default(1)
+  quantity    Float    @default(1)
   unitPrice   Float
+  unite       String?
   total       Float
 }
 
@@ -269,13 +272,33 @@ enum InvoiceStatus {
 }
 
 model InvoiceLine {
-  id          String  @id @default(cuid())
+  id          String   @id @default(cuid())
   invoiceId   String
-  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  serviceId   String?
+  service     Service? @relation(fields: [serviceId], references: [id])
   description String
-  quantity    Float   @default(1)
+  quantity    Float    @default(1)
   unitPrice   Float
+  unite       String?
   total       Float
+}
+
+// ─── CATALOGUE DE SERVICES ────────────────────────────────────────────────────
+
+model Service {
+  id           String        @id @default(cuid())
+  idPrestation String        @unique
+  categorie    String
+  description  String
+  prixHT       Float
+  unite        String?
+  remarques    String?
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  quoteLines   QuoteLine[]
+  invoiceLines InvoiceLine[]
 }
 
 // ─── COMMISSIONS (spécifique INEE) ────────────────────────────────────────────

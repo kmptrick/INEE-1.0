@@ -2,6 +2,9 @@ import { IsString, IsOptional, IsNumber, IsArray, ValidateNested, IsDateString, 
 import { Type } from 'class-transformer';
 
 export class QuoteLineDto {
+  @IsOptional() @IsString()
+  serviceId?: string;
+
   @IsString()
   description: string;
 
@@ -10,6 +13,9 @@ export class QuoteLineDto {
 
   @IsNumber() @Min(0)
   unitPrice: number;
+
+  @IsOptional() @IsString()
+  unite?: string;
 }
 
 export class CreateQuoteDto {

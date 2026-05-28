@@ -5,7 +5,9 @@
       "PowerShell(gh auth status)",
       "PowerShell(cd \"C:\\\\PERSO\\\\INEE 1.0\\\\backend\"; npm run build 2>&1 | Select-Object -Last 3; $proc = Start-Process -FilePath \"node\" -ArgumentList \"dist/src/main.js\" -PassThru -NoNewWindow -RedirectStandardOutput \"$env:TEMP\\\\inee-out.txt\" -RedirectStandardError \"$env:TEMP\\\\inee-err.txt\"; Start-Sleep -Seconds 5; Get-Content \"$env:TEMP\\\\inee-out.txt\"; Get-Content \"$env:TEMP\\\\inee-err.txt\" -ErrorAction SilentlyContinue; $proc.Id)",
       "PowerShell($npm = \\(Get-Command npm\\).Source; cd \"C:\\\\PERSO\\\\INEE 1.0\\\\frontend\"; $proc = Start-Process -FilePath $npm -ArgumentList \"run\",\"dev\" -PassThru -NoNewWindow -RedirectStandardOutput \"$env:TEMP\\\\inee-front.txt\" -RedirectStandardError \"$env:TEMP\\\\inee-front-err.txt\"; Start-Sleep -Seconds 12; Get-Content \"$env:TEMP\\\\inee-front.txt\" | Select-Object -Last 8; $proc.Id)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(npm install *)",
+      "Bash(npx tsc *)"
     ]
   }
 }

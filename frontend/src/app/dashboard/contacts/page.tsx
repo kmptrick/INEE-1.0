@@ -1,66 +1,82 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { contacts, Contact } from '@/lib/api';
+import { contacts, companies, Contact, Company } from '@/lib/api';
+import { Modal } from '@/components/Modal';
+import { FormField, inputClass, selectClass, T } from '@/components/FormField';
+import { PageHeader, AddButton, DataTable, Td, FormActions } from '@/components/PageShell';
+
+const empty = { firstName: '', lastName: '', email: '', phone: '', mobile: '', jobTitle: '', companyId: '', notes: '' };
 
 export default function ContactsPage() {
   const [list, setList] = useState<Contact[]>([]);
+  const [compList, setCompList] = useState<Company[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState(empty);
+  const [saving, setSaving] = useState(false);
 
-  const load = (q?: string) => {
-    setLoading(true);
-    contacts.list(q).then(setList).finally(() => setLoading(false));
+  const load = (q?: string) => { setLoading(true); contacts.list(q).then(setList).finally(() => setLoading(false)); };
+  useEffect(() => { load(); companies.list().then(setCompList); }, []);
+  const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault(); setSaving(true);
+    try {
+      const data: any = { ...form };
+      if (!data.companyId) delete data.companyId;
+      await contacts.create(data); setOpen(false); setForm(empty); load(search || undefined);
+    } finally { setSaving(false); }
   };
-
-  useEffect(() => { load(); }, []);
 
   return (
     <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-semibold text-gray-900">Contacts</h1>
-        <span className="text-sm text-gray-400">{list.length} contact(s)</span>
-      </div>
+      <PageHeader title="Contacts" action={<AddButton onClick={() => setOpen(true)} />} />
 
-      <div className="mb-4">
-        <input
-          type="text"
-          placeholder="Rechercher..."
-          value={search}
+      <div className="mb-5">
+        <input type="text" placeholder="Rechercher un contact..." value={search}
           onChange={e => { setSearch(e.target.value); load(e.target.value || undefined); }}
-          className="w-full max-w-xs px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-4 py-2.5 rounded-lg text-sm outline-none w-full max-w-xs transition-all"
+          style={{ background: '#FFF', border: `1.5px solid ${T.border}`, color: T.dark }}
+          onFocus={e => { e.target.style.borderColor = T.copper; e.target.style.boxShadow = '0 0 0 3px rgba(200,128,58,0.1)'; }}
+          onBlur={e => { e.target.style.borderColor = T.border; e.target.style.boxShadow = 'none'; }}
         />
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        {loading ? (
-          <div className="p-8 text-center text-sm text-gray-400">Chargement...</div>
-        ) : list.length === 0 ? (
-          <div className="p-8 text-center text-sm text-gray-400">Aucun contact</div>
-        ) : (
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Nom</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Email</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Téléphone</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Poste</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Société</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {list.map(c => (
-                <tr key={c.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3 font-medium text-gray-900">{c.firstName} {c.lastName}</td>
-                  <td className="px-4 py-3 text-gray-500">{c.email ?? '—'}</td>
-                  <td className="px-4 py-3 text-gray-500">{c.phone ?? '—'}</td>
-                  <td className="px-4 py-3 text-gray-500">{c.jobTitle ?? '—'}</td>
-                  <td className="px-4 py-3 text-gray-500">{c.company?.name ?? '—'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+      <DataTable loading={loading} empty="Aucun contact — cliquez sur «+ Ajouter»"
+        headers={[{ label: 'Nom' }, { label: 'Email' }, { label: 'Téléphone' }, { label: 'Poste' }, { label: 'Société' }]}>
+        {list.map((c, i) => (
+          <tr key={c.id} style={{ borderTop: i > 0 ? `1px solid ${T.rowDiv}` : undefined }}>
+            <Td bold>{c.firstName} {c.lastName}</Td>
+            <Td>{c.email ?? '—'}</Td>
+            <Td>{c.phone ?? '—'}</Td>
+            <Td>{c.jobTitle ?? '—'}</Td>
+            <Td>{c.company?.name ?? '—'}</Td>
+          </tr>
+        ))}
+      </DataTable>
+
+      <Modal title="Nouveau contact" open={open} onClose={() => setOpen(false)}>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <FormField label="Prénom" required><input className={inputClass} value={form.firstName} onChange={e => set('firstName', e.target.value)} required /></FormField>
+            <FormField label="Nom" required><input className={inputClass} value={form.lastName} onChange={e => set('lastName', e.target.value)} required /></FormField>
+          </div>
+          <FormField label="Email"><input type="email" className={inputClass} value={form.email} onChange={e => set('email', e.target.value)} /></FormField>
+          <div className="grid grid-cols-2 gap-3">
+            <FormField label="Téléphone"><input className={inputClass} value={form.phone} onChange={e => set('phone', e.target.value)} /></FormField>
+            <FormField label="Mobile"><input className={inputClass} value={form.mobile} onChange={e => set('mobile', e.target.value)} /></FormField>
+          </div>
+          <FormField label="Poste"><input className={inputClass} value={form.jobTitle} onChange={e => set('jobTitle', e.target.value)} /></FormField>
+          <FormField label="Société">
+            <select className={selectClass} value={form.companyId} onChange={e => set('companyId', e.target.value)}>
+              <option value="">— Aucune —</option>
+              {compList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </FormField>
+          <FormActions onCancel={() => setOpen(false)} saving={saving} />
+        </form>
+      </Modal>
     </div>
   );
 }

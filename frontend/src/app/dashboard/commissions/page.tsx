@@ -1,87 +1,90 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { commissions, Commission } from '@/lib/api';
+import { commissions, companies, Commission, Company } from '@/lib/api';
+import { Modal } from '@/components/Modal';
+import { FormField, inputClass, selectClass, T } from '@/components/FormField';
+import { PageHeader, AddButton, FilterBar, DataTable, Td, StatusBadge, FormActions } from '@/components/PageShell';
 
-const STATUS_COLORS: Record<string, string> = {
-  PENDING: 'bg-yellow-100 text-yellow-700',
-  APPROVED: 'bg-blue-100 text-blue-700',
-  PAID: 'bg-green-100 text-green-700',
-  CANCELLED: 'bg-gray-100 text-gray-600',
+const STATUS_ST: Record<string, { bg: string; color: string }> = {
+  PENDING:   { bg: '#FDF3E8', color: '#C8803A' },
+  APPROVED:  { bg: '#EFF6FF', color: '#1D6FD8' },
+  PAID:      { bg: '#F0FDF4', color: '#16A34A' },
+  CANCELLED: { bg: '#F5F5F5', color: '#888'    },
 };
+const STATUS_FR: Record<string, string> = { PENDING: 'En attente', APPROVED: 'Approuvée', PAID: 'Payée', CANCELLED: 'Annulée' };
+const FILTERS = [
+  { value: '',          label: 'Toutes'      },
+  { value: 'PENDING',   label: 'En attente'  },
+  { value: 'APPROVED',  label: 'Approuvées'  },
+  { value: 'PAID',      label: 'Payées'      },
+  { value: 'CANCELLED', label: 'Annulées'    },
+];
 
 const fmt = (n: number) => new Intl.NumberFormat('fr-LU', { style: 'currency', currency: 'EUR' }).format(n);
+const empty = { brokerName: '', dealValue: '', commissionRate: '10', currency: 'EUR', companyId: '', notes: '' };
 
 export default function CommissionsPage() {
   const [list, setList] = useState<Commission[]>([]);
+  const [compList, setCompList] = useState<Company[]>([]);
   const [filter, setFilter] = useState('');
   const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState(empty);
+  const [saving, setSaving] = useState(false);
 
-  const load = (status?: string) => {
-    setLoading(true);
-    commissions.list(status || undefined).then(setList).finally(() => setLoading(false));
+  const load = (s?: string) => { setLoading(true); commissions.list(s || undefined).then(setList).finally(() => setLoading(false)); };
+  useEffect(() => { load(); companies.list().then(setCompList); }, []);
+  const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault(); setSaving(true);
+    try {
+      const data: any = { brokerName: form.brokerName, dealValue: parseFloat(form.dealValue) || 0, commissionRate: parseFloat(form.commissionRate) || 0, currency: form.currency, notes: form.notes };
+      if (form.companyId) data.companyId = form.companyId;
+      await commissions.create(data); setOpen(false); setForm(empty); load(filter || undefined);
+    } finally { setSaving(false); }
   };
-
-  useEffect(() => { load(); }, []);
 
   return (
     <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-semibold text-gray-900">Commissions</h1>
-        <span className="text-sm text-gray-400">{list.length} commission(s)</span>
-      </div>
+      <PageHeader title="Commissions" action={<AddButton onClick={() => setOpen(true)} />} />
+      <FilterBar filters={FILTERS} active={filter} onChange={v => { setFilter(v); load(v || undefined); }} />
 
-      <div className="mb-4 flex gap-2">
-        {['', 'PENDING', 'APPROVED', 'PAID', 'CANCELLED'].map(s => (
-          <button
-            key={s}
-            onClick={() => { setFilter(s); load(s || undefined); }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-              filter === s ? 'bg-blue-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
-            }`}
-          >
-            {s || 'Toutes'}
-          </button>
-        ))}
-      </div>
+      <DataTable loading={loading} empty="Aucune commission — cliquez sur «+ Ajouter»"
+        headers={[{ label: 'Référence' }, { label: 'Apporteur' }, { label: 'Société' }, { label: 'Affaire', align: 'right' }, { label: 'Taux', align: 'center' }, { label: 'Commission', align: 'right' }, { label: 'Statut', align: 'center' }]}>
+        {list.map((c, i) => {
+          const ss = STATUS_ST[c.status] ?? { bg: '#F5F5F5', color: '#888' };
+          return (
+            <tr key={c.id} style={{ borderTop: i > 0 ? `1px solid ${T.rowDiv}` : undefined }}>
+              <td className="px-4 py-3 font-mono text-xs" style={{ color: T.muted }}>{c.reference}</td>
+              <Td bold>{c.brokerName}</Td>
+              <Td>{c.company?.name ?? '—'}</Td>
+              <td className="px-4 py-3 text-right text-sm" style={{ color: T.dark }}>{fmt(c.dealValue)}</td>
+              <td className="px-4 py-3 text-center text-sm" style={{ color: T.muted }}>{c.commissionRate}%</td>
+              <td className="px-4 py-3 text-right text-sm font-bold" style={{ color: T.copper }}>{fmt(c.commissionAmount)}</td>
+              <td className="px-4 py-3 text-center"><StatusBadge label={STATUS_FR[c.status] ?? c.status} bg={ss.bg} color={ss.color} /></td>
+            </tr>
+          );
+        })}
+      </DataTable>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        {loading ? (
-          <div className="p-8 text-center text-sm text-gray-400">Chargement...</div>
-        ) : list.length === 0 ? (
-          <div className="p-8 text-center text-sm text-gray-400">Aucune commission</div>
-        ) : (
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Référence</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Apporteur</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Société</th>
-                <th className="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Affaire</th>
-                <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Taux</th>
-                <th className="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Commission</th>
-                <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Statut</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {list.map(c => (
-                <tr key={c.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3 font-mono text-xs text-gray-600">{c.reference}</td>
-                  <td className="px-4 py-3 font-medium text-gray-900">{c.brokerName}</td>
-                  <td className="px-4 py-3 text-gray-500">{c.company?.name ?? '—'}</td>
-                  <td className="px-4 py-3 text-right text-gray-700">{fmt(c.dealValue)}</td>
-                  <td className="px-4 py-3 text-center text-gray-500">{c.commissionRate}%</td>
-                  <td className="px-4 py-3 text-right font-semibold text-blue-700">{fmt(c.commissionAmount)}</td>
-                  <td className="px-4 py-3 text-center">
-                    <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[c.status]}`}>
-                      {c.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+      <Modal title="Nouvelle commission" open={open} onClose={() => setOpen(false)}>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <FormField label="Nom de l'apporteur" required><input className={inputClass} value={form.brokerName} onChange={e => set('brokerName', e.target.value)} required /></FormField>
+          <FormField label="Société">
+            <select className={selectClass} value={form.companyId} onChange={e => set('companyId', e.target.value)}>
+              <option value="">— Aucune —</option>
+              {compList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </FormField>
+          <div className="grid grid-cols-2 gap-3">
+            <FormField label="Valeur de l'affaire (€)" required><input type="number" min="0" step="0.01" className={inputClass} value={form.dealValue} onChange={e => set('dealValue', e.target.value)} required /></FormField>
+            <FormField label="Taux (%)"><input type="number" min="0" max="100" step="0.1" className={inputClass} value={form.commissionRate} onChange={e => set('commissionRate', e.target.value)} /></FormField>
+          </div>
+          <FormField label="Notes"><textarea className={inputClass} rows={2} value={form.notes} onChange={e => set('notes', e.target.value)} /></FormField>
+          <FormActions onCancel={() => setOpen(false)} saving={saving} />
+        </form>
+      </Modal>
     </div>
   );
 }

@@ -71,6 +71,22 @@ export const commissions = {
   stats: () => api.get<CommissionStats>('/commissions/stats'),
 };
 
+export const services = {
+  list: (search?: string, categorie?: string) => {
+    const params = new URLSearchParams();
+    if (search) params.set('search', search);
+    if (categorie) params.set('categorie', categorie);
+    const qs = params.toString();
+    return api.get<Service[]>(`/services${qs ? `?${qs}` : ''}`);
+  },
+  get: (id: string) => api.get<Service>(`/services/${id}`),
+  byId: (idPrestation: string) => api.get<Service>(`/services/by-id/${idPrestation}`),
+  categories: () => api.get<string[]>('/services/categories'),
+  create: (data: Partial<Service>) => api.post<Service>('/services', data),
+  update: (id: string, data: Partial<Service>) => api.put<Service>(`/services/${id}`, data),
+  delete: (id: string) => api.delete(`/services/${id}`),
+};
+
 export const invoicing = {
   quotes: {
     list: (status?: string) => api.get<Quote[]>(`/invoicing/quotes${status ? `?status=${status}` : ''}`),
@@ -96,11 +112,12 @@ export interface User { id: string; email: string; firstName: string; lastName: 
 export interface Company { id: string; name: string; email?: string; phone?: string; city?: string; country?: string; vatNumber?: string; _count?: { contacts: number; deals: number }; }
 export interface Contact { id: string; firstName: string; lastName: string; email?: string; phone?: string; jobTitle?: string; company?: { id: string; name: string }; }
 export interface Deal { id: string; title: string; value: number; currency: string; status: string; probability: number; company?: { id: string; name: string }; contact?: { id: string; firstName: string; lastName: string }; stage?: { id: string; name: string }; }
+export interface Service { id: string; idPrestation: string; categorie: string; description: string; prixHT: number; unite?: string; remarques?: string; isActive: boolean; }
 export interface Commission { id: string; reference: string; brokerName: string; dealValue: number; commissionRate: number; commissionAmount: number; currency: string; status: string; notes?: string; company?: { id: string; name: string }; }
 export interface Quote { id: string; number: string; status: string; subtotal: number; vatRate: number; vatAmount: number; total: number; company?: { id: string; name: string }; lines?: QuoteLine[]; }
 export interface Invoice { id: string; number: string; status: string; subtotal: number; vatRate: number; vatAmount: number; total: number; paidAmount: number; dueDate?: string; company?: { id: string; name: string }; lines?: InvoiceLine[]; }
-export interface QuoteLine { id: string; description: string; quantity: number; unitPrice: number; total: number; }
-export interface InvoiceLine { id: string; description: string; quantity: number; unitPrice: number; total: number; }
+export interface QuoteLine { id: string; serviceId?: string; description: string; quantity: number; unitPrice: number; unite?: string; total: number; }
+export interface InvoiceLine { id: string; serviceId?: string; description: string; quantity: number; unitPrice: number; unite?: string; total: number; }
 export interface PipelineStats { status: string; _sum: { value: number }; _count: number; }
 export interface CommissionStats { totalDeals: number; totalCommissions: number; totalCount: number; pendingAmount: number; paidAmount: number; }
 export interface InvoicingStats { invoiceStats: any[]; quoteStats: any[]; overdueInvoices: any[]; }
