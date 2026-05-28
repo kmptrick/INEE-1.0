@@ -41,7 +41,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <line x1="36" y1="70" x2="64" y2="70" stroke="#F5EDE4" strokeWidth="4" strokeLinecap="round" />
               <circle cx="50" cy="50" r="4" fill="#C8803A" />
             </svg>
-            <div className="font-bold tracking-[0.18em] text-xl" style={{ color: '#F5EDE4' }}>INEE</div>
+            <div className="font-bold tracking-[0.18em] text-4xl" style={{ color: '#F5EDE4' }}>INEE</div>
           </div>
         </div>
 
