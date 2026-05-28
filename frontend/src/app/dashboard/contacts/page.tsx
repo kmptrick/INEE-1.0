@@ -44,7 +44,7 @@ export default function ContactsPage() {
       </div>
 
       <DataTable loading={loading} empty="Aucun contact — cliquez sur «+ Ajouter»"
-        headers={[{ label: 'Nom' }, { label: 'Email' }, { label: 'Téléphone' }, { label: 'Poste' }, { label: 'Société' }]}>
+        headers={[{ label: 'Nom' }, { label: 'Email' }, { label: 'Téléphone' }, { label: 'Poste' }, { label: 'Client' }]}>
         {list.map((c, i) => (
           <tr key={c.id} style={{ borderTop: i > 0 ? `1px solid ${T.rowDiv}` : undefined }}>
             <Td bold>{c.firstName} {c.lastName}</Td>
@@ -68,7 +68,7 @@ export default function ContactsPage() {
             <FormField label="Mobile"><input className={inputClass} value={form.mobile} onChange={e => set('mobile', e.target.value)} /></FormField>
           </div>
           <FormField label="Poste"><input className={inputClass} value={form.jobTitle} onChange={e => set('jobTitle', e.target.value)} /></FormField>
-          <FormField label="Société">
+          <FormField label="Client">
             <select className={selectClass} value={form.companyId} onChange={e => set('companyId', e.target.value)}>
               <option value="">— Aucune —</option>
               {compList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}

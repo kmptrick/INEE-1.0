@@ -96,7 +96,7 @@ export default function QuotesPage() {
       <FilterBar filters={FILTERS} active={filter} onChange={v => { setFilter(v); load(v || undefined); }} />
 
       <DataTable loading={loading} empty="Aucun devis"
-        headers={[{ label: 'Numéro' }, { label: 'Société' }, { label: 'HT', align: 'right' }, { label: 'TVA 17%', align: 'right' }, { label: 'TTC', align: 'right' }, { label: 'Statut', align: 'center' }, { label: '', align: 'center' }]}>
+        headers={[{ label: 'Numéro' }, { label: 'Client' }, { label: 'HT', align: 'right' }, { label: 'TVA 17%', align: 'right' }, { label: 'TTC', align: 'right' }, { label: 'Statut', align: 'center' }, { label: '', align: 'center' }]}>
         {list.map((q, i) => {
           const full = fullQuotes[q.id] ?? q;
           const ss = STATUS_ST[q.status] ?? { bg: '#F5F5F5', color: '#888' };
@@ -116,7 +116,7 @@ export default function QuotesPage() {
 
       <Modal title="Nouveau devis" open={open} onClose={() => setOpen(false)}>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <FormField label="Société">
+          <FormField label="Client">
             <select className={selectClass} value={form.companyId} onChange={e => setField('companyId', e.target.value)}>
               <option value="">— Aucune —</option>
               {compList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}

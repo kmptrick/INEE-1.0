@@ -98,7 +98,7 @@ export default function InvoicesPage() {
       <FilterBar filters={FILTERS} active={filter} onChange={v => { setFilter(v); load(v || undefined); }} />
 
       <DataTable loading={loading} empty="Aucune facture"
-        headers={[{ label: 'Numéro' }, { label: 'Société' }, { label: 'HT', align: 'right' }, { label: 'TVA', align: 'right' }, { label: 'TTC', align: 'right' }, { label: 'Payé', align: 'right' }, { label: 'Statut', align: 'center' }, { label: '', align: 'center' }]}>
+        headers={[{ label: 'Numéro' }, { label: 'Client' }, { label: 'HT', align: 'right' }, { label: 'TVA', align: 'right' }, { label: 'TTC', align: 'right' }, { label: 'Payé', align: 'right' }, { label: 'Statut', align: 'center' }, { label: '', align: 'center' }]}>
         {list.map((inv, i) => {
           const full = fullInvoices[inv.id] ?? inv;
           const ss = STATUS_ST[inv.status] ?? { bg: '#F5F5F5', color: '#888' };
@@ -119,7 +119,7 @@ export default function InvoicesPage() {
 
       <Modal title="Nouvelle facture" open={open} onClose={() => setOpen(false)}>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <FormField label="Société">
+          <FormField label="Client">
             <select className={selectClass} value={form.companyId} onChange={e => setField('companyId', e.target.value)}>
               <option value="">— Aucune —</option>
               {compList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}

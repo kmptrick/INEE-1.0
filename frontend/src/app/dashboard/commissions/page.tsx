@@ -51,7 +51,7 @@ export default function CommissionsPage() {
       <FilterBar filters={FILTERS} active={filter} onChange={v => { setFilter(v); load(v || undefined); }} />
 
       <DataTable loading={loading} empty="Aucune commission — cliquez sur «+ Ajouter»"
-        headers={[{ label: 'Référence' }, { label: 'Apporteur' }, { label: 'Société' }, { label: 'Affaire', align: 'right' }, { label: 'Taux', align: 'center' }, { label: 'Commission', align: 'right' }, { label: 'Statut', align: 'center' }]}>
+        headers={[{ label: 'Référence' }, { label: 'Apporteur' }, { label: 'Client' }, { label: 'Affaire', align: 'right' }, { label: 'Taux', align: 'center' }, { label: 'Commission', align: 'right' }, { label: 'Statut', align: 'center' }]}>
         {list.map((c, i) => {
           const ss = STATUS_ST[c.status] ?? { bg: '#F5F5F5', color: '#888' };
           return (
@@ -71,7 +71,7 @@ export default function CommissionsPage() {
       <Modal title="Nouvelle commission" open={open} onClose={() => setOpen(false)}>
         <form onSubmit={handleSubmit} className="space-y-4">
           <FormField label="Nom de l'apporteur" required><input className={inputClass} value={form.brokerName} onChange={e => set('brokerName', e.target.value)} required /></FormField>
-          <FormField label="Société">
+          <FormField label="Client">
             <select className={selectClass} value={form.companyId} onChange={e => set('companyId', e.target.value)}>
               <option value="">— Aucune —</option>
               {compList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}

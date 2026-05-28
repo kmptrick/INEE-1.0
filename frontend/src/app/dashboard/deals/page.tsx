@@ -51,7 +51,7 @@ export default function DealsPage() {
       <FilterBar filters={FILTERS} active={filter} onChange={v => { setFilter(v); load(v || undefined); }} />
 
       <DataTable loading={loading} empty="Aucune affaire — cliquez sur «+ Ajouter»"
-        headers={[{ label: 'Titre' }, { label: 'Société' }, { label: 'Valeur', align: 'right' }, { label: 'Proba.', align: 'center' }, { label: 'Statut', align: 'center' }]}>
+        headers={[{ label: 'Titre' }, { label: 'Client' }, { label: 'Valeur', align: 'right' }, { label: 'Proba.', align: 'center' }, { label: 'Statut', align: 'center' }]}>
         {list.map((d, i) => {
           const ss = STATUS_ST[d.status] ?? { bg: '#F5F5F5', color: '#888' };
           return (
@@ -75,7 +75,7 @@ export default function DealsPage() {
             <FormField label="Valeur (€)"><input type="number" min="0" step="0.01" className={inputClass} value={form.value} onChange={e => set('value', e.target.value)} /></FormField>
             <FormField label="Probabilité (%)"><input type="number" min="0" max="100" className={inputClass} value={form.probability} onChange={e => set('probability', e.target.value)} /></FormField>
           </div>
-          <FormField label="Société">
+          <FormField label="Client">
             <select className={selectClass} value={form.companyId} onChange={e => set('companyId', e.target.value)}>
               <option value="">— Aucune —</option>
               {compList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
