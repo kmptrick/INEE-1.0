@@ -385,14 +385,17 @@ export function TableFooter({ pagination, columnSelector, export: exportProps }:
   ) : null;
 
   return (
-    <div className="mt-3 pt-3 flex items-center justify-between flex-wrap gap-3"
-      style={{ borderTop: `1px solid ${T.border}` }}>
-      {/* Left: per-page selector */}
+    <div className="flex items-center justify-between flex-wrap gap-3 px-6 py-3"
+      style={{
+        position: 'sticky', bottom: 0,
+        background: '#F8F5F2',
+        borderTop: `1px solid ${T.border}`,
+        zIndex: 10,
+      }}>
       <div className="flex items-center gap-4">
         {perPageBar}
         {navBar}
       </div>
-      {/* Right: settings + export */}
       <div className="flex items-center gap-2">
         {exportProps && <ExportMenu getData={exportProps.getData} filename={exportProps.filename} title={exportProps.title} />}
         {columnSelector && <ColumnSelector allCols={columnSelector.allCols} visible={columnSelector.visible} toggle={columnSelector.toggle} />}
