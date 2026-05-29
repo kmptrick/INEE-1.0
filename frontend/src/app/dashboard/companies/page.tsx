@@ -5,7 +5,16 @@ import { Modal } from '@/components/Modal';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
 import { PageHeader, AddButton, DataTable, Td, FormActions, usePagination, useSort, useColumns, TableFooter, useSegmentFilter, SegmentFilterBar, FilterRuleDef } from '@/components/PageShell';
 
-const FORMES = ['Sàrl', 'SA', 'SNC', 'SCS', 'SC', 'GIE', 'ASBL', 'Fondation', 'Autre'];
+const FORMES_BY_COUNTRY: Record<string, string[]> = {
+  LU: ['Particulier', 'Indépendant', 'SARL', 'SARL-S', 'SA', 'SAS', 'SCA', 'SCS', 'SNC', 'SCoop', 'SCI', 'ASBL', 'Fondation', 'GIE'],
+  BE: ['Particulier', 'Indépendant', 'SRL', 'SA', 'SC', 'SNC', 'SComm', 'ASBL', 'Fondation', 'SCI'],
+  DE: ['Privatperson', 'Einzelunternehmen', 'GmbH', 'AG', 'KG', 'OHG', 'GmbH & Co. KG', 'GbR', 'e.V.', 'Stiftung'],
+  FR: ['Particulier', 'Auto-entrepreneur', 'EI', 'EURL', 'SARL', 'SAS', 'SASU', 'SA', 'SNC', 'SCS', 'SCA', 'SCI', 'SCP', 'SCOP', 'Association loi 1901', 'Fondation', 'GIE'],
+  DEFAULT: ['Particulier', 'Indépendant', 'SARL', 'SA', 'SAS', 'SNC', 'ASBL', 'Fondation', 'GIE', 'Autre'],
+};
+function getFormes(country: string): string[] {
+  return FORMES_BY_COUNTRY[country?.toUpperCase()] ?? FORMES_BY_COUNTRY.DEFAULT;
+}
 
 const SEGMENT_DEFS: FilterRuleDef[] = [
   { key: 'type',      label: 'Type',            dataType: 'select', options: [{ value: 'SOCIETE', label: 'Société' }, { value: 'PARTICULIER', label: 'Particulier' }], getValue: (c) => c.clientType },
@@ -20,7 +29,7 @@ const SEGMENT_DEFS: FilterRuleDef[] = [
 const emptyForm = () => ({
   clientType: 'SOCIETE' as 'SOCIETE' | 'PARTICULIER',
   denomination: '', formeJuridique: '', prenom: '', nom: '',
-  email: '', phone: '', city: '', country: 'LU', vatNumber: '', notes: '',
+  email: '', phone: '', streetNumber: '', address: '', city: '', country: 'LU', vatNumber: '', notes: '',
 });
 
 export default function ClientsPage() {
@@ -111,7 +120,7 @@ export default function ClientsPage() {
           );
         })}
       </DataTable>
-      <TableFooter pagination={pagination} export={{ getData: () => filtered.map(c => ({ Référence: (c as any).reference ?? '', Type: c.clientType === 'SOCIETE' ? 'Société' : 'Particulier', Nom: c.name, Email: c.email ?? '', Téléphone: c.phone ?? '', Ville: c.city ?? '', Pays: c.country ?? '', Statut: c.isActive === false ? 'Inactif' : 'Actif' })), filename: 'clients', title: 'Clients' }} columnSelector={{ allCols: [
+      <TableFooter pagination={pagination} export={{ getData: () => filtered.map(c => ({ Référence: (c as any).reference ?? '', Type: c.clientType === 'SOCIETE' ? 'Société' : 'Particulier', Nom: c.name, 'Forme juridique': c.formeJuridique ?? '', Email: c.email ?? '', Téléphone: c.phone ?? '', 'N°': c.streetNumber ?? '', Rue: c.address ?? '', Ville: c.city ?? '', Pays: c.country ?? '', 'N° TVA': c.vatNumber ?? '', Statut: c.isActive === false ? 'Inactif' : 'Actif' })), filename: 'clients', title: 'Clients' }} columnSelector={{ allCols: [
         { key: 'reference', label: 'Réf.' }, { key: 'name', label: 'Nom' }, { key: 'email', label: 'Email' },
         { key: 'city', label: 'Ville' }, { key: 'country', label: 'Pays' }, { key: 'status', label: 'Statut' }, { key: 'createdAt', label: 'Création' },
       ], visible, toggle: colToggle }} />
@@ -137,8 +146,10 @@ export default function ClientsPage() {
                 <input className={inputClass} value={form.denomination} onChange={e => set('denomination', e.target.value)} required placeholder="ACME Sàrl" />
               </FormField>
               <FormField label="Forme juridique">
-                <input className={inputClass} value={form.formeJuridique} onChange={e => set('formeJuridique', e.target.value)} list="formes-list" placeholder="Sàrl, SA..." />
-                <datalist id="formes-list">{FORMES.map(f => <option key={f} value={f} />)}</datalist>
+                <select className={selectClass} value={form.formeJuridique} onChange={e => set('formeJuridique', e.target.value)}>
+                  <option value="">— Choisir —</option>
+                  {getFormes(form.country).map(f => <option key={f} value={f}>{f}</option>)}
+                </select>
               </FormField>
             </div>
           ) : (
@@ -156,9 +167,27 @@ export default function ClientsPage() {
             <FormField label="Email"><input type="email" className={inputClass} value={form.email} onChange={e => set('email', e.target.value)} /></FormField>
             <FormField label="Téléphone"><input className={inputClass} value={form.phone} onChange={e => set('phone', e.target.value)} /></FormField>
           </div>
+
+          {/* Adresse */}
+          <div className="grid gap-3" style={{ gridTemplateColumns: '90px 1fr' }}>
+            <FormField label="N°">
+              <input className={inputClass} placeholder="42" value={form.streetNumber} onChange={e => set('streetNumber', e.target.value)} />
+            </FormField>
+            <FormField label="Rue">
+              <input className={inputClass} placeholder="Route d'Arlon" value={form.address} onChange={e => set('address', e.target.value)} />
+            </FormField>
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <FormField label="Ville"><input className={inputClass} value={form.city} onChange={e => set('city', e.target.value)} /></FormField>
-            <FormField label="Pays"><input className={inputClass} value={form.country} onChange={e => set('country', e.target.value)} /></FormField>
+            <FormField label="Pays">
+              <select className={selectClass} value={form.country} onChange={e => { set('country', e.target.value); set('formeJuridique', ''); }}>
+                <option value="LU">Luxembourg (LU)</option>
+                <option value="BE">Belgique (BE)</option>
+                <option value="DE">Allemagne (DE)</option>
+                <option value="FR">France (FR)</option>
+                <option value="">Autre pays</option>
+              </select>
+            </FormField>
           </div>
           <FormField label="N° TVA">
             <input className={inputClass} placeholder="LU12345678" value={form.vatNumber} onChange={e => set('vatNumber', e.target.value)} />

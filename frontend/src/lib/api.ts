@@ -180,6 +180,8 @@ export interface Company {
   nom?: string;
   email?: string;
   phone?: string;
+  streetNumber?: string;
+  address?: string;
   city?: string;
   country?: string;
   vatNumber?: string;
