@@ -104,92 +104,244 @@ export function FilterBar({ filters, active, onChange }: {
   );
 }
 
-// ── Column Filters ────────────────────────────────────────────────────────────
+// ── Segment Filter (search + modal rules) ────────────────────────────────────
 
-export type FilterDef = {
+export type FilterRuleDef = {
   key: string;
   label: string;
-  type: 'text' | 'select';
-  placeholder?: string;
+  dataType: 'text' | 'number' | 'date' | 'select';
   options?: { value: string; label: string }[];
   getValue?: (row: any) => string;
 };
 
-export function useColumnFilters<T>(data: T[], defs: FilterDef[]) {
-  const [values, setValues] = useState<Record<string, string>>(() =>
-    Object.fromEntries(defs.map(d => [d.key, '']))
-  );
+export type FilterRule = {
+  id: string;
+  column: string;
+  operator: string;
+  value: string;
+};
 
-  const set = (key: string, val: string) =>
-    setValues(v => ({ ...v, [key]: val }));
+const _OPERATORS: Record<string, { value: string; label: string }[]> = {
+  text:   [{ value: 'contains', label: 'contient' }, { value: 'eq', label: 'est égal à' }, { value: 'starts', label: 'commence par' }, { value: 'neq', label: "n'est pas" }],
+  number: [{ value: 'eq', label: 'est égal à' }, { value: 'gt', label: 'est supérieur à' }, { value: 'lt', label: 'est inférieur à' }, { value: 'gte', label: 'est ≥' }, { value: 'lte', label: 'est ≤' }],
+  date:   [{ value: 'eq', label: 'est le' }, { value: 'after', label: 'est après le' }, { value: 'before', label: 'est avant le' }],
+  select: [{ value: 'eq', label: 'est' }, { value: 'neq', label: "n'est pas" }],
+};
 
-  const reset = () =>
-    setValues(Object.fromEntries(defs.map(d => [d.key, ''])));
-
-  const activeCount = Object.values(values).filter(Boolean).length;
-
-  const filtered = data.filter(row =>
-    defs.every(def => {
-      const val = values[def.key];
-      if (!val) return true;
-      const rowVal = def.getValue
-        ? def.getValue(row).toLowerCase()
-        : String((row as any)[def.key] ?? '').toLowerCase();
-      return def.type === 'select'
-        ? rowVal === val.toLowerCase()
-        : rowVal.includes(val.toLowerCase());
-    })
-  );
-
-  return { values, set, reset, filtered, activeCount };
+function _applyRule(rowVal: string, op: string, v: string): boolean {
+  if (!v) return true;
+  switch (op) {
+    case 'contains': return rowVal.toLowerCase().includes(v.toLowerCase());
+    case 'eq':       return rowVal.toLowerCase() === v.toLowerCase();
+    case 'starts':   return rowVal.toLowerCase().startsWith(v.toLowerCase());
+    case 'neq':      return rowVal.toLowerCase() !== v.toLowerCase();
+    case 'gt':       return parseFloat(rowVal) > parseFloat(v);
+    case 'lt':       return parseFloat(rowVal) < parseFloat(v);
+    case 'gte':      return parseFloat(rowVal) >= parseFloat(v);
+    case 'lte':      return parseFloat(rowVal) <= parseFloat(v);
+    case 'after':    return rowVal >= v;
+    case 'before':   return rowVal <= v;
+    default:         return true;
+  }
 }
 
-export function ColumnFilterBar({ defs, values, set, reset, activeCount }: {
-  defs: FilterDef[];
-  values: Record<string, string>;
-  set: (key: string, val: string) => void;
-  reset: () => void;
+export function useSegmentFilter<T>(data: T[], defs: FilterRuleDef[]) {
+  const [search, setSearch] = useState('');
+  const [rules, setRules] = useState<FilterRule[]>([]);
+
+  const addRule = () => setRules(r => [...r, {
+    id: Date.now().toString(),
+    column: defs[0]?.key ?? '',
+    operator: _OPERATORS[defs[0]?.dataType ?? 'text'][0].value,
+    value: '',
+  }]);
+  const removeRule = (id: string) => setRules(r => r.filter(x => x.id !== id));
+  const updateRule = (id: string, patch: Partial<FilterRule>) =>
+    setRules(r => r.map(x => x.id === id ? { ...x, ...patch } : x));
+  const clearRules = () => setRules([]);
+  const clearAll  = () => { setRules([]); setSearch(''); };
+  const activeCount = rules.filter(r => r.value).length;
+
+  const filtered = data.filter(row => {
+    if (search) {
+      const q = search.toLowerCase();
+      const hit = defs.some(def => {
+        const val = def.getValue ? def.getValue(row) : String((row as any)[def.key] ?? '');
+        return val.toLowerCase().includes(q);
+      });
+      if (!hit) return false;
+    }
+    return rules.every(rule => {
+      if (!rule.value) return true;
+      const def = defs.find(d => d.key === rule.column);
+      if (!def) return true;
+      const rowVal = def.getValue ? def.getValue(row) : String((row as any)[rule.column] ?? '');
+      return _applyRule(rowVal, rule.operator, rule.value);
+    });
+  });
+
+  return { search, setSearch, rules, addRule, removeRule, updateRule, clearRules, clearAll, filtered, activeCount };
+}
+
+function _FilterModal({ defs, rules, addRule, removeRule, updateRule, clearRules, onClose }: {
+  defs: FilterRuleDef[];
+  rules: FilterRule[];
+  addRule: () => void;
+  removeRule: (id: string) => void;
+  updateRule: (id: string, patch: Partial<FilterRule>) => void;
+  clearRules: () => void;
+  onClose: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center"
+      style={{ background: 'rgba(26,16,8,0.45)' }} onClick={onClose}>
+      <div className="rounded-xl shadow-2xl w-full max-w-xl mx-4" style={{ background: '#FFF' }}
+        onClick={e => e.stopPropagation()}>
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 rounded-t-xl" style={{ background: T.copper }}>
+          <h2 className="font-bold text-white">Filtres avancés</h2>
+          <button onClick={onClose} className="text-white/80 hover:text-white text-xl leading-none cursor-pointer">✕</button>
+        </div>
+
+        {/* Rules */}
+        <div className="px-5 py-4 space-y-2.5 max-h-72 overflow-y-auto">
+          {rules.length === 0 && (
+            <p className="text-sm text-center py-6" style={{ color: T.muted }}>
+              Aucune règle — cliquez sur &quot;+ Ajouter une règle&quot;
+            </p>
+          )}
+          {rules.map((rule, idx) => {
+            const def = defs.find(d => d.key === rule.column) ?? defs[0];
+            const ops = _OPERATORS[def?.dataType ?? 'text'] ?? _OPERATORS.text;
+            return (
+              <div key={rule.id} className="flex gap-2 items-center">
+                <span className="text-xs font-semibold shrink-0 w-12 text-right" style={{ color: T.muted }}>
+                  Règle {idx + 1}
+                </span>
+                {/* Column */}
+                <select value={rule.column}
+                  onChange={e => {
+                    const d = defs.find(x => x.key === e.target.value);
+                    updateRule(rule.id, { column: e.target.value, operator: _OPERATORS[d?.dataType ?? 'text'][0].value, value: '' });
+                  }}
+                  className="flex-1 px-2 py-1.5 rounded-lg text-xs outline-none cursor-pointer"
+                  style={{ background: '#F8F5F2', border: `1px solid ${T.border}`, color: T.dark }}>
+                  {defs.map(d => <option key={d.key} value={d.key}>{d.label}</option>)}
+                </select>
+                {/* Operator */}
+                <select value={rule.operator} onChange={e => updateRule(rule.id, { operator: e.target.value })}
+                  className="flex-1 px-2 py-1.5 rounded-lg text-xs outline-none cursor-pointer"
+                  style={{ background: '#F8F5F2', border: `1px solid ${T.border}`, color: T.dark }}>
+                  {ops.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+                {/* Value */}
+                {def?.dataType === 'select' ? (
+                  <select value={rule.value} onChange={e => updateRule(rule.id, { value: e.target.value })}
+                    className="flex-1 px-2 py-1.5 rounded-lg text-xs outline-none cursor-pointer"
+                    style={{ background: '#F8F5F2', border: `1px solid ${T.border}`, color: T.dark }}>
+                    <option value="">— Choisir —</option>
+                    {def.options?.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                ) : (
+                  <input
+                    type={def?.dataType === 'number' ? 'number' : def?.dataType === 'date' ? 'date' : 'text'}
+                    placeholder="Valeur..."
+                    value={rule.value}
+                    onChange={e => updateRule(rule.id, { value: e.target.value })}
+                    className="flex-1 px-2 py-1.5 rounded-lg text-xs outline-none"
+                    style={{ background: '#F8F5F2', border: `1px solid ${T.border}`, color: T.dark }}
+                  />
+                )}
+                <button onClick={() => removeRule(rule.id)}
+                  className="shrink-0 text-base leading-none cursor-pointer" style={{ color: '#DC2626' }}>🗑</button>
+              </div>
+            );
+          })}
+          <button onClick={addRule}
+            className="flex items-center gap-1 text-xs font-semibold cursor-pointer pt-1"
+            style={{ color: T.copper }}>
+            + Ajouter une règle
+          </button>
+        </div>
+
+        {/* Footer */}
+        <div className="flex gap-3 px-5 py-4" style={{ borderTop: `1px solid ${T.border}` }}>
+          <button onClick={() => { clearRules(); onClose(); }}
+            className="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium cursor-pointer"
+            style={{ border: `1px solid ${T.border}`, color: T.muted, background: 'transparent' }}>
+            Effacer tout
+          </button>
+          <button onClick={onClose}
+            className="flex-1 px-4 py-2.5 rounded-lg text-sm font-semibold text-white cursor-pointer"
+            style={{ background: T.copper, boxShadow: '0 1px 4px rgba(200,128,58,0.3)' }}>
+            Appliquer ✓
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function SegmentFilterBar({ search, onSearch, placeholder, defs, rules, addRule, removeRule, updateRule, clearRules, clearAll, activeCount }: {
+  search: string;
+  onSearch: (v: string) => void;
+  placeholder?: string;
+  defs: FilterRuleDef[];
+  rules: FilterRule[];
+  addRule: () => void;
+  removeRule: (id: string) => void;
+  updateRule: (id: string, patch: Partial<FilterRule>) => void;
+  clearRules: () => void;
+  clearAll: () => void;
   activeCount: number;
 }) {
-  if (defs.length === 0) return null;
+  const [modalOpen, setModalOpen] = useState(false);
   return (
-    <div className="mb-5 px-4 py-3 rounded-xl flex flex-wrap gap-x-4 gap-y-3 items-end"
-      style={{ background: '#FFF', border: `1px solid ${T.border}`, boxShadow: '0 1px 3px rgba(26,16,8,0.04)' }}>
-      <span className="text-xs font-bold uppercase tracking-wider self-end pb-1.5" style={{ color: T.muted }}>🔍 Filtres</span>
-      {defs.map(def => (
-        <div key={def.key} className="flex flex-col gap-1 min-w-[130px]">
-          <label className="text-xs font-semibold" style={{ color: T.muted }}>{def.label}</label>
-          {def.type === 'select' ? (
-            <select
-              value={values[def.key]}
-              onChange={e => set(def.key, e.target.value)}
-              className="px-2 py-1.5 rounded-lg text-xs outline-none cursor-pointer"
-              style={{ background: '#F8F5F2', border: `1.5px solid ${values[def.key] ? T.copper : T.border}`, color: T.dark }}>
-              <option value="">— Tous —</option>
-              {def.options?.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
-          ) : (
-            <input
-              type="text"
-              placeholder={def.placeholder ?? 'Filtrer...'}
-              value={values[def.key]}
-              onChange={e => set(def.key, e.target.value)}
-              className="px-2 py-1.5 rounded-lg text-xs outline-none transition-all"
-              style={{ background: '#F8F5F2', border: `1.5px solid ${values[def.key] ? T.copper : T.border}`, color: T.dark }}
-              onFocus={e => (e.target.style.borderColor = T.copper)}
-              onBlur={e => (e.target.style.borderColor = values[def.key] ? T.copper : T.border)}
-            />
-          )}
+    <>
+      <div className="mb-5 flex gap-3 items-center flex-wrap">
+        {/* Search */}
+        <div className="relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs pointer-events-none" style={{ color: T.muted }}>🔍</span>
+          <input
+            type="text"
+            placeholder={placeholder ?? 'Rechercher...'}
+            value={search}
+            onChange={e => onSearch(e.target.value)}
+            className="pl-8 pr-4 py-2 rounded-lg text-sm outline-none transition-all w-56"
+            style={{ background: '#FFF', border: `1.5px solid ${search ? T.copper : T.border}`, color: T.dark }}
+            onFocus={e => { e.target.style.borderColor = T.copper; e.target.style.boxShadow = '0 0 0 3px rgba(200,128,58,0.1)'; }}
+            onBlur={e => { e.target.style.borderColor = search ? T.copper : T.border; e.target.style.boxShadow = 'none'; }}
+          />
         </div>
-      ))}
-      {activeCount > 0 && (
-        <button onClick={reset}
-          className="px-3 py-1.5 rounded-lg text-xs font-semibold self-end cursor-pointer transition-all"
-          style={{ background: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA' }}>
-          ✕ Effacer ({activeCount})
+        {/* Filtres button */}
+        <button
+          onClick={() => setModalOpen(true)}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border transition-all cursor-pointer"
+          style={{
+            background: activeCount > 0 ? T.copper : '#FFF',
+            color: activeCount > 0 ? '#FFF' : T.muted,
+            borderColor: activeCount > 0 ? T.copper : T.border,
+            boxShadow: activeCount > 0 ? '0 1px 4px rgba(200,128,58,0.3)' : 'none',
+          }}>
+          ⊕ Filtres{activeCount > 0 ? ` (${activeCount})` : ''}
         </button>
+        {/* Clear all */}
+        {(activeCount > 0 || search) && (
+          <button onClick={clearAll}
+            className="text-xs px-3 py-2 rounded-lg cursor-pointer transition-all"
+            style={{ color: '#DC2626', background: '#FEF2F2', border: '1px solid #FECACA' }}>
+            ✕ Tout effacer
+          </button>
+        )}
+      </div>
+      {modalOpen && (
+        <_FilterModal
+          defs={defs} rules={rules}
+          addRule={addRule} removeRule={removeRule} updateRule={updateRule} clearRules={clearRules}
+          onClose={() => setModalOpen(false)}
+        />
       )}
-    </div>
+    </>
   );
 }
 

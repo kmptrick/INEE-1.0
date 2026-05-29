@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { projects, companies, Project, Task, Company } from '@/lib/api';
 import { Modal } from '@/components/Modal';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
-import { PageHeader, AddButton, FilterBar, FormActions, DataTable, Td, usePagination, useSort, TableFooter, useColumnFilters, ColumnFilterBar, FilterDef } from '@/components/PageShell';
+import { PageHeader, AddButton, FilterBar, FormActions, DataTable, Td, usePagination, useSort, TableFooter, useSegmentFilter, SegmentFilterBar, FilterRuleDef } from '@/components/PageShell';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -35,9 +35,11 @@ const PROJ_FILTERS = [
   { value: 'COMPLETED', label: 'Terminés'   },
 ];
 
-const FILTER_DEFS: FilterDef[] = [
-  { key: 'name',    label: 'Nom',    type: 'text', placeholder: 'Projet...', getValue: (p) => p.name },
-  { key: 'company', label: 'Client', type: 'text', placeholder: 'ACME...',   getValue: (p) => p.company?.name ?? '' },
+const SEGMENT_DEFS: FilterRuleDef[] = [
+  { key: 'name',      label: 'Nom du projet',    dataType: 'text',   getValue: (p) => p.name },
+  { key: 'company',   label: 'Client',            dataType: 'text',   getValue: (p) => p.company?.name ?? '' },
+  { key: 'budget',    label: 'Budget (€)',        dataType: 'number', getValue: (p) => String(p.budget ?? 0) },
+  { key: 'createdAt', label: 'Date de création',  dataType: 'date',   getValue: (p) => p.createdAt?.slice(0, 10) ?? '' },
 ];
 
 const fmtDate = (d?: string) => d ? new Date(d).toLocaleDateString('fr-LU') : null;
@@ -96,7 +98,7 @@ export default function ProjectsPage() {
   const [editTask, setEditTask] = useState<Task | null>(null);
 
   const { sort, toggle: sortToggle, sorted } = useSort(list);
-  const { values: fv, set: fset, reset: freset, filtered, activeCount: fCount } = useColumnFilters(sorted, FILTER_DEFS);
+  const { search, setSearch, rules, addRule, removeRule, updateRule, clearRules, clearAll, filtered, activeCount } = useSegmentFilter(sorted, SEGMENT_DEFS);
   const pagination = usePagination(filtered);
 
   const load = (s?: string) => {
@@ -175,7 +177,7 @@ export default function ProjectsPage() {
     <div className="p-6">
       <PageHeader title="Projets" action={<AddButton onClick={() => { setProjectForm(emptyProjectForm()); setCreateOpen(true); }} label="+ Nouveau projet" />} />
       <FilterBar filters={PROJ_FILTERS} active={filter} onChange={v => { setFilter(v); load(v || undefined); }} />
-      <ColumnFilterBar defs={FILTER_DEFS} values={fv} set={fset} reset={freset} activeCount={fCount} />
+      <SegmentFilterBar search={search} onSearch={setSearch} placeholder="Rechercher un projet..." defs={SEGMENT_DEFS} rules={rules} addRule={addRule} removeRule={removeRule} updateRule={updateRule} clearRules={clearRules} clearAll={clearAll} activeCount={activeCount} />
 
       <DataTable loading={loading} empty="Aucun projet — cliquez sur «+ Nouveau projet»" sort={sort} onSort={sortToggle}
         headers={[

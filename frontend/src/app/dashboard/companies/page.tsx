@@ -3,17 +3,18 @@ import { useEffect, useState } from 'react';
 import { companies, Company } from '@/lib/api';
 import { Modal } from '@/components/Modal';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
-import { PageHeader, AddButton, DataTable, Td, FormActions, usePagination, useSort, useColumns, TableFooter, useColumnFilters, ColumnFilterBar, FilterDef } from '@/components/PageShell';
+import { PageHeader, AddButton, DataTable, Td, FormActions, usePagination, useSort, useColumns, TableFooter, useSegmentFilter, SegmentFilterBar, FilterRuleDef } from '@/components/PageShell';
 
 const FORMES = ['Sàrl', 'SA', 'SNC', 'SCS', 'SC', 'GIE', 'ASBL', 'Fondation', 'Autre'];
 
-const FILTER_DEFS: FilterDef[] = [
-  { key: 'type',    label: 'Type',    type: 'select', options: [{ value: 'SOCIETE', label: 'Société' }, { value: 'PARTICULIER', label: 'Particulier' }], getValue: (c) => c.clientType },
-  { key: 'name',    label: 'Nom',     type: 'text',   placeholder: 'ACME...', getValue: (c) => c.name },
-  { key: 'email',   label: 'Email',   type: 'text',   placeholder: '@...', getValue: (c) => c.email ?? '' },
-  { key: 'city',    label: 'Ville',   type: 'text',   placeholder: 'Luxembourg...', getValue: (c) => c.city ?? '' },
-  { key: 'country', label: 'Pays',    type: 'text',   placeholder: 'LU...', getValue: (c) => c.country ?? '' },
-  { key: 'status',  label: 'Statut',  type: 'select', options: [{ value: 'actif', label: 'Actif' }, { value: 'inactif', label: 'Inactif' }], getValue: (c) => c.isActive === false ? 'inactif' : 'actif' },
+const SEGMENT_DEFS: FilterRuleDef[] = [
+  { key: 'type',      label: 'Type',            dataType: 'select', options: [{ value: 'SOCIETE', label: 'Société' }, { value: 'PARTICULIER', label: 'Particulier' }], getValue: (c) => c.clientType },
+  { key: 'name',      label: 'Nom',             dataType: 'text',   getValue: (c) => c.name },
+  { key: 'email',     label: 'Email',           dataType: 'text',   getValue: (c) => c.email ?? '' },
+  { key: 'city',      label: 'Ville',           dataType: 'text',   getValue: (c) => c.city ?? '' },
+  { key: 'country',   label: 'Pays',            dataType: 'text',   getValue: (c) => c.country ?? '' },
+  { key: 'status',    label: 'Statut',          dataType: 'select', options: [{ value: 'actif', label: 'Actif' }, { value: 'inactif', label: 'Inactif' }], getValue: (c) => c.isActive === false ? 'inactif' : 'actif' },
+  { key: 'createdAt', label: 'Date de création', dataType: 'date',  getValue: (c) => c.createdAt?.slice(0, 10) ?? '' },
 ];
 
 const emptyForm = () => ({
@@ -30,7 +31,7 @@ export default function ClientsPage() {
   const [saving, setSaving] = useState(false);
   const [toggling, setToggling] = useState<string | null>(null);
   const { sort, toggle: sortToggle, sorted } = useSort(list);
-  const { values: fv, set: fset, reset: freset, filtered, activeCount: fCount } = useColumnFilters(sorted, FILTER_DEFS);
+  const { search, setSearch, rules, addRule, removeRule, updateRule, clearRules, clearAll, filtered, activeCount } = useSegmentFilter(sorted, SEGMENT_DEFS);
   const pagination = usePagination(filtered);
   const { visible, toggle: colToggle } = useColumns('companies', [
     { key: 'reference', label: 'Réf.' }, { key: 'name', label: 'Nom' },
@@ -62,7 +63,7 @@ export default function ClientsPage() {
   return (
     <div className="p-6">
       <PageHeader title="Clients" action={<AddButton onClick={() => { setForm(emptyForm()); setOpen(true); }} />} />
-      <ColumnFilterBar defs={FILTER_DEFS} values={fv} set={fset} reset={freset} activeCount={fCount} />
+      <SegmentFilterBar search={search} onSearch={setSearch} placeholder="Rechercher un client..." defs={SEGMENT_DEFS} rules={rules} addRule={addRule} removeRule={removeRule} updateRule={updateRule} clearRules={clearRules} clearAll={clearAll} activeCount={activeCount} />
 
       <DataTable loading={loading} empty="Aucun client — cliquez sur «+ Ajouter»" sort={sort} onSort={sortToggle}
         headers={[

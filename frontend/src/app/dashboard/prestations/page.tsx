@@ -4,17 +4,18 @@ import { services, Service } from '@/lib/api';
 import { Modal } from '@/components/Modal';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
 import { LU_VAT_RATES } from '@/lib/vat-rules';
-import { PageHeader, AddButton, DataTable, Td, FormActions, usePagination, useSort, useColumns, TableFooter, useColumnFilters, ColumnFilterBar, FilterDef } from '@/components/PageShell';
+import { PageHeader, AddButton, DataTable, Td, FormActions, usePagination, useSort, useColumns, TableFooter, useSegmentFilter, SegmentFilterBar, FilterRuleDef } from '@/components/PageShell';
 
 const UNITES = ['/h', '/mois', '/déclaration', '/facture', '/employé/mois', '/session', '/personne', '/groupe', '/module', '/post', '/envoi', '/consultation', '/jour', 'forfait'];
 
 const emptyForm = { idPrestation: '', categorie: '', description: '', prixHT: '', vatRate: '17', unite: '', remarques: '' };
 
-const FILTER_DEFS: FilterDef[] = [
-  { key: 'id',          label: 'ID Prestation', type: 'text',   placeholder: 'PREST-001...', getValue: (s) => s.idPrestation },
-  { key: 'description', label: 'Description',   type: 'text',   placeholder: 'Comptabilité...', getValue: (s) => s.description },
-  { key: 'categorie',   label: 'Catégorie',      type: 'text',   placeholder: 'Social...', getValue: (s) => s.categorie ?? '' },
-  { key: 'vatRate',     label: 'TVA',            type: 'select', options: [{ value: '17', label: '17%' }, { value: '8', label: '8%' }, { value: '3', label: '3%' }, { value: '0', label: '0%' }], getValue: (s) => String(s.vatRate ?? 17) },
+const SEGMENT_DEFS: FilterRuleDef[] = [
+  { key: 'id',          label: 'ID Prestation', dataType: 'text',   getValue: (s) => s.idPrestation },
+  { key: 'description', label: 'Description',   dataType: 'text',   getValue: (s) => s.description },
+  { key: 'categorie',   label: 'Catégorie',      dataType: 'text',   getValue: (s) => s.categorie ?? '' },
+  { key: 'prixHT',      label: 'Prix HT (€)',   dataType: 'number', getValue: (s) => String(s.prixHT) },
+  { key: 'vatRate',     label: 'TVA (%)',        dataType: 'select', options: [{ value: '17', label: '17%' }, { value: '8', label: '8%' }, { value: '3', label: '3%' }, { value: '0', label: '0%' }], getValue: (s) => String(s.vatRate ?? 17) },
 ];
 
 export default function PrestationsPage() {
@@ -27,7 +28,7 @@ export default function PrestationsPage() {
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<Service | null>(null);
   const { sort, toggle: sortToggle, sorted } = useSort(list);
-  const { values: fv, set: fset, reset: freset, filtered, activeCount: fCount } = useColumnFilters(sorted, FILTER_DEFS);
+  const { search, setSearch, rules, addRule, removeRule, updateRule, clearRules, clearAll, filtered, activeCount } = useSegmentFilter(sorted, SEGMENT_DEFS);
   const pagination = usePagination(filtered);
   const { visible, toggle: colToggle } = useColumns('prestations', [
     { key: 'id', label: 'ID Prestation' }, { key: 'categorie', label: 'Catégorie' },
@@ -73,7 +74,7 @@ export default function PrestationsPage() {
     <div className="p-6">
       <PageHeader title="Catalogue de prestations"
         action={<AddButton onClick={openCreate} label="+ Nouvelle prestation" />} />
-      <ColumnFilterBar defs={FILTER_DEFS} values={fv} set={fset} reset={freset} activeCount={fCount} />
+      <SegmentFilterBar search={search} onSearch={setSearch} placeholder="Rechercher une prestation..." defs={SEGMENT_DEFS} rules={rules} addRule={addRule} removeRule={removeRule} updateRule={updateRule} clearRules={clearRules} clearAll={clearAll} activeCount={activeCount} />
 
       <DataTable loading={loading} empty="Aucune prestation — cliquez sur &quot;+ Nouvelle prestation&quot;" sort={sort} onSort={sortToggle}
         headers={[

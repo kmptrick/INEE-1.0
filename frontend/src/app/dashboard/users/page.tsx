@@ -4,15 +4,16 @@ import { users, UserProfile } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { Modal } from '@/components/Modal';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
-import { PageHeader, AddButton, DataTable, Td, FormActions, usePagination, useSort, TableFooter, useColumnFilters, ColumnFilterBar, FilterDef } from '@/components/PageShell';
+import { PageHeader, AddButton, DataTable, Td, FormActions, usePagination, useSort, TableFooter, useSegmentFilter, SegmentFilterBar, FilterRuleDef } from '@/components/PageShell';
 
 const ROLE_FR: Record<string, string> = { ADMIN: 'Administrateur', MANAGER: 'Manager', MEMBER: 'Membre' };
 
-const FILTER_DEFS: FilterDef[] = [
-  { key: 'name',  label: 'Nom',     type: 'text',   placeholder: 'Dupont...', getValue: (u) => `${u.firstName ?? ''} ${u.lastName ?? ''}` },
-  { key: 'email', label: 'Email',   type: 'text',   placeholder: '@...', getValue: (u) => u.email ?? '' },
-  { key: 'role',  label: 'Rôle',    type: 'select', options: [{ value: 'ADMIN', label: 'Administrateur' }, { value: 'MANAGER', label: 'Manager' }, { value: 'MEMBER', label: 'Membre' }], getValue: (u) => u.role ?? '' },
-  { key: 'status', label: 'Statut', type: 'select', options: [{ value: 'actif', label: 'Actif' }, { value: 'inactif', label: 'Inactif' }], getValue: (u) => u.isActive ? 'actif' : 'inactif' },
+const SEGMENT_DEFS: FilterRuleDef[] = [
+  { key: 'name',      label: 'Nom',             dataType: 'text',   getValue: (u) => `${u.firstName ?? ''} ${u.lastName ?? ''}` },
+  { key: 'email',     label: 'Email',            dataType: 'text',   getValue: (u) => u.email ?? '' },
+  { key: 'role',      label: 'Rôle',             dataType: 'select', options: [{ value: 'ADMIN', label: 'Administrateur' }, { value: 'MANAGER', label: 'Manager' }, { value: 'MEMBER', label: 'Membre' }], getValue: (u) => u.role ?? '' },
+  { key: 'status',    label: 'Statut',           dataType: 'select', options: [{ value: 'actif', label: 'Actif' }, { value: 'inactif', label: 'Inactif' }], getValue: (u) => u.isActive ? 'actif' : 'inactif' },
+  { key: 'createdAt', label: 'Date de création', dataType: 'date',   getValue: (u) => u.createdAt?.slice(0, 10) ?? '' },
 ];
 const ROLE_COLORS: Record<string, { bg: string; color: string }> = {
   ADMIN:   { bg: '#FEF3C7', color: '#92400E' },
@@ -76,7 +77,7 @@ export default function UsersPage() {
   };
 
   const { sort, toggle: sortToggle, sorted } = useSort(list, { key: 'role', dir: 'asc' });
-  const { values: fv, set: fset, reset: freset, filtered, activeCount: fCount } = useColumnFilters(sorted, FILTER_DEFS);
+  const { search, setSearch, rules, addRule, removeRule, updateRule, clearRules, clearAll, filtered, activeCount } = useSegmentFilter(sorted, SEGMENT_DEFS);
   const pagination = usePagination(filtered);
 
   const load = () => { setLoading(true); users.list().then(setList).finally(() => setLoading(false)); };
@@ -126,7 +127,7 @@ export default function UsersPage() {
   return (
     <div className="p-6">
       <PageHeader title="Utilisateurs" action={<AddButton onClick={openNew} label="+ Nouveau" />} />
-      <ColumnFilterBar defs={FILTER_DEFS} values={fv} set={fset} reset={freset} activeCount={fCount} />
+      <SegmentFilterBar search={search} onSearch={setSearch} placeholder="Rechercher un utilisateur..." defs={SEGMENT_DEFS} rules={rules} addRule={addRule} removeRule={removeRule} updateRule={updateRule} clearRules={clearRules} clearAll={clearAll} activeCount={activeCount} />
 
       <DataTable loading={loading} empty="Aucun utilisateur" sort={sort} onSort={sortToggle}
         headers={[

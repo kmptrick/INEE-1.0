@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import { invoicing, companies, creditNotes, Invoice, Company, Service } from '@/lib/api';
 import { Modal } from '@/components/Modal';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
-import { PageHeader, AddButton, FilterBar, DataTable, Td, StatusBadge, FormActions, usePagination, useSort, useColumns, TableFooter, useColumnFilters, ColumnFilterBar, FilterDef } from '@/components/PageShell';
+import { PageHeader, AddButton, FilterBar, DataTable, Td, StatusBadge, FormActions, usePagination, useSort, useColumns, TableFooter, useSegmentFilter, SegmentFilterBar, FilterRuleDef } from '@/components/PageShell';
 import { NotesWidget } from '@/components/NotesWidget';
 import { ServicePicker } from '@/components/ServicePicker';
 import { computeVat, LU_VAT_RATES } from '@/lib/vat-rules';
@@ -40,16 +40,24 @@ type LineForm = { serviceId: string; description: string; quantity: string; unit
 const emptyLine = (): LineForm => ({ serviceId: '', description: '', quantity: '1', unitPrice: '', unite: '', discountRate: '', lineVatRate: '', periodStart: '', periodEnd: '' });
 const emptyForm = () => ({ companyId: '', vatRate: '17', vatMention: '', dueDate: '', notes: '', lines: [emptyLine()] });
 const lineTotal = (l: LineForm) => { const q = parseFloat(l.quantity)||0; const p = parseFloat(l.unitPrice)||0; const d = parseFloat(l.discountRate)||0; return q * p * (1 - d/100); };
-const FILTER_DEFS_INV: FilterDef[] = [
-  { key: 'number',  label: 'Numéro',  type: 'text', placeholder: 'FAC-2026...', getValue: (inv) => inv.number },
-  { key: 'company', label: 'Client',  type: 'text', placeholder: 'ACME...',     getValue: (inv) => inv.company?.name ?? '' },
+const SEGMENT_DEFS_INV: FilterRuleDef[] = [
+  { key: 'number',    label: 'Numéro',          dataType: 'text',   getValue: (inv) => inv.number },
+  { key: 'company',   label: 'Client',           dataType: 'text',   getValue: (inv) => inv.company?.name ?? '' },
+  { key: 'subtotal',  label: 'Montant HT (€)',   dataType: 'number', getValue: (inv) => String(inv.subtotal) },
+  { key: 'total',     label: 'Montant TTC (€)',  dataType: 'number', getValue: (inv) => String(inv.total) },
+  { key: 'dueDate',   label: 'Échéance',         dataType: 'date',   getValue: (inv) => inv.dueDate?.slice(0, 10) ?? '' },
+  { key: 'createdAt', label: 'Date de création', dataType: 'date',   getValue: (inv) => inv.createdAt?.slice(0, 10) ?? '' },
 ];
 
 const ALL_COLS_INV = [
-  { key: 'number', label: 'Numéro' }, { key: 'company', label: 'Client' },
-  { key: 'subtotal', label: 'HT' }, { key: 'vatAmount', label: 'TVA' },
-  { key: 'total', label: 'TTC' }, { key: 'paidAmount', label: 'Payé' },
-  { key: 'status', label: 'Statut' },
+  { key: 'number',    label: 'Numéro'   },
+  { key: 'company',   label: 'Client'   },
+  { key: 'subtotal',  label: 'HT'       },
+  { key: 'vatAmount', label: 'TVA'      },
+  { key: 'total',     label: 'TTC'      },
+  { key: 'paidAmount',label: 'Payé'     },
+  { key: 'dueDate',   label: 'Échéance' },
+  { key: 'status',    label: 'Statut'   },
 ];
 
 function ActionBtn({ label, color, bg, border, onClick, disabled }: { label: string; color: string; bg: string; border: string; onClick: () => void; disabled?: boolean }) {
@@ -73,7 +81,7 @@ export default function InvoicesPage() {
   const [saving, setSaving] = useState(false);
   const [fullInvoices, setFullInvoices] = useState<Record<string, Invoice>>({});
   const { sort, toggle: sortToggle, sorted } = useSort(list);
-  const { values: fv, set: fset, reset: freset, filtered, activeCount: fCount } = useColumnFilters(sorted, FILTER_DEFS_INV);
+  const { search, setSearch, rules, addRule, removeRule, updateRule, clearRules, clearAll, filtered, activeCount } = useSegmentFilter(sorted, SEGMENT_DEFS_INV);
   const pagination = usePagination(filtered);
   const { visible, toggle: colToggle } = useColumns('invoices', ALL_COLS_INV);
 
@@ -165,7 +173,7 @@ export default function InvoicesPage() {
     <div className="p-6">
       <PageHeader title="Factures" action={<AddButton onClick={() => setOpen(true)} />} />
       <FilterBar filters={FILTERS} active={filter} onChange={v => { setFilter(v); load(v || undefined); }} />
-      <ColumnFilterBar defs={FILTER_DEFS_INV} values={fv} set={fset} reset={freset} activeCount={fCount} />
+      <SegmentFilterBar search={search} onSearch={setSearch} placeholder="Rechercher une facture..." defs={SEGMENT_DEFS_INV} rules={rules} addRule={addRule} removeRule={removeRule} updateRule={updateRule} clearRules={clearRules} clearAll={clearAll} activeCount={activeCount} />
 
       <DataTable loading={loading} empty="Aucune facture" sort={sort} onSort={sortToggle}
         headers={[
@@ -174,8 +182,9 @@ export default function InvoicesPage() {
           ...(visible.includes('subtotal')  ? [{ label: 'HT',     key: 'subtotal',  align: 'right' as const }] : []),
           ...(visible.includes('vatAmount') ? [{ label: 'TVA',    key: 'vatAmount', align: 'right' as const }] : []),
           ...(visible.includes('total')     ? [{ label: 'TTC',    key: 'total',     align: 'right' as const }] : []),
-          ...(visible.includes('paidAmount')? [{ label: 'Payé',   key: 'paidAmount',align: 'right' as const }] : []),
-          ...(visible.includes('status')    ? [{ label: 'Statut', key: 'status',    align: 'center' as const }] : []),
+          ...(visible.includes('paidAmount')? [{ label: 'Payé',     key: 'paidAmount', align: 'right' as const }] : []),
+          ...(visible.includes('dueDate')   ? [{ label: 'Échéance', key: 'dueDate' }] : []),
+          ...(visible.includes('status')    ? [{ label: 'Statut',   key: 'status',    align: 'center' as const }] : []),
           { label: '', align: 'center' as const },
         ]}>
         {pagination.paged.map((inv, i) => {
@@ -191,6 +200,7 @@ export default function InvoicesPage() {
               {visible.includes('vatAmount')  && <td className="px-4 py-3 text-right text-sm" style={{ color: T.muted }}>{fmt(inv.vatAmount)}</td>}
               {visible.includes('total')      && <td className="px-4 py-3 text-right text-sm font-bold" style={{ color: T.dark }}>{fmt(inv.total)}</td>}
               {visible.includes('paidAmount') && <td className="px-4 py-3 text-right text-sm font-semibold" style={{ color: '#16A34A' }}>{fmt(inv.paidAmount)}</td>}
+              {visible.includes('dueDate')    && <Td>{inv.dueDate ? new Date(inv.dueDate).toLocaleDateString('fr-LU') : '—'}</Td>}
               {visible.includes('status')     && <td className="px-4 py-3 text-center"><StatusBadge label={STATUS_FR[inv.status] ?? inv.status} bg={ss.bg} color={ss.color} /></td>}
               <td className="px-4 py-3 text-center" onClick={e => e.stopPropagation()}>
                 <PdfDownloadButton {...buildPdfProps(full)} />

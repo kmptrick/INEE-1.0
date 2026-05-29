@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { commissions, companies, Commission, Company } from '@/lib/api';
 import { Modal } from '@/components/Modal';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
-import { PageHeader, AddButton, FilterBar, DataTable, Td, StatusBadge, FormActions, usePagination, useSort, TableFooter, useColumnFilters, ColumnFilterBar, FilterDef } from '@/components/PageShell';
+import { PageHeader, AddButton, FilterBar, DataTable, Td, StatusBadge, FormActions, usePagination, useSort, TableFooter, useSegmentFilter, SegmentFilterBar, FilterRuleDef } from '@/components/PageShell';
 
 const STATUS_ST: Record<string, { bg: string; color: string }> = {
   PENDING:   { bg: '#FDF3E8', color: '#C8803A' },
@@ -23,9 +23,12 @@ const FILTERS = [
 const fmt = (n: number) => new Intl.NumberFormat('fr-LU', { style: 'currency', currency: 'EUR' }).format(n);
 const empty = { brokerName: '', dealValue: '', commissionRate: '10', currency: 'EUR', companyId: '', notes: '' };
 
-const FILTER_DEFS: FilterDef[] = [
-  { key: 'broker',  label: 'Apporteur', type: 'text', placeholder: 'Nom...', getValue: (c) => c.brokerName },
-  { key: 'company', label: 'Client',    type: 'text', placeholder: 'ACME...', getValue: (c) => c.company?.name ?? '' },
+const SEGMENT_DEFS: FilterRuleDef[] = [
+  { key: 'broker',          label: 'Apporteur',         dataType: 'text',   getValue: (c) => c.brokerName },
+  { key: 'company',         label: 'Client',             dataType: 'text',   getValue: (c) => c.company?.name ?? '' },
+  { key: 'dealValue',       label: 'Valeur affaire (€)', dataType: 'number', getValue: (c) => String(c.dealValue) },
+  { key: 'commissionAmount',label: 'Commission (€)',     dataType: 'number', getValue: (c) => String(c.commissionAmount) },
+  { key: 'createdAt',       label: 'Date de création',  dataType: 'date',   getValue: (c) => c.createdAt?.slice(0, 10) ?? '' },
 ];
 
 export default function CommissionsPage() {
@@ -38,7 +41,7 @@ export default function CommissionsPage() {
   const [saving, setSaving] = useState(false);
 
   const { sort, toggle: sortToggle, sorted } = useSort(list);
-  const { values: fv, set: fset, reset: freset, filtered, activeCount: fCount } = useColumnFilters(sorted, FILTER_DEFS);
+  const { search, setSearch, rules, addRule, removeRule, updateRule, clearRules, clearAll, filtered, activeCount } = useSegmentFilter(sorted, SEGMENT_DEFS);
   const pagination = usePagination(filtered);
   const load = (s?: string) => { setLoading(true); commissions.list(s || undefined).then(setList).finally(() => setLoading(false)); };
   useEffect(() => { load(); companies.list().then(setCompList); }, []);
@@ -57,7 +60,7 @@ export default function CommissionsPage() {
     <div className="p-6">
       <PageHeader title="Commissions" action={<AddButton onClick={() => setOpen(true)} />} />
       <FilterBar filters={FILTERS} active={filter} onChange={v => { setFilter(v); load(v || undefined); }} />
-      <ColumnFilterBar defs={FILTER_DEFS} values={fv} set={fset} reset={freset} activeCount={fCount} />
+      <SegmentFilterBar search={search} onSearch={setSearch} placeholder="Rechercher une commission..." defs={SEGMENT_DEFS} rules={rules} addRule={addRule} removeRule={removeRule} updateRule={updateRule} clearRules={clearRules} clearAll={clearAll} activeCount={activeCount} />
 
       <DataTable loading={loading} empty="Aucune commission — cliquez sur «+ Ajouter»" sort={sort} onSort={sortToggle}
         headers={[{ label: 'Référence' }, { label: 'Apporteur', key: 'brokerName' }, { label: 'Client' }, { label: 'Affaire', key: 'dealValue', align: 'right' }, { label: 'Taux', align: 'center' }, { label: 'Commission', key: 'commissionAmount', align: 'right' }, { label: 'Statut', key: 'status', align: 'center' }]}>

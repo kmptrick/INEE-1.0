@@ -171,6 +171,7 @@ export interface Company {
   id: string;
   reference?: string;
   isActive?: boolean;
+  createdAt?: string;
   clientType: 'SOCIETE' | 'PARTICULIER';
   name: string;
   denomination?: string;
@@ -185,16 +186,16 @@ export interface Company {
   notes?: string;
   _count?: { contacts: number; deals: number };
 }
-export interface Contact { id: string; reference?: string; isActive?: boolean; firstName: string; lastName: string; email?: string; phone?: string; jobTitle?: string; canReceiveInvoices?: boolean; company?: { id: string; name: string }; }
-export interface Deal { id: string; reference?: string; title: string; value: number; currency: string; status: string; probability: number; company?: { id: string; name: string }; contact?: { id: string; firstName: string; lastName: string }; stage?: { id: string; name: string }; }
+export interface Contact { id: string; reference?: string; isActive?: boolean; createdAt?: string; firstName: string; lastName: string; email?: string; phone?: string; jobTitle?: string; canReceiveInvoices?: boolean; company?: { id: string; name: string }; }
+export interface Deal { id: string; reference?: string; createdAt?: string; title: string; value: number; currency: string; status: string; probability: number; company?: { id: string; name: string }; contact?: { id: string; firstName: string; lastName: string }; stage?: { id: string; name: string }; }
 export interface Service { id: string; idPrestation: string; categorie: string; description: string; prixHT: number; vatRate?: number; unite?: string; remarques?: string; isActive: boolean; }
-export interface Commission { id: string; reference: string; brokerName: string; dealValue: number; commissionRate: number; commissionAmount: number; currency: string; status: string; notes?: string; company?: { id: string; name: string }; }
-export interface Quote { id: string; number: string; status: string; subtotal: number; vatRate: number; vatAmount: number; total: number; vatMention?: string; notes?: string; company?: { id: string; name: string }; lines?: QuoteLine[]; }
-export interface Invoice { id: string; number: string; status: string; subtotal: number; vatRate: number; vatAmount: number; total: number; paidAmount: number; dueDate?: string; vatMention?: string; notes?: string; company?: { id: string; name: string }; lines?: InvoiceLine[]; }
+export interface Commission { id: string; reference: string; createdAt?: string; brokerName: string; dealValue: number; commissionRate: number; commissionAmount: number; currency: string; status: string; notes?: string; company?: { id: string; name: string }; }
+export interface Quote { id: string; number: string; createdAt?: string; status: string; subtotal: number; vatRate: number; vatAmount: number; total: number; vatMention?: string; notes?: string; company?: { id: string; name: string }; lines?: QuoteLine[]; }
+export interface Invoice { id: string; number: string; createdAt?: string; status: string; subtotal: number; vatRate: number; vatAmount: number; total: number; paidAmount: number; dueDate?: string; vatMention?: string; notes?: string; company?: { id: string; name: string }; lines?: InvoiceLine[]; }
 export interface QuoteLine { id: string; serviceId?: string; description: string; quantity: number; unitPrice: number; unite?: string; discountRate?: number; lineVatRate?: number; periodStart?: string; periodEnd?: string; total: number; }
 export interface InvoiceLine { id: string; serviceId?: string; description: string; quantity: number; unitPrice: number; unite?: string; discountRate?: number; lineVatRate?: number; periodStart?: string; periodEnd?: string; total: number; }
 export interface Project {
-  id: string; reference?: string; name: string; description?: string; status: string;
+  id: string; reference?: string; createdAt?: string; name: string; description?: string; status: string;
   startDate?: string; endDate?: string; budget?: number;
   company?: { id: string; name: string };
   tasks?: Task[];
@@ -211,7 +212,7 @@ export interface PipelineStats { status: string; _sum: { value: number }; _count
 export interface CommissionStats { totalDeals: number; totalCommissions: number; totalCount: number; pendingAmount: number; paidAmount: number; }
 export interface InvoicingStats { invoiceStats: any[]; quoteStats: any[]; overdueInvoices: any[]; }
 export interface CreditNote {
-  id: string; number: string; status: string;
+  id: string; number: string; createdAt?: string; status: string;
   subtotal: number; vatRate: number; vatAmount: number; total: number;
   vatMention?: string; notes?: string;
   invoice?: { id: string; number: string };

@@ -3,17 +3,18 @@ import { useEffect, useState } from 'react';
 import { contacts, companies, Contact, Company } from '@/lib/api';
 import { Modal } from '@/components/Modal';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
-import { PageHeader, AddButton, DataTable, Td, FormActions, usePagination, useSort, TableFooter, useColumnFilters, ColumnFilterBar, FilterDef } from '@/components/PageShell';
+import { PageHeader, AddButton, DataTable, Td, FormActions, usePagination, useSort, TableFooter, useSegmentFilter, SegmentFilterBar, FilterRuleDef } from '@/components/PageShell';
 
 const empty = { firstName: '', lastName: '', email: '', phone: '', mobile: '', jobTitle: '', companyId: '', notes: '' };
 
-const FILTER_DEFS: FilterDef[] = [
-  { key: 'name',     label: 'Nom',              type: 'text',   placeholder: 'Dupont...', getValue: (c) => `${c.firstName} ${c.lastName}` },
-  { key: 'email',    label: 'Email',             type: 'text',   placeholder: '@...', getValue: (c) => c.email ?? '' },
-  { key: 'jobTitle', label: 'Poste',             type: 'text',   placeholder: 'Comptable...', getValue: (c) => c.jobTitle ?? '' },
-  { key: 'company',  label: 'Client',            type: 'text',   placeholder: 'ACME...', getValue: (c) => c.company?.name ?? '' },
-  { key: 'status',   label: 'Statut',            type: 'select', options: [{ value: 'actif', label: 'Actif' }, { value: 'inactif', label: 'Inactif' }], getValue: (c) => c.isActive === false ? 'inactif' : 'actif' },
-  { key: 'invoices', label: 'Reçoit factures',   type: 'select', options: [{ value: 'oui', label: 'Oui' }, { value: 'non', label: 'Non' }], getValue: (c) => c.canReceiveInvoices ? 'oui' : 'non' },
+const SEGMENT_DEFS: FilterRuleDef[] = [
+  { key: 'name',      label: 'Nom',             dataType: 'text',   getValue: (c) => `${c.firstName} ${c.lastName}` },
+  { key: 'email',     label: 'Email',            dataType: 'text',   getValue: (c) => c.email ?? '' },
+  { key: 'jobTitle',  label: 'Poste',            dataType: 'text',   getValue: (c) => c.jobTitle ?? '' },
+  { key: 'company',   label: 'Client',           dataType: 'text',   getValue: (c) => c.company?.name ?? '' },
+  { key: 'status',    label: 'Statut',           dataType: 'select', options: [{ value: 'actif', label: 'Actif' }, { value: 'inactif', label: 'Inactif' }], getValue: (c) => c.isActive === false ? 'inactif' : 'actif' },
+  { key: 'invoices',  label: 'Reçoit factures',  dataType: 'select', options: [{ value: 'oui', label: 'Oui' }, { value: 'non', label: 'Non' }], getValue: (c) => c.canReceiveInvoices ? 'oui' : 'non' },
+  { key: 'createdAt', label: 'Date de création', dataType: 'date',   getValue: (c) => c.createdAt?.slice(0, 10) ?? '' },
 ];
 
 export default function ContactsPage() {
@@ -26,7 +27,7 @@ export default function ContactsPage() {
   const [toggling, setToggling] = useState<string | null>(null);
   const [togglingActive, setTogglingActive] = useState<string | null>(null);
   const { sort, toggle: sortToggle, sorted } = useSort(list);
-  const { values: fv, set: fset, reset: freset, filtered, activeCount: fCount } = useColumnFilters(sorted, FILTER_DEFS);
+  const { search, setSearch, rules, addRule, removeRule, updateRule, clearRules, clearAll, filtered, activeCount } = useSegmentFilter(sorted, SEGMENT_DEFS);
   const pagination = usePagination(filtered);
 
   const load = () => { setLoading(true); contacts.list().then(setList).finally(() => setLoading(false)); };
@@ -61,7 +62,7 @@ export default function ContactsPage() {
   return (
     <div className="p-6">
       <PageHeader title="Contacts" action={<AddButton onClick={() => setOpen(true)} />} />
-      <ColumnFilterBar defs={FILTER_DEFS} values={fv} set={fset} reset={freset} activeCount={fCount} />
+      <SegmentFilterBar search={search} onSearch={setSearch} placeholder="Rechercher un contact..." defs={SEGMENT_DEFS} rules={rules} addRule={addRule} removeRule={removeRule} updateRule={updateRule} clearRules={clearRules} clearAll={clearAll} activeCount={activeCount} />
 
       <DataTable loading={loading} empty="Aucun contact — cliquez sur «+ Ajouter»" sort={sort} onSort={sortToggle}
         headers={[

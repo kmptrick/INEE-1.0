@@ -4,7 +4,7 @@ import { useSearchParams } from 'next/navigation';
 import { creditNotes, invoicing, companies, CreditNote, Invoice, Company, Service } from '@/lib/api';
 import { Modal } from '@/components/Modal';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
-import { PageHeader, AddButton, FilterBar, DataTable, Td, StatusBadge, FormActions, usePagination, useSort, TableFooter, useColumnFilters, ColumnFilterBar, FilterDef } from '@/components/PageShell';
+import { PageHeader, AddButton, FilterBar, DataTable, Td, StatusBadge, FormActions, usePagination, useSort, TableFooter, useSegmentFilter, SegmentFilterBar, FilterRuleDef } from '@/components/PageShell';
 import { ServicePicker } from '@/components/ServicePicker';
 
 const STATUS_ST: Record<string, { bg: string; color: string }> = {
@@ -22,10 +22,12 @@ const FILTERS = [
 
 const fmt = (n: number) => new Intl.NumberFormat('fr-LU', { style: 'currency', currency: 'EUR' }).format(n);
 
-const FILTER_DEFS: FilterDef[] = [
-  { key: 'number',  label: 'Numéro',          type: 'text', placeholder: 'NC-2026...', getValue: (cn) => cn.number },
-  { key: 'invoice', label: 'Facture liée',     type: 'text', placeholder: 'FAC-2026...', getValue: (cn) => cn.invoice?.number ?? '' },
-  { key: 'company', label: 'Client',           type: 'text', placeholder: 'ACME...',     getValue: (cn) => cn.company?.name ?? '' },
+const SEGMENT_DEFS: FilterRuleDef[] = [
+  { key: 'number',    label: 'Numéro',          dataType: 'text',   getValue: (cn) => cn.number },
+  { key: 'invoice',   label: 'Facture liée',    dataType: 'text',   getValue: (cn) => cn.invoice?.number ?? '' },
+  { key: 'company',   label: 'Client',          dataType: 'text',   getValue: (cn) => cn.company?.name ?? '' },
+  { key: 'total',     label: 'Montant TTC (€)', dataType: 'number', getValue: (cn) => String(cn.total) },
+  { key: 'createdAt', label: 'Date de création', dataType: 'date',  getValue: (cn) => cn.createdAt?.slice(0, 10) ?? '' },
 ];
 
 type LineForm = { serviceId: string; description: string; quantity: string; unitPrice: string; unite: string };
@@ -61,7 +63,7 @@ function CreditNotesContent() {
   const [actioning, setActioning] = useState(false);
   const [fullCNs, setFullCNs] = useState<Record<string, CreditNote>>({});
   const { sort, toggle: sortToggle, sorted } = useSort(list);
-  const { values: fv, set: fset, reset: freset, filtered, activeCount: fCount } = useColumnFilters(sorted, FILTER_DEFS);
+  const { search, setSearch, rules, addRule, removeRule, updateRule, clearRules, clearAll, filtered, activeCount } = useSegmentFilter(sorted, SEGMENT_DEFS);
   const pagination = usePagination(filtered);
 
   const load = (s?: string) => {
@@ -149,7 +151,7 @@ function CreditNotesContent() {
     <div className="p-6">
       <PageHeader title="Notes de crédit" action={<AddButton onClick={() => { setForm(emptyForm()); setOpen(true); }} />} />
       <FilterBar filters={FILTERS} active={filter} onChange={v => { setFilter(v); load(v || undefined); }} />
-      <ColumnFilterBar defs={FILTER_DEFS} values={fv} set={fset} reset={freset} activeCount={fCount} />
+      <SegmentFilterBar search={search} onSearch={setSearch} placeholder="Rechercher une note de crédit..." defs={SEGMENT_DEFS} rules={rules} addRule={addRule} removeRule={removeRule} updateRule={updateRule} clearRules={clearRules} clearAll={clearAll} activeCount={activeCount} />
 
       <DataTable loading={loading} empty="Aucune note de crédit" sort={sort} onSort={sortToggle}
         headers={[
