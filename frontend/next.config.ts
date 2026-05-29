@@ -8,6 +8,7 @@ const withPWA = require('next-pwa')({
 
 const nextConfig: NextConfig = {
   devIndicators: false,
+  transpilePackages: ['@react-pdf/renderer'],
 };
 
 export default withPWA(nextConfig);
