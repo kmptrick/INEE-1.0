@@ -4,7 +4,7 @@ import { users, UserProfile } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { Modal } from '@/components/Modal';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
-import { PageHeader, DataTable, Td, FormActions, usePagination, useSort, TableFooter } from '@/components/PageShell';
+import { PageHeader, AddButton, DataTable, Td, FormActions, usePagination, useSort, TableFooter } from '@/components/PageShell';
 
 const ROLE_FR: Record<string, string> = { ADMIN: 'Administrateur', MANAGER: 'Manager', MEMBER: 'Membre' };
 const ROLE_COLORS: Record<string, { bg: string; color: string }> = {
@@ -41,6 +41,32 @@ export default function UsersPage() {
   const [deleting, setDeleting] = useState(false);
 
   const [toggling, setToggling] = useState<string | null>(null);
+
+  const emptyNew = () => ({ firstName: '', lastName: '', username: '', email: '', password: '', jobTitle: '', birthDate: '', role: 'MEMBER' });
+  const [newOpen, setNewOpen] = useState(false);
+  const [newForm, setNewForm] = useState(emptyNew());
+  const [newSaving, setNewSaving] = useState(false);
+  const [newError, setNewError] = useState('');
+  const [newDone, setNewDone] = useState(false);
+  const setNF = (k: string, v: string) => setNewForm(f => ({ ...f, [k]: v }));
+  const openNew = () => { setNewForm(emptyNew()); setNewError(''); setNewDone(false); setNewOpen(true); };
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newForm.password.length < 8) { setNewError('Minimum 8 caractères pour le mot de passe.'); return; }
+    setNewSaving(true); setNewError('');
+    try {
+      const data: any = { firstName: newForm.firstName, lastName: newForm.lastName, email: newForm.email, password: newForm.password, role: newForm.role };
+      if (newForm.username) data.username = newForm.username;
+      if (newForm.jobTitle) data.jobTitle = newForm.jobTitle;
+      if (newForm.birthDate) data.birthDate = newForm.birthDate;
+      await users.create(data);
+      setNewDone(true);
+      load();
+    } catch (err: any) {
+      setNewError(err.message ?? 'Erreur');
+    } finally { setNewSaving(false); }
+  };
 
   const { sort, toggle: sortToggle, sorted } = useSort(list, { key: 'role', dir: 'asc' });
   const pagination = usePagination(sorted);
@@ -91,7 +117,7 @@ export default function UsersPage() {
 
   return (
     <div className="p-6">
-      <PageHeader title="Utilisateurs" />
+      <PageHeader title="Utilisateurs" action={<AddButton onClick={openNew} label="+ Nouveau" />} />
 
       <DataTable loading={loading} empty="Aucun utilisateur" sort={sort} onSort={sortToggle}
         headers={[
@@ -163,6 +189,48 @@ export default function UsersPage() {
         })}
       </DataTable>
       <TableFooter pagination={pagination} export={{ getData: () => sorted.map(u => ({ Prénom: u.firstName, Nom: u.lastName, Utilisateur: u.username ?? '', Email: u.email, Fonction: u.jobTitle ?? '', Rôle: ROLE_FR[u.role] ?? u.role, Statut: u.isActive ? 'Actif' : 'Inactif' })), filename: 'utilisateurs', title: 'Utilisateurs' }} />
+
+      {/* Modale nouvel utilisateur */}
+      {newOpen && (
+        <Modal title="Nouvel utilisateur" open onClose={() => setNewOpen(false)}>
+          {newDone ? (
+            <div className="text-center space-y-3 py-4">
+              <p className="text-3xl">✓</p>
+              <p className="font-semibold text-sm" style={{ color: '#16A34A' }}>Utilisateur créé avec succès</p>
+              <button onClick={() => setNewOpen(false)} className="cursor-pointer w-full py-2.5 rounded-lg text-sm font-semibold text-white" style={{ background: T.copper }}>Fermer</button>
+            </div>
+          ) : (
+            <form onSubmit={handleCreate} className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <FormField label="Prénom" required><input className={inputClass} value={newForm.firstName} onChange={e => setNF('firstName', e.target.value)} required /></FormField>
+                <FormField label="Nom" required><input className={inputClass} value={newForm.lastName} onChange={e => setNF('lastName', e.target.value)} required /></FormField>
+              </div>
+              <FormField label="Nom d'utilisateur">
+                <input className={inputClass} value={newForm.username} onChange={e => setNF('username', e.target.value)} placeholder="ex : jdupont" />
+              </FormField>
+              <FormField label="Email" required>
+                <input type="email" className={inputClass} value={newForm.email} onChange={e => setNF('email', e.target.value)} required />
+              </FormField>
+              <FormField label="Mot de passe (min. 8 caractères)" required>
+                <input type="password" className={inputClass} value={newForm.password} onChange={e => setNF('password', e.target.value)} required minLength={8} placeholder="••••••••" />
+              </FormField>
+              <div className="grid grid-cols-2 gap-3">
+                <FormField label="Fonction"><input className={inputClass} value={newForm.jobTitle} onChange={e => setNF('jobTitle', e.target.value)} placeholder="Comptable, RH..." /></FormField>
+                <FormField label="Date de naissance"><input type="date" className={inputClass} value={newForm.birthDate} onChange={e => setNF('birthDate', e.target.value)} /></FormField>
+              </div>
+              <FormField label="Rôle">
+                <select className={selectClass} value={newForm.role} onChange={e => setNF('role', e.target.value)}>
+                  <option value="MEMBER">Membre</option>
+                  <option value="MANAGER">Manager</option>
+                  <option value="ADMIN">Administrateur</option>
+                </select>
+              </FormField>
+              {newError && <p className="text-xs font-semibold" style={{ color: '#DC2626' }}>{newError}</p>}
+              <FormActions onCancel={() => setNewOpen(false)} saving={newSaving} label="Créer" />
+            </form>
+          )}
+        </Modal>
+      )}
 
       {/* Modale modification */}
       {editTarget && (

@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
-import { users, UserProfile } from '@/lib/api';
 
 const nav = [
   {
@@ -56,33 +55,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { user, loading, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-
-  // Admin — modale nouvel utilisateur
-  const [newUserOpen, setNewUserOpen] = useState(false);
-  const emptyNewUser = () => ({ firstName: '', lastName: '', username: '', email: '', password: '', jobTitle: '', birthDate: '', role: 'MEMBER' });
-  const [newUserForm, setNewUserForm] = useState(emptyNewUser());
-  const [newUserSaving, setNewUserSaving] = useState(false);
-  const [newUserError, setNewUserError] = useState('');
-  const [newUserDone, setNewUserDone] = useState(false);
-
-  const openNewUser = () => { setNewUserForm(emptyNewUser()); setNewUserError(''); setNewUserDone(false); setNewUserOpen(true); };
-  const setNU = (k: string, v: string) => setNewUserForm(f => ({ ...f, [k]: v }));
-
-  const handleCreateUser = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newUserForm.password.length < 8) { setNewUserError('Minimum 8 caractères pour le mot de passe.'); return; }
-    setNewUserSaving(true); setNewUserError('');
-    try {
-      const data: any = { firstName: newUserForm.firstName, lastName: newUserForm.lastName, email: newUserForm.email, password: newUserForm.password, role: newUserForm.role };
-      if (newUserForm.username) data.username = newUserForm.username;
-      if (newUserForm.jobTitle) data.jobTitle = newUserForm.jobTitle;
-      if (newUserForm.birthDate) data.birthDate = newUserForm.birthDate;
-      await users.create(data);
-      setNewUserDone(true);
-    } catch (err: any) {
-      setNewUserError(err.message ?? 'Erreur');
-    } finally { setNewUserSaving(false); }
-  };
 
   useEffect(() => {
     if (!loading && !user) router.replace('/login');
@@ -167,18 +139,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             >
               ↩ Se déconnecter
             </button>
-            {user.role === 'ADMIN' && (
-              <button
-                onClick={openNewUser}
-                title="Ajouter un utilisateur"
-                className="p-1.5 rounded-lg transition-colors cursor-pointer text-2xl leading-none"
-                style={{ color: '#5A4030' }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#C8803A'; (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#5A4030'; (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-              >
-                🔑
-              </button>
-            )}
           </div>
         </div>
       </aside>
@@ -188,75 +148,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {children}
       </main>
 
-      {/* Admin — modale nouvel utilisateur */}
-      {newUserOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.4)' }}>
-          <div className="w-full max-w-md rounded-xl shadow-2xl p-6 space-y-4" style={{ background: '#FFF' }}>
-            <div className="flex items-center justify-between">
-              <h2 className="text-base font-bold" style={{ color: '#1A1008' }}>🔑 Nouvel utilisateur</h2>
-              <button onClick={() => setNewUserOpen(false)} className="cursor-pointer" style={{ color: '#AAA', fontSize: 20, lineHeight: 1 }}>✕</button>
-            </div>
-
-            {newUserDone ? (
-              <div className="text-center space-y-3 py-4">
-                <p className="text-3xl">✓</p>
-                <p className="font-semibold text-sm" style={{ color: '#16A34A' }}>Utilisateur créé avec succès</p>
-                <button onClick={() => setNewUserOpen(false)} className="cursor-pointer w-full py-2.5 rounded-lg text-sm font-semibold text-white" style={{ background: '#C8803A' }}>Fermer</button>
-              </div>
-            ) : (
-              <form onSubmit={handleCreateUser} className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-semibold mb-1" style={{ color: '#4A3020' }}>Prénom *</label>
-                    <input value={newUserForm.firstName} onChange={e => setNU('firstName', e.target.value)} required className="w-full px-3 py-2.5 rounded-lg text-sm outline-none" style={{ border: '1.5px solid #E8DDD5', background: '#FFF8F4' }} />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold mb-1" style={{ color: '#4A3020' }}>Nom *</label>
-                    <input value={newUserForm.lastName} onChange={e => setNU('lastName', e.target.value)} required className="w-full px-3 py-2.5 rounded-lg text-sm outline-none" style={{ border: '1.5px solid #E8DDD5', background: '#FFF8F4' }} />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold mb-1" style={{ color: '#4A3020' }}>Nom d'utilisateur</label>
-                  <input value={newUserForm.username} onChange={e => setNU('username', e.target.value)} placeholder="ex : jdupont" className="w-full px-3 py-2.5 rounded-lg text-sm outline-none" style={{ border: '1.5px solid #E8DDD5', background: '#FFF8F4' }} />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold mb-1" style={{ color: '#4A3020' }}>Email *</label>
-                  <input type="email" value={newUserForm.email} onChange={e => setNU('email', e.target.value)} required className="w-full px-3 py-2.5 rounded-lg text-sm outline-none" style={{ border: '1.5px solid #E8DDD5', background: '#FFF8F4' }} />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold mb-1" style={{ color: '#4A3020' }}>Mot de passe * (min. 8 caractères)</label>
-                  <input type="password" value={newUserForm.password} onChange={e => setNU('password', e.target.value)} required minLength={8} placeholder="••••••••" className="w-full px-3 py-2.5 rounded-lg text-sm outline-none" style={{ border: '1.5px solid #E8DDD5', background: '#FFF8F4' }} />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-semibold mb-1" style={{ color: '#4A3020' }}>Fonction</label>
-                    <input value={newUserForm.jobTitle} onChange={e => setNU('jobTitle', e.target.value)} placeholder="Comptable, RH..." className="w-full px-3 py-2.5 rounded-lg text-sm outline-none" style={{ border: '1.5px solid #E8DDD5', background: '#FFF8F4' }} />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold mb-1" style={{ color: '#4A3020' }}>Date de naissance</label>
-                    <input type="date" value={newUserForm.birthDate} onChange={e => setNU('birthDate', e.target.value)} className="w-full px-3 py-2.5 rounded-lg text-sm outline-none" style={{ border: '1.5px solid #E8DDD5', background: '#FFF8F4' }} />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold mb-1" style={{ color: '#4A3020' }}>Rôle</label>
-                  <select value={newUserForm.role} onChange={e => setNU('role', e.target.value)} className="w-full px-3 py-2.5 rounded-lg text-sm outline-none cursor-pointer" style={{ border: '1.5px solid #E8DDD5', background: '#FFF8F4' }}>
-                    <option value="MEMBER">Membre</option>
-                    <option value="MANAGER">Manager</option>
-                    <option value="ADMIN">Administrateur</option>
-                  </select>
-                </div>
-                {newUserError && <p className="text-xs font-semibold" style={{ color: '#DC2626' }}>{newUserError}</p>}
-                <div className="flex gap-3 pt-1">
-                  <button type="button" onClick={() => setNewUserOpen(false)} className="flex-1 py-2.5 rounded-lg text-sm font-medium cursor-pointer" style={{ border: '1px solid #E8DDD5', color: '#7A6050' }}>Annuler</button>
-                  <button type="submit" disabled={newUserSaving} className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white cursor-pointer" style={{ background: '#C8803A', opacity: newUserSaving ? 0.6 : 1 }}>
-                    {newUserSaving ? '…' : 'Créer'}
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
