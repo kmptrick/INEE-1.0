@@ -103,7 +103,7 @@ export class UsersService {
     }
 
     const hashed = await bcrypt.hash(newPassword, 12);
-    await this.prisma.user.update({ where: { id: targetId }, data: { password: hashed } });
+    await this.prisma.user.update({ where: { id: targetId }, data: { password: hashed, loginAttempts: 0, lockedUntil: null } });
     return { message: 'Mot de passe mis à jour' };
   }
 
@@ -186,7 +186,7 @@ export class UsersService {
     }
 
     const hashed = await bcrypt.hash(newPassword, 12);
-    await this.prisma.user.update({ where: { id: record.userId }, data: { password: hashed } });
+    await this.prisma.user.update({ where: { id: record.userId }, data: { password: hashed, loginAttempts: 0, lockedUntil: null } });
     await (this.prisma as any).passwordResetToken.update({ where: { id: record.id }, data: { used: true } });
 
     return { message: 'Mot de passe mis à jour. Vous pouvez maintenant vous connecter.' };

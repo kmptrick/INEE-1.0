@@ -20,7 +20,9 @@
       "Bash(sed -i 's/label=\"Société\"/label=\"Client\"/g' \"C:/PERSO/INEE 1.0/frontend/src/app/dashboard/quotes/page.tsx\")",
       "Bash(sed -i \"s/label: 'Société'/label: 'Client'/g\" \"C:/PERSO/INEE 1.0/frontend/src/app/dashboard/invoices/page.tsx\")",
       "Bash(sed -i 's/label=\"Société\"/label=\"Client\"/g' \"C:/PERSO/INEE 1.0/frontend/src/app/dashboard/invoices/page.tsx\")",
-      "Bash(sed -i \"s/label: 'Société'/label: 'Client'/g\" \"C:/PERSO/INEE 1.0/frontend/src/app/dashboard/contacts/page.tsx\")"
+      "Bash(sed -i \"s/label: 'Société'/label: 'Client'/g\" \"C:/PERSO/INEE 1.0/frontend/src/app/dashboard/contacts/page.tsx\")",
+      "Bash(cat)",
+      "Bash(ssh root@178.105.159.65 'python3 -c \" *)"
     ]
   }
 }

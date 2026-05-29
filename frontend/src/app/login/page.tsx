@@ -11,6 +11,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPwd, setShowPwd] = useState(false);
+  const [locked, setLocked] = useState(false);
 
   // Forgot password state
   const [forgotOpen, setForgotOpen] = useState(false);
@@ -26,8 +28,14 @@ export default function LoginPage() {
     try {
       await login(email, password);
       router.replace('/dashboard');
-    } catch {
-      setError('Email ou mot de passe incorrect');
+    } catch (err: any) {
+      if (err.message?.includes('ACCOUNT_LOCKED')) {
+        setLocked(true);
+        setError('');
+      } else {
+        setLocked(false);
+        setError('Email ou mot de passe incorrect');
+      }
     } finally {
       setLoading(false);
     }
@@ -124,15 +132,47 @@ export default function LoginPage() {
                       Mot de passe oublié ?
                     </button>
                   </div>
-                  <input type="password" value={password} onChange={e => setPassword(e.target.value)} required
-                    placeholder="••••••••"
-                    className="w-full px-4 py-3 rounded-lg text-sm outline-none transition-all"
-                    style={{ background: '#FFFFFF', border: '1.5px solid #E0D5CC', color: '#1A1008' }}
-                    onFocus={e => { e.target.style.borderColor = '#C8803A'; e.target.style.boxShadow = '0 0 0 3px rgba(200,128,58,0.12)'; }}
-                    onBlur={e => { e.target.style.borderColor = '#E0D5CC'; e.target.style.boxShadow = 'none'; }}
-                  />
+                  <div className="relative">
+                    <input type={showPwd ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} required
+                      placeholder="••••••••"
+                      className="w-full px-4 py-3 pr-11 rounded-lg text-sm outline-none transition-all"
+                      style={{ background: '#FFFFFF', border: '1.5px solid #E0D5CC', color: '#1A1008' }}
+                      onFocus={e => { e.target.style.borderColor = '#C8803A'; e.target.style.boxShadow = '0 0 0 3px rgba(200,128,58,0.12)'; }}
+                      onBlur={e => { e.target.style.borderColor = '#E0D5CC'; e.target.style.boxShadow = 'none'; }}
+                    />
+                    <button
+                      type="button"
+                      onMouseDown={() => setShowPwd(true)}
+                      onMouseUp={() => setShowPwd(false)}
+                      onMouseLeave={() => setShowPwd(false)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer select-none"
+                      style={{ color: '#A08070', lineHeight: 1 }}
+                      tabIndex={-1}
+                    >
+                      {showPwd ? (
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/>
+                          <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/>
+                          <line x1="1" y1="1" x2="23" y2="23"/>
+                        </svg>
+                      ) : (
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                          <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                      )}
+                    </button>
+                  </div>
                 </div>
 
+                {locked && (
+                  <div className="rounded-lg px-4 py-3 space-y-2" style={{ background: '#FEF2F2', border: '1px solid #FECACA' }}>
+                    <p className="text-sm font-semibold" style={{ color: '#B91C1C' }}>Compte bloqué après 5 tentatives incorrectes.</p>
+                    <button type="button" onClick={openForgot} className="text-xs font-semibold underline cursor-pointer" style={{ color: '#C8803A' }}>
+                      Réinitialiser mon mot de passe →
+                    </button>
+                  </div>
+                )}
                 {error && (
                   <div className="text-sm rounded-lg px-4 py-3" style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C' }}>
                     {error}
