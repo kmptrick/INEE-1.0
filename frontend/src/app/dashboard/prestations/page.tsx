@@ -57,7 +57,6 @@ export default function PrestationsPage() {
       else await services.create(data);
       setOpen(false);
       load();
-      services.categories().then(setCats);
     } finally { setSaving(false); }
   };
 
