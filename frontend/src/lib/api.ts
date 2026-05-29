@@ -46,8 +46,10 @@ export const auth = {
 // Users (admin)
 export const users = {
   list: () => api.get<UserProfile[]>('/users'),
-  create: (data: { email: string; firstName: string; lastName: string; role?: string }) =>
+  create: (data: { email: string; firstName: string; lastName: string; username?: string; jobTitle?: string; birthDate?: string; role?: string }) =>
     api.post<UserProfile>('/users', data),
+  update: (id: string, data: Partial<UserProfile>) => api.put<UserProfile>(`/users/${id}`, data),
+  delete: (id: string) => api.delete(`/users/${id}`),
   changePassword: (id: string, newPassword: string) =>
     api.patch<{ message: string }>(`/users/${id}/password`, { newPassword }),
   resetPassword: (id: string) => api.post<{ message: string }>(`/users/${id}/reset-password`, {}),
@@ -164,7 +166,7 @@ export const invoicing = {
 
 // Types
 export interface User { id: string; email: string; firstName: string; lastName: string; role: string; }
-export interface UserProfile { id: string; email: string; firstName: string; lastName: string; role: string; isActive: boolean; createdAt: string; }
+export interface UserProfile { id: string; email: string; firstName: string; lastName: string; username?: string; jobTitle?: string; birthDate?: string; role: string; isActive: boolean; createdAt: string; }
 export interface Company {
   id: string;
   reference?: string;

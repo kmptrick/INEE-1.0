@@ -16,6 +16,9 @@ model User {
   password         String
   firstName        String
   lastName         String
+  username         String?   @unique
+  jobTitle         String?
+  birthDate        DateTime?
   role             Role      @default(MEMBER)
   twoFactorEnabled Boolean   @default(false)
   twoFactorSecret  String?

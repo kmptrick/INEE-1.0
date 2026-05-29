@@ -6,6 +6,7 @@ import * as crypto from 'crypto';
 
 const USER_SELECT = {
   id: true, email: true, firstName: true, lastName: true,
+  username: true, jobTitle: true, birthDate: true,
   role: true, isActive: true, createdAt: true,
 } as const;
 
@@ -21,21 +22,20 @@ export class UsersService {
   findAll() {
     return this.prisma.user.findMany({
       select: USER_SELECT,
-      orderBy: { lastName: 'asc' },
+      orderBy: [{ role: 'asc' }, { lastName: 'asc' }],
     });
   }
 
-  async create(data: { email: string; password: string; firstName: string; lastName: string; role?: string }) {
+  async create(data: { email: string; password: string; firstName: string; lastName: string; username?: string; jobTitle?: string; birthDate?: string; role?: string }) {
     const existing = await this.prisma.user.findUnique({ where: { email: data.email } });
     if (existing) throw new ConflictException('Email déjà utilisé');
     const hashed = await bcrypt.hash(data.password, 12);
-    return this.prisma.user.create({
-      data: { ...data, password: hashed } as any,
-      select: USER_SELECT,
-    });
+    const payload: any = { ...data, password: hashed };
+    if (data.birthDate) payload.birthDate = new Date(data.birthDate);
+    return this.prisma.user.create({ data: payload, select: USER_SELECT });
   }
 
-  async createWithTempPassword(data: { email: string; firstName: string; lastName: string; role?: string }) {
+  async createWithTempPassword(data: { email: string; firstName: string; lastName: string; username?: string; jobTitle?: string; birthDate?: string; role?: string }) {
     const tempPassword = generateTempPassword();
     const user = await this.create({ ...data, password: tempPassword });
 
@@ -62,6 +62,18 @@ export class UsersService {
     });
 
     return user;
+  }
+
+  async update(id: string, data: { firstName?: string; lastName?: string; username?: string; jobTitle?: string; birthDate?: string; role?: string; email?: string }) {
+    const payload: any = { ...data };
+    if (data.birthDate) payload.birthDate = new Date(data.birthDate);
+    else if (data.birthDate === '') payload.birthDate = null;
+    return this.prisma.user.update({ where: { id }, data: payload, select: USER_SELECT });
+  }
+
+  async delete(id: string) {
+    await this.prisma.user.delete({ where: { id } });
+    return { message: 'Utilisateur supprimé' };
   }
 
   async findByEmail(email: string) {

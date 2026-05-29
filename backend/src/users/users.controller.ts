@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, UseGuards } from '@nestjs/common';
 import { IsEmail, IsString, MinLength, IsOptional, IsIn } from 'class-validator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -10,6 +10,10 @@ class CreateUserDto {
   @IsEmail() email: string;
   @IsString() firstName: string;
   @IsString() lastName: string;
+  @IsOptional() @IsString() username?: string;
+  @IsOptional() @IsString() jobTitle?: string;
+  @IsOptional() @IsString() birthDate?: string;
+  @IsOptional() @IsString() @MinLength(8) password?: string;
   @IsOptional() @IsIn(['ADMIN', 'MANAGER', 'MEMBER']) role?: string;
 }
 
@@ -30,6 +34,7 @@ export class UsersController {
   @Post()
   @Roles('ADMIN')
   create(@Body() dto: CreateUserDto) {
+    if (dto.password) return this.service.create({ ...dto, password: dto.password });
     return this.service.createWithTempPassword(dto);
   }
 
@@ -47,6 +52,16 @@ export class UsersController {
   resetPassword(@Param('id') id: string) {
     return this.service.resetPassword(id);
   }
+
+  @Put(':id')
+  @Roles('ADMIN')
+  update(@Param('id') id: string, @Body() dto: Partial<CreateUserDto>) {
+    return this.service.update(id, dto as any);
+  }
+
+  @Delete(':id')
+  @Roles('ADMIN')
+  delete(@Param('id') id: string) { return this.service.delete(id); }
 
   @Patch(':id/deactivate')
   @Roles('ADMIN')

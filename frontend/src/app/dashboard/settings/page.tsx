@@ -10,8 +10,8 @@ export default function SettingsPage() {
   const { user } = useAuth();
   const [tab, setTab] = useState<'password' | 'leaves'>('password');
 
-  // Password change by email
-  const [pwEmail, setPwEmail] = useState('');
+  // Password change by select
+  const [pwUserId, setPwUserId] = useState('');
   const [pwNew, setPwNew] = useState('');
   const [pwConfirm, setPwConfirm] = useState('');
   const [pwSaving, setPwSaving] = useState(false);
@@ -41,15 +41,15 @@ export default function SettingsPage() {
 
   const handleChangePw = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!pwUserId) { setPwMsg({ ok: false, text: 'Sélectionnez un utilisateur.' }); return; }
     if (pwNew !== pwConfirm) { setPwMsg({ ok: false, text: 'Les mots de passe ne correspondent pas.' }); return; }
     if (pwNew.length < 8) { setPwMsg({ ok: false, text: 'Minimum 8 caractères.' }); return; }
-    const target = userList.find(u => u.email.toLowerCase() === pwEmail.toLowerCase().trim());
-    if (!target) { setPwMsg({ ok: false, text: 'Aucun utilisateur trouvé avec cet email.' }); return; }
     setPwSaving(true); setPwMsg(null);
     try {
-      await users.changePassword(target.id, pwNew);
+      const target = userList.find(u => u.id === pwUserId)!;
+      await users.changePassword(pwUserId, pwNew);
       setPwMsg({ ok: true, text: `Mot de passe mis à jour pour ${target.firstName} ${target.lastName}.` });
-      setPwEmail(''); setPwNew(''); setPwConfirm('');
+      setPwUserId(''); setPwNew(''); setPwConfirm('');
     } catch (err: any) {
       setPwMsg({ ok: false, text: err.message ?? 'Erreur' });
     } finally { setPwSaving(false); }
@@ -115,18 +115,18 @@ export default function SettingsPage() {
         <div className="rounded-xl p-6 space-y-5" style={{ background: '#FFF', border: `1px solid ${T.border}` }}>
           <div>
             <h2 className="text-sm font-bold mb-1" style={{ color: T.dark }}>Changer le mot de passe d'un utilisateur</h2>
-            <p className="text-xs" style={{ color: T.muted }}>En tant qu'administrateur, saisissez l'email et le nouveau mot de passe.</p>
+            <p className="text-xs" style={{ color: T.muted }}>Sélectionnez un utilisateur et définissez son nouveau mot de passe.</p>
           </div>
           <form onSubmit={handleChangePw} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: '#4A3020' }}>Email du compte</label>
-              <input
-                type="email" value={pwEmail} onChange={e => setPwEmail(e.target.value)} required
-                placeholder="utilisateur@inee.lu" list="user-email-list"
-                className={inputClass} />
-              <datalist id="user-email-list">
-                {userList.map(u => <option key={u.id} value={u.email}>{u.firstName} {u.lastName}</option>)}
-              </datalist>
+              <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: '#4A3020' }}>Utilisateur</label>
+              <select value={pwUserId} onChange={e => setPwUserId(e.target.value)} required className={selectClass}
+                style={{ color: pwUserId ? T.dark : T.muted }}>
+                <option value="">— Sélectionner un utilisateur —</option>
+                {userList.map(u => (
+                  <option key={u.id} value={u.id}>{u.firstName} {u.lastName} ({u.email})</option>
+                ))}
+              </select>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
