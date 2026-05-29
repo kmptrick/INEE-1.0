@@ -50,4 +50,23 @@ export class AuthController {
   me(@CurrentUser() user: { sub: string }) {
     return this.users.findById(user.sub);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('change-password')
+  changePassword(
+    @Body() dto: { oldPassword?: string; newPassword: string },
+    @CurrentUser() user: { sub: string; role: string },
+  ) {
+    return this.users.changePassword(user.sub, user.role, user.sub, dto.oldPassword ?? null, dto.newPassword);
+  }
+
+  @Post('forgot-password')
+  forgotPassword(@Body() dto: { email: string }) {
+    return this.users.forgotPassword(dto.email);
+  }
+
+  @Post('reset-password')
+  resetPassword(@Body() dto: { token: string; newPassword: string }) {
+    return this.users.resetPasswordWithToken(dto.token, dto.newPassword);
+  }
 }

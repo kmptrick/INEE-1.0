@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { projects, companies, Project, Task, Company } from '@/lib/api';
 import { Modal } from '@/components/Modal';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
-import { PageHeader, AddButton, FilterBar, FormActions } from '@/components/PageShell';
+import { PageHeader, AddButton, FilterBar, FormActions, DataTable, Td, usePagination, useSort, TableFooter } from '@/components/PageShell';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -90,6 +90,9 @@ export default function ProjectsPage() {
   const [savingTask, setSavingTask] = useState(false);
   const [editTask, setEditTask] = useState<Task | null>(null);
 
+  const { sort, toggle: sortToggle, sorted } = useSort(list, null);
+  const pagination = usePagination(sorted);
+
   const load = (s?: string) => {
     setLoading(true);
     projects.list(s || undefined).then(setList).finally(() => setLoading(false));
@@ -167,47 +170,37 @@ export default function ProjectsPage() {
       <PageHeader title="Projets" action={<AddButton onClick={() => { setProjectForm(emptyProjectForm()); setCreateOpen(true); }} label="+ Nouveau projet" />} />
       <FilterBar filters={PROJ_FILTERS} active={filter} onChange={v => { setFilter(v); load(v || undefined); }} />
 
-      {loading ? (
-        <div className="text-center py-16 text-sm" style={{ color: T.muted }}>Chargement...</div>
-      ) : list.length === 0 ? (
-        <div className="text-center py-16 text-sm" style={{ color: T.muted }}>Aucun projet — cliquez sur «+ Nouveau projet»</div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {list.map(p => {
-            const s = PROJ_STATUS[p.status] ?? PROJ_STATUS.ACTIVE;
-            return (
-              <div key={p.id} onClick={() => openDetail(p)}
-                className="rounded-2xl p-5 cursor-pointer transition-all"
-                style={{ background: '#FFF', border: `1.5px solid ${T.border}`, boxShadow: '0 1px 4px rgba(26,16,8,0.06)' }}
-                onMouseEnter={e => (e.currentTarget.style.borderColor = T.copper)}
-                onMouseLeave={e => (e.currentTarget.style.borderColor = T.border)}>
-                {/* Header */}
-                <div className="flex items-start justify-between mb-3">
-                  <h3 className="font-bold text-sm leading-tight flex-1 mr-2" style={{ color: T.dark }}>{p.name}</h3>
-                  <StatusBadge status={p.status} />
-                </div>
-                {/* Client */}
-                {p.company && <p className="text-xs mb-2" style={{ color: T.muted }}>Client : <span className="font-semibold" style={{ color: T.dark }}>{p.company.name}</span></p>}
-                {/* Description */}
-                {p.description && <p className="text-xs mb-3 line-clamp-2" style={{ color: T.muted }}>{p.description}</p>}
-                {/* Dates */}
-                {(p.startDate || p.endDate) && (
-                  <div className="flex gap-3 text-xs mb-3" style={{ color: T.muted }}>
-                    {p.startDate && <span>Début : <strong style={{ color: T.dark }}>{fmtDate(p.startDate)}</strong></span>}
-                    {p.endDate && <span>Fin : <strong style={{ color: p.endDate && new Date(p.endDate) < new Date() && p.status !== 'COMPLETED' ? '#DC2626' : T.dark }}>{fmtDate(p.endDate)}</strong></span>}
-                  </div>
-                )}
-                {/* Budget */}
-                {p.budget != null && p.budget > 0 && (
-                  <p className="text-xs mb-3" style={{ color: T.muted }}>Budget : <span className="font-bold" style={{ color: T.copper }}>{fmt(p.budget)}</span></p>
-                )}
-                {/* Progress */}
-                <TaskProgress tasks={p.tasks ?? []} />
-              </div>
-            );
-          })}
-        </div>
-      )}
+      <DataTable loading={loading} empty="Aucun projet — cliquez sur «+ Nouveau projet»" sort={sort} onSort={sortToggle}
+        headers={[
+          { label: 'Réf.' },
+          { label: 'Nom', key: 'name' },
+          { label: 'Client' },
+          { label: 'Statut', key: 'status' },
+          { label: 'Budget', key: 'budget', align: 'right' },
+          { label: 'Tâches' },
+          { label: 'Début', key: 'startDate' },
+          { label: 'Fin', key: 'endDate' },
+        ]}>
+        {pagination.paged.map((p, i) => (
+          <tr key={p.id} onClick={() => openDetail(p)}
+            className="cursor-pointer hover:bg-amber-50 transition-colors"
+            style={{ borderTop: i > 0 ? `1px solid ${T.rowDiv}` : undefined }}>
+            <td className="px-4 py-3 font-mono text-xs" style={{ color: T.muted }}>{(p as any).reference ?? '—'}</td>
+            <td className="px-4 py-3 font-semibold text-sm" style={{ color: T.dark }}>{p.name}</td>
+            <Td>{p.company?.name ?? '—'}</Td>
+            <td className="px-4 py-3"><StatusBadge status={p.status} /></td>
+            <td className="px-4 py-3 text-right text-sm font-semibold" style={{ color: T.copper }}>
+              {p.budget != null && p.budget > 0 ? fmt(p.budget) : '—'}
+            </td>
+            <td className="px-4 py-3 min-w-[120px]"><TaskProgress tasks={p.tasks ?? []} /></td>
+            <Td>{fmtDate(p.startDate) ?? '—'}</Td>
+            <td className="px-4 py-3 text-sm" style={{ color: p.endDate && new Date(p.endDate) < new Date() && p.status !== 'COMPLETED' ? '#DC2626' : T.muted }}>
+              {fmtDate(p.endDate) ?? '—'}
+            </td>
+          </tr>
+        ))}
+      </DataTable>
+      <TableFooter pagination={pagination} export={{ getData: () => sorted.map(p => ({ Référence: (p as any).reference ?? '', Nom: p.name, Client: p.company?.name ?? '', Statut: PROJ_STATUS[p.status]?.label ?? p.status, 'Budget (€)': p.budget ?? '', Tâches: `${(p.tasks ?? []).filter(t => t.status === 'DONE').length}/${(p.tasks ?? []).length}`, Début: p.startDate ? new Date(p.startDate).toLocaleDateString('fr-LU') : '', Fin: p.endDate ? new Date(p.endDate).toLocaleDateString('fr-LU') : '' })), filename: 'projets', title: 'Projets' }} />
 
       {/* ── Nouveau projet ── */}
       <Modal title="Nouveau projet" open={createOpen} onClose={() => setCreateOpen(false)}>

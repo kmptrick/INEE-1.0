@@ -4,7 +4,7 @@ import { services, Service } from '@/lib/api';
 import { Modal } from '@/components/Modal';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
 import { LU_VAT_RATES } from '@/lib/vat-rules';
-import { PageHeader, AddButton, DataTable, Td, FormActions } from '@/components/PageShell';
+import { PageHeader, AddButton, DataTable, Td, FormActions, usePagination, useSort, useColumns, TableFooter } from '@/components/PageShell';
 
 const UNITES = ['/h', '/mois', '/déclaration', '/facture', '/employé/mois', '/session', '/personne', '/groupe', '/module', '/post', '/envoi', '/consultation', '/jour', 'forfait'];
 
@@ -21,6 +21,13 @@ export default function PrestationsPage() {
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<Service | null>(null);
+  const { sort, toggle: sortToggle, sorted } = useSort(list, null);
+  const pagination = usePagination(sorted);
+  const { visible, toggle: colToggle } = useColumns('prestations', [
+    { key: 'id', label: 'ID Prestation' }, { key: 'categorie', label: 'Catégorie' },
+    { key: 'description', label: 'Description' }, { key: 'prix', label: 'Prix HT' },
+    { key: 'tva', label: 'TVA' }, { key: 'unite', label: 'Unité' }, { key: 'remarques', label: 'Remarques' },
+  ]);
 
   const load = () => {
     setLoading(true);
@@ -88,18 +95,18 @@ export default function PrestationsPage() {
         <span className="text-xs ml-auto" style={{ color: T.muted }}>{list.length} prestation(s)</span>
       </div>
 
-      <DataTable loading={loading} empty="Aucune prestation — cliquez sur &quot;+ Nouvelle prestation&quot;"
+      <DataTable loading={loading} empty="Aucune prestation — cliquez sur &quot;+ Nouvelle prestation&quot;" sort={sort} onSort={sortToggle}
         headers={[
-          { label: 'ID Prestation' },
-          { label: 'Catégorie' },
-          { label: 'Description' },
-          { label: 'Prix HT', align: 'right' },
+          { label: 'ID Prestation', key: 'idPrestation' },
+          { label: 'Catégorie', key: 'categorie' },
+          { label: 'Description', key: 'description' },
+          { label: 'Prix HT', key: 'prixHT', align: 'right' },
           { label: 'TVA', align: 'center' },
           { label: 'Unité' },
           { label: 'Remarques' },
           { label: '', align: 'right' },
         ]}>
-        {list.map((s, i) => (
+        {pagination.paged.map((s, i) => (
           <tr key={s.id} style={{ borderTop: i > 0 ? `1px solid ${T.rowDiv}` : undefined }}>
             <td className="px-4 py-3 font-mono text-xs font-bold" style={{ color: T.copper }}>{s.idPrestation}</td>
             <td className="px-4 py-3 text-xs font-semibold" style={{ color: T.muted }}>{s.categorie}</td>
@@ -122,13 +129,18 @@ export default function PrestationsPage() {
                   style={{ color: '#DC2626', borderColor: '#FECACA', background: 'transparent' }}
                   onMouseEnter={e => (e.currentTarget.style.background = '#FEF2F2')}
                   onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                  Supprimer
+                  Désactiver
                 </button>
               </div>
             </td>
           </tr>
         ))}
       </DataTable>
+      <TableFooter pagination={pagination} export={{ getData: () => sorted.map(s => ({ ID: s.idPrestation, Catégorie: s.categorie, Description: s.description, 'Prix HT (€)': s.prixHT, 'TVA (%)': s.vatRate ?? 17, Unité: s.unite ?? '', Remarques: s.remarques ?? '' })), filename: 'prestations', title: 'Catalogue de prestations' }} columnSelector={{ allCols: [
+        { key: 'id', label: 'ID Prestation' }, { key: 'categorie', label: 'Catégorie' },
+        { key: 'description', label: 'Description' }, { key: 'prix', label: 'Prix HT' },
+        { key: 'tva', label: 'TVA' }, { key: 'unite', label: 'Unité' }, { key: 'remarques', label: 'Remarques' },
+      ], visible, toggle: colToggle }} />
 
       {/* Modal création/édition */}
       <Modal title={editTarget ? 'Modifier la prestation' : 'Nouvelle prestation'} open={open} onClose={() => setOpen(false)}>
@@ -169,13 +181,13 @@ export default function PrestationsPage() {
       </Modal>
 
       {/* Modal confirmation suppression */}
-      <Modal title="Supprimer la prestation" open={!!deleteConfirm} onClose={() => setDeleteConfirm(null)}>
+      <Modal title="Désactiver la prestation" open={!!deleteConfirm} onClose={() => setDeleteConfirm(null)}>
         <div className="space-y-4">
           <p className="text-sm" style={{ color: T.dark }}>
-            Voulez-vous supprimer la prestation <strong>{deleteConfirm?.idPrestation}</strong> — {deleteConfirm?.description} ?
+            Voulez-vous désactiver la prestation <strong>{deleteConfirm?.idPrestation}</strong> — {deleteConfirm?.description} ?
           </p>
           <p className="text-xs" style={{ color: T.muted }}>
-            Cette prestation ne sera plus visible dans le catalogue. Les lignes de devis/factures existantes ne sont pas affectées.
+            Si cette prestation est liée à des devis ou factures, elle sera uniquement désactivée (les lignes existantes sont préservées). Sinon, elle sera supprimée définitivement.
           </p>
           <div className="flex gap-3 pt-1">
             <button onClick={() => setDeleteConfirm(null)}
@@ -186,7 +198,7 @@ export default function PrestationsPage() {
             <button onClick={() => deleteConfirm && handleDelete(deleteConfirm)}
               className="flex-1 px-4 py-2.5 rounded-lg text-sm font-semibold text-white"
               style={{ background: '#DC2626' }}>
-              Supprimer
+              Désactiver
             </button>
           </div>
         </div>

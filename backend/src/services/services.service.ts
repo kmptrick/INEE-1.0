@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateServiceDto, UpdateServiceDto } from './dto/service.dto';
 
@@ -61,7 +61,17 @@ export class ServicesService {
   }
 
   async remove(id: string) {
-    await this.findOne(id);
-    return this.prisma.service.update({ where: { id }, data: { isActive: false } });
+    const svc = await this.prisma.service.findUnique({
+      where: { id },
+      include: { _count: { select: { quoteLines: true, invoiceLines: true } } },
+    });
+    if (!svc) throw new NotFoundException('Service introuvable');
+    const total = svc._count.quoteLines + svc._count.invoiceLines;
+    if (total > 0) {
+      // Linked → soft deactivate only
+      return this.prisma.service.update({ where: { id }, data: { isActive: false } });
+    }
+    // No links → true delete
+    return this.prisma.service.delete({ where: { id } });
   }
 }

@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { deals, companies, contacts, Deal, Company, Contact } from '@/lib/api';
 import { Modal } from '@/components/Modal';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
-import { PageHeader, AddButton, FilterBar, DataTable, Td, StatusBadge, FormActions } from '@/components/PageShell';
+import { PageHeader, AddButton, FilterBar, DataTable, Td, StatusBadge, FormActions, usePagination, useSort, TableFooter } from '@/components/PageShell';
 
 const STATUS_FR: Record<string, string> = { OPEN: 'En cours', WON: 'Gagné', LOST: 'Perdu' };
 const STATUS_ST: Record<string, { bg: string; color: string }> = {
@@ -31,6 +31,8 @@ export default function DealsPage() {
   const [form, setForm] = useState(empty);
   const [saving, setSaving] = useState(false);
 
+  const { sort, toggle: sortToggle, sorted } = useSort(list, null);
+  const pagination = usePagination(sorted);
   const load = (s?: string) => { setLoading(true); deals.list(s || undefined).then(setList).finally(() => setLoading(false)); };
   useEffect(() => { load(); companies.list().then(setCompList); contacts.list().then(setContList); }, []);
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
@@ -50,23 +52,22 @@ export default function DealsPage() {
       <PageHeader title="Affaires" action={<AddButton onClick={() => setOpen(true)} />} />
       <FilterBar filters={FILTERS} active={filter} onChange={v => { setFilter(v); load(v || undefined); }} />
 
-      <DataTable loading={loading} empty="Aucune affaire — cliquez sur «+ Ajouter»"
-        headers={[{ label: 'Titre' }, { label: 'Client' }, { label: 'Valeur', align: 'right' }, { label: 'Proba.', align: 'center' }, { label: 'Statut', align: 'center' }]}>
-        {list.map((d, i) => {
+      <DataTable loading={loading} empty="Aucune affaire — cliquez sur «+ Ajouter»" sort={sort} onSort={sortToggle}
+        headers={[{ label: 'Titre', key: 'title' }, { label: 'Client' }, { label: 'Valeur', key: 'value', align: 'right' }, { label: 'Proba.', align: 'center' }, { label: 'Statut', key: 'status', align: 'center' }]}>
+        {pagination.paged.map((d, i) => {
           const ss = STATUS_ST[d.status] ?? { bg: '#F5F5F5', color: '#888' };
           return (
-            <tr key={d.id} style={{ borderTop: i > 0 ? `1px solid ${T.rowDiv}` : undefined }}>
+            <tr key={d.id} style={{ borderTop: i > 0 ? `1px solid ${T.rowDiv}` : undefined, cursor: 'default' }}>
               <Td bold>{d.title}</Td>
               <Td>{d.company?.name ?? '—'}</Td>
               <td className="px-4 py-3 text-right text-sm font-bold" style={{ color: T.dark }}>{fmt(d.value)}</td>
               <td className="px-4 py-3 text-center text-sm" style={{ color: T.muted }}>{d.probability}%</td>
-              <td className="px-4 py-3 text-center">
-                <StatusBadge label={STATUS_FR[d.status] ?? d.status} bg={ss.bg} color={ss.color} />
-              </td>
+              <td className="px-4 py-3 text-center"><StatusBadge label={STATUS_FR[d.status] ?? d.status} bg={ss.bg} color={ss.color} /></td>
             </tr>
           );
         })}
       </DataTable>
+      <TableFooter pagination={pagination} export={{ getData: () => sorted.map(d => ({ Titre: d.title, Client: d.company?.name ?? '', 'Valeur (€)': d.value, 'Probabilité (%)': d.probability, Statut: STATUS_FR[d.status] ?? d.status })), filename: 'affaires', title: 'Affaires' }} />
 
       <Modal title="Nouvelle affaire" open={open} onClose={() => setOpen(false)}>
         <form onSubmit={handleSubmit} className="space-y-4">

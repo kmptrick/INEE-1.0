@@ -26,6 +26,7 @@ export const api = {
   get: <T>(path: string) => request<T>(path),
   post: <T>(path: string, body: unknown) => request<T>(path, { method: 'POST', body: JSON.stringify(body) }),
   put: <T>(path: string, body: unknown) => request<T>(path, { method: 'PUT', body: JSON.stringify(body) }),
+  patch: <T>(path: string, body: unknown) => request<T>(path, { method: 'PATCH', body: JSON.stringify(body) }),
   delete: <T>(path: string) => request<T>(path, { method: 'DELETE' }),
 };
 
@@ -34,6 +35,24 @@ export const auth = {
   login: (email: string, password: string) =>
     api.post<{ access_token: string; user: User }>('/auth/login', { email, password }),
   me: () => api.get<User>('/auth/me'),
+  changePassword: (oldPassword: string, newPassword: string) =>
+    api.post<{ message: string }>('/auth/change-password', { oldPassword, newPassword }),
+  forgotPassword: (email: string) =>
+    api.post<{ message: string }>('/auth/forgot-password', { email }),
+  resetPasswordWithToken: (token: string, newPassword: string) =>
+    api.post<{ message: string }>('/auth/reset-password', { token, newPassword }),
+};
+
+// Users (admin)
+export const users = {
+  list: () => api.get<UserProfile[]>('/users'),
+  create: (data: { email: string; firstName: string; lastName: string; role?: string }) =>
+    api.post<UserProfile>('/users', data),
+  changePassword: (id: string, newPassword: string) =>
+    api.patch<{ message: string }>(`/users/${id}/password`, { newPassword }),
+  resetPassword: (id: string) => api.post<{ message: string }>(`/users/${id}/reset-password`, {}),
+  deactivate: (id: string) => api.patch<UserProfile>(`/users/${id}/deactivate`, {}),
+  activate: (id: string) => api.patch<UserProfile>(`/users/${id}/activate`, {}),
 };
 
 // CRM
@@ -42,15 +61,38 @@ export const companies = {
   get: (id: string) => api.get<Company>(`/companies/${id}`),
   create: (data: Partial<Company>) => api.post<Company>('/companies', data),
   update: (id: string, data: Partial<Company>) => api.put<Company>(`/companies/${id}`, data),
+  deactivate: (id: string) => api.patch<Company>(`/companies/${id}/deactivate`, {}),
+  activate: (id: string) => api.patch<Company>(`/companies/${id}/activate`, {}),
   delete: (id: string) => api.delete(`/companies/${id}`),
 };
 
 export const contacts = {
-  list: (search?: string) => api.get<Contact[]>(`/contacts${search ? `?search=${search}` : ''}`),
+  deactivate: (id: string) => api.patch<Contact>(`/contacts/${id}/deactivate`, {}),
+  activate: (id: string) => api.patch<Contact>(`/contacts/${id}/activate`, {}),
+  list: (search?: string, companyId?: string) => {
+    const params = new URLSearchParams();
+    if (search) params.set('search', search);
+    if (companyId) params.set('companyId', companyId);
+    const qs = params.toString();
+    return api.get<Contact[]>(`/contacts${qs ? `?${qs}` : ''}`);
+  },
   get: (id: string) => api.get<Contact>(`/contacts/${id}`),
   create: (data: Partial<Contact>) => api.post<Contact>('/contacts', data),
   update: (id: string, data: Partial<Contact>) => api.put<Contact>(`/contacts/${id}`, data),
   delete: (id: string) => api.delete(`/contacts/${id}`),
+};
+
+export const invoicingSend = {
+  quote: (id: string, recipients: string[]) => api.post<Quote>(`/invoicing/quotes/${id}/send`, { recipients }),
+  invoice: (id: string, recipients: string[]) => api.post<Invoice>(`/invoicing/invoices/${id}/send`, { recipients }),
+};
+
+export const creditNotes = {
+  list: (status?: string) => api.get<CreditNote[]>(`/credit-notes${status ? `?status=${status}` : ''}`),
+  get: (id: string) => api.get<CreditNote>(`/credit-notes/${id}`),
+  create: (data: Partial<CreditNote> & { invoiceId: string; lines: any[] }) => api.post<CreditNote>('/credit-notes', data),
+  update: (id: string, data: any) => api.put<CreditNote>(`/credit-notes/${id}`, data),
+  delete: (id: string) => api.delete(`/credit-notes/${id}`),
 };
 
 export const deals = {
@@ -122,8 +164,11 @@ export const invoicing = {
 
 // Types
 export interface User { id: string; email: string; firstName: string; lastName: string; role: string; }
+export interface UserProfile { id: string; email: string; firstName: string; lastName: string; role: string; isActive: boolean; createdAt: string; }
 export interface Company {
   id: string;
+  reference?: string;
+  isActive?: boolean;
   clientType: 'SOCIETE' | 'PARTICULIER';
   name: string;
   denomination?: string;
@@ -138,16 +183,16 @@ export interface Company {
   notes?: string;
   _count?: { contacts: number; deals: number };
 }
-export interface Contact { id: string; firstName: string; lastName: string; email?: string; phone?: string; jobTitle?: string; company?: { id: string; name: string }; }
-export interface Deal { id: string; title: string; value: number; currency: string; status: string; probability: number; company?: { id: string; name: string }; contact?: { id: string; firstName: string; lastName: string }; stage?: { id: string; name: string }; }
+export interface Contact { id: string; reference?: string; isActive?: boolean; firstName: string; lastName: string; email?: string; phone?: string; jobTitle?: string; canReceiveInvoices?: boolean; company?: { id: string; name: string }; }
+export interface Deal { id: string; reference?: string; title: string; value: number; currency: string; status: string; probability: number; company?: { id: string; name: string }; contact?: { id: string; firstName: string; lastName: string }; stage?: { id: string; name: string }; }
 export interface Service { id: string; idPrestation: string; categorie: string; description: string; prixHT: number; vatRate?: number; unite?: string; remarques?: string; isActive: boolean; }
 export interface Commission { id: string; reference: string; brokerName: string; dealValue: number; commissionRate: number; commissionAmount: number; currency: string; status: string; notes?: string; company?: { id: string; name: string }; }
 export interface Quote { id: string; number: string; status: string; subtotal: number; vatRate: number; vatAmount: number; total: number; vatMention?: string; notes?: string; company?: { id: string; name: string }; lines?: QuoteLine[]; }
 export interface Invoice { id: string; number: string; status: string; subtotal: number; vatRate: number; vatAmount: number; total: number; paidAmount: number; dueDate?: string; vatMention?: string; notes?: string; company?: { id: string; name: string }; lines?: InvoiceLine[]; }
-export interface QuoteLine { id: string; serviceId?: string; description: string; quantity: number; unitPrice: number; unite?: string; total: number; }
-export interface InvoiceLine { id: string; serviceId?: string; description: string; quantity: number; unitPrice: number; unite?: string; total: number; }
+export interface QuoteLine { id: string; serviceId?: string; description: string; quantity: number; unitPrice: number; unite?: string; discountRate?: number; lineVatRate?: number; periodStart?: string; periodEnd?: string; total: number; }
+export interface InvoiceLine { id: string; serviceId?: string; description: string; quantity: number; unitPrice: number; unite?: string; discountRate?: number; lineVatRate?: number; periodStart?: string; periodEnd?: string; total: number; }
 export interface Project {
-  id: string; name: string; description?: string; status: string;
+  id: string; reference?: string; name: string; description?: string; status: string;
   startDate?: string; endDate?: string; budget?: number;
   company?: { id: string; name: string };
   tasks?: Task[];
@@ -163,3 +208,55 @@ export interface Task {
 export interface PipelineStats { status: string; _sum: { value: number }; _count: number; }
 export interface CommissionStats { totalDeals: number; totalCommissions: number; totalCount: number; pendingAmount: number; paidAmount: number; }
 export interface InvoicingStats { invoiceStats: any[]; quoteStats: any[]; overdueInvoices: any[]; }
+export interface CreditNote {
+  id: string; number: string; status: string;
+  subtotal: number; vatRate: number; vatAmount: number; total: number;
+  vatMention?: string; notes?: string;
+  invoice?: { id: string; number: string };
+  company?: { id: string; name: string };
+  lines?: CreditNoteLine[];
+}
+export interface CreditNoteLine { id: string; serviceId?: string; description: string; quantity: number; unitPrice: number; unite?: string; total: number; }
+
+export interface LeaveType { id: string; name: string; color: string; maxDaysPerYear: number; isActive: boolean; }
+export interface LeaveRequest {
+  id: string; userId: string; leaveTypeId: string; startDate: string; endDate: string;
+  daysCount: number; status: 'PENDING' | 'APPROVED' | 'REJECTED'; notes?: string;
+  user?: { id: string; firstName: string; lastName: string };
+  leaveType?: LeaveType;
+}
+export interface CalendarEvent {
+  id: string; title: string; description?: string; startDate: string; endDate: string;
+  allDay: boolean; location?: string; type: 'MEETING' | 'CALL' | 'TASK' | 'OTHER';
+  userId: string; user?: { id: string; firstName: string; lastName: string };
+}
+
+export const leaveTypes = {
+  list: () => api.get<LeaveType[]>('/leave-types'),
+  create: (data: Partial<LeaveType>) => api.post<LeaveType>('/leave-types', data),
+  update: (id: string, data: Partial<LeaveType>) => api.patch<LeaveType>(`/leave-types/${id}`, data),
+  delete: (id: string) => api.delete(`/leave-types/${id}`),
+};
+
+export const leaveRequests = {
+  list: (params?: { userId?: string; status?: string }) => {
+    const qs = new URLSearchParams(params as any).toString();
+    return api.get<LeaveRequest[]>(`/leave-requests${qs ? `?${qs}` : ''}`);
+  },
+  my: () => api.get<LeaveRequest[]>('/leave-requests/my'),
+  create: (data: { leaveTypeId: string; startDate: string; endDate: string; daysCount: number; notes?: string }) =>
+    api.post<LeaveRequest>('/leave-requests', data),
+  approve: (id: string) => api.patch<LeaveRequest>(`/leave-requests/${id}/approve`, {}),
+  reject: (id: string) => api.patch<LeaveRequest>(`/leave-requests/${id}/reject`, {}),
+  delete: (id: string) => api.delete(`/leave-requests/${id}`),
+};
+
+export const calendar = {
+  list: (params?: { userId?: string; start?: string; end?: string }) => {
+    const qs = new URLSearchParams(Object.entries(params ?? {}).filter(([, v]) => v) as any).toString();
+    return api.get<CalendarEvent[]>(`/calendar${qs ? `?${qs}` : ''}`);
+  },
+  create: (data: Partial<CalendarEvent>) => api.post<CalendarEvent>('/calendar', data),
+  update: (id: string, data: Partial<CalendarEvent>) => api.put<CalendarEvent>(`/calendar/${id}`, data),
+  delete: (id: string) => api.delete(`/calendar/${id}`),
+};

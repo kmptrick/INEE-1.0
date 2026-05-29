@@ -4,7 +4,8 @@ import dynamic from 'next/dynamic';
 import { invoicing, companies, Quote, Company, Service } from '@/lib/api';
 import { Modal } from '@/components/Modal';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
-import { PageHeader, AddButton, FilterBar, DataTable, Td, StatusBadge, FormActions } from '@/components/PageShell';
+import { PageHeader, AddButton, FilterBar, DataTable, Td, StatusBadge, FormActions, usePagination, useSort, useColumns, TableFooter } from '@/components/PageShell';
+import { NotesWidget } from '@/components/NotesWidget';
 import { ServicePicker } from '@/components/ServicePicker';
 import { computeVat, LU_VAT_RATES } from '@/lib/vat-rules';
 import type { IneeDocumentProps } from '@/components/IneeDocumentPdf';
@@ -34,9 +35,15 @@ const fmt = (n: number) => new Intl.NumberFormat('fr-LU', { style: 'currency', c
 const today = () => new Date().toLocaleDateString('fr-LU');
 const fmtDate = (d?: string) => d ? new Date(d).toLocaleDateString('fr-LU') : '—';
 
-type LineForm = { serviceId: string; description: string; quantity: string; unitPrice: string; unite: string };
-const emptyLine = (): LineForm => ({ serviceId: '', description: '', quantity: '1', unitPrice: '', unite: '' });
+type LineForm = { serviceId: string; description: string; quantity: string; unitPrice: string; unite: string; discountRate: string; lineVatRate: string; periodStart: string; periodEnd: string; };
+const emptyLine = (): LineForm => ({ serviceId: '', description: '', quantity: '1', unitPrice: '', unite: '', discountRate: '', lineVatRate: '', periodStart: '', periodEnd: '' });
 const emptyForm = () => ({ companyId: '', vatRate: '17', vatMention: '', notes: '', lines: [emptyLine()] });
+const lineTotal = (l: LineForm) => { const q = parseFloat(l.quantity)||0; const p = parseFloat(l.unitPrice)||0; const d = parseFloat(l.discountRate)||0; return q * p * (1 - d/100); };
+const ALL_COLS_Q = [
+  { key: 'number', label: 'Numéro' }, { key: 'company', label: 'Client' },
+  { key: 'subtotal', label: 'HT' }, { key: 'vatAmount', label: 'TVA' },
+  { key: 'total', label: 'TTC' }, { key: 'status', label: 'Statut' },
+];
 
 function ActionBtn({ label, color, bg, border, onClick, disabled }: { label: string; color: string; bg: string; border: string; onClick: () => void; disabled?: boolean }) {
   return (
@@ -57,6 +64,9 @@ export default function QuotesPage() {
   const [form, setForm] = useState(emptyForm());
   const [saving, setSaving] = useState(false);
   const [fullQuotes, setFullQuotes] = useState<Record<string, Quote>>({});
+  const { sort, toggle: sortToggle, sorted } = useSort(list, null);
+  const pagination = usePagination(sorted);
+  const { visible, toggle: colToggle } = useColumns('quotes', ALL_COLS_Q);
 
   // Detail / action modal
   const [viewItem, setViewItem] = useState<Quote | null>(null);
@@ -133,6 +143,10 @@ export default function QuotesPage() {
           ...(l.serviceId ? { serviceId: l.serviceId } : {}),
           description: l.description, quantity: parseFloat(l.quantity) || 1,
           unitPrice: parseFloat(l.unitPrice) || 0, ...(l.unite ? { unite: l.unite } : {}),
+          ...(l.discountRate ? { discountRate: parseFloat(l.discountRate) } : {}),
+          ...(l.lineVatRate ? { lineVatRate: parseFloat(l.lineVatRate) } : {}),
+          ...(l.periodStart ? { periodStart: l.periodStart } : {}),
+          ...(l.periodEnd ? { periodEnd: l.periodEnd } : {}),
         })),
       };
       if (form.companyId) data.companyId = form.companyId;
@@ -156,21 +170,29 @@ export default function QuotesPage() {
       <PageHeader title="Devis" action={<AddButton onClick={() => setOpen(true)} />} />
       <FilterBar filters={FILTERS} active={filter} onChange={v => { setFilter(v); load(v || undefined); }} />
 
-      <DataTable loading={loading} empty="Aucun devis"
-        headers={[{ label: 'Numéro' }, { label: 'Client' }, { label: 'HT', align: 'right' }, { label: 'TVA', align: 'right' }, { label: 'TTC', align: 'right' }, { label: 'Statut', align: 'center' }, { label: '', align: 'center' }]}>
-        {list.map((q, i) => {
+      <DataTable loading={loading} empty="Aucun devis" sort={sort} onSort={sortToggle}
+        headers={[
+          ...(visible.includes('number')   ? [{ label: 'Numéro',  key: 'number' }] : []),
+          ...(visible.includes('company')  ? [{ label: 'Client' }] : []),
+          ...(visible.includes('subtotal') ? [{ label: 'HT',      key: 'subtotal',  align: 'right' as const }] : []),
+          ...(visible.includes('vatAmount')? [{ label: 'TVA',     key: 'vatAmount', align: 'right' as const }] : []),
+          ...(visible.includes('total')    ? [{ label: 'TTC',     key: 'total',     align: 'right' as const }] : []),
+          ...(visible.includes('status')   ? [{ label: 'Statut',  key: 'status',    align: 'center' as const }] : []),
+          { label: '', align: 'center' as const },
+        ]}>
+        {pagination.paged.map((q, i) => {
           const full = fullQuotes[q.id] ?? q;
           const ss = STATUS_ST[q.status] ?? { bg: '#F5F5F5', color: '#888' };
           return (
             <tr key={q.id} onClick={() => openView(q)} style={{ borderTop: i > 0 ? `1px solid ${T.rowDiv}` : undefined, cursor: 'pointer' }}
               onMouseEnter={e => (e.currentTarget.style.background = T.copperBg)}
               onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-              <td className="px-4 py-3 font-mono text-xs font-bold" style={{ color: T.dark }}>{q.number}</td>
-              <Td>{q.company?.name ?? '—'}</Td>
-              <td className="px-4 py-3 text-right text-sm" style={{ color: T.dark }}>{fmt(q.subtotal)}</td>
-              <td className="px-4 py-3 text-right text-sm" style={{ color: T.muted }}>{fmt(q.vatAmount)}</td>
-              <td className="px-4 py-3 text-right text-sm font-bold" style={{ color: T.dark }}>{fmt(q.total)}</td>
-              <td className="px-4 py-3 text-center"><StatusBadge label={STATUS_FR[q.status] ?? q.status} bg={ss.bg} color={ss.color} /></td>
+              {visible.includes('number')    && <td className="px-4 py-3 font-mono text-xs font-bold" style={{ color: T.dark }}>{q.number}</td>}
+              {visible.includes('company')   && <Td>{q.company?.name ?? '—'}</Td>}
+              {visible.includes('subtotal')  && <td className="px-4 py-3 text-right text-sm" style={{ color: T.dark }}>{fmt(q.subtotal)}</td>}
+              {visible.includes('vatAmount') && <td className="px-4 py-3 text-right text-sm" style={{ color: T.muted }}>{fmt(q.vatAmount)}</td>}
+              {visible.includes('total')     && <td className="px-4 py-3 text-right text-sm font-bold" style={{ color: T.dark }}>{fmt(q.total)}</td>}
+              {visible.includes('status')    && <td className="px-4 py-3 text-center"><StatusBadge label={STATUS_FR[q.status] ?? q.status} bg={ss.bg} color={ss.color} /></td>}
               <td className="px-4 py-3 text-center" onClick={e => e.stopPropagation()}>
                 <PdfDownloadButton {...buildPdfProps(full)} />
               </td>
@@ -178,6 +200,7 @@ export default function QuotesPage() {
           );
         })}
       </DataTable>
+      <TableFooter pagination={pagination} export={{ getData: () => sorted.map(q => ({ Numéro: q.number, Client: q.company?.name ?? '', 'HT (€)': q.subtotal, 'TVA (€)': q.vatAmount, 'TTC (€)': q.total, Statut: STATUS_FR[q.status] ?? q.status, Validité: q.validUntil ? new Date(q.validUntil).toLocaleDateString('fr-LU') : '' })), filename: 'devis', title: 'Devis' }} columnSelector={{ allCols: ALL_COLS_Q, visible, toggle: colToggle }} />
 
       {/* ── Detail / Actions modal ── */}
       {viewItem && (
@@ -185,6 +208,7 @@ export default function QuotesPage() {
           <div className="space-y-4">
             {/* Status + actions */}
             <div className="flex flex-wrap items-center gap-2 pb-3" style={{ borderBottom: `1px solid ${T.border}` }}>
+              <NotesWidget value={viewItem.notes ?? ''} onChange={v => setViewItem(d => d ? { ...d, notes: v } : d)} />
               {(() => { const ss = STATUS_ST[viewItem.status] ?? { bg: '#F5F5F5', color: '#888' }; return <StatusBadge label={STATUS_FR[viewItem.status] ?? viewItem.status} bg={ss.bg} color={ss.color} />; })()}
               <div className="flex flex-wrap gap-2 ml-auto">
                 <PdfDownloadButton {...buildPdfProps(viewItem)} />

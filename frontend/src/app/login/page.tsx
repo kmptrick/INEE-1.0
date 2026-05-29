@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
+import { auth } from '@/lib/api';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -10,6 +11,13 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Forgot password state
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotDone, setForgotDone] = useState(false);
+  const [forgotError, setForgotError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,6 +31,27 @@ export default function LoginPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleForgot = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotError('');
+    setForgotLoading(true);
+    try {
+      await auth.forgotPassword(forgotEmail);
+      setForgotDone(true);
+    } catch {
+      setForgotError('Une erreur est survenue. Veuillez réessayer.');
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  const openForgot = () => {
+    setForgotEmail('');
+    setForgotDone(false);
+    setForgotError('');
+    setForgotOpen(true);
   };
 
   return (
@@ -68,46 +97,105 @@ export default function LoginPage() {
             <span className="text-xl font-bold tracking-widest" style={{ color: '#1A1008' }}>INEE</span>
           </div>
 
-          <h2 className="text-2xl font-bold mb-1" style={{ color: '#1A1008' }}>Connexion</h2>
-          <p className="text-sm mb-8" style={{ color: '#8A7060' }}>Accédez à votre espace de travail</p>
+          {!forgotOpen ? (
+            <>
+              <h2 className="text-2xl font-bold mb-1" style={{ color: '#1A1008' }}>Connexion</h2>
+              <p className="text-sm mb-8" style={{ color: '#8A7060' }}>Accédez à votre espace de travail</p>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: '#4A3020' }}>Email</label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} required
-                placeholder="vous@inee.lu"
-                className="w-full px-4 py-3 rounded-lg text-sm outline-none transition-all"
-                style={{ background: '#FFFFFF', border: '1.5px solid #E0D5CC', color: '#1A1008' }}
-                onFocus={e => { e.target.style.borderColor = '#C8803A'; e.target.style.boxShadow = '0 0 0 3px rgba(200,128,58,0.12)'; }}
-                onBlur={e => { e.target.style.borderColor = '#E0D5CC'; e.target.style.boxShadow = 'none'; }}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: '#4A3020' }}>Mot de passe</label>
-              <input type="password" value={password} onChange={e => setPassword(e.target.value)} required
-                placeholder="••••••••"
-                className="w-full px-4 py-3 rounded-lg text-sm outline-none transition-all"
-                style={{ background: '#FFFFFF', border: '1.5px solid #E0D5CC', color: '#1A1008' }}
-                onFocus={e => { e.target.style.borderColor = '#C8803A'; e.target.style.boxShadow = '0 0 0 3px rgba(200,128,58,0.12)'; }}
-                onBlur={e => { e.target.style.borderColor = '#E0D5CC'; e.target.style.boxShadow = 'none'; }}
-              />
-            </div>
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: '#4A3020' }}>Email</label>
+                  <input type="email" value={email} onChange={e => setEmail(e.target.value)} required
+                    placeholder="vous@inee.lu"
+                    className="w-full px-4 py-3 rounded-lg text-sm outline-none transition-all"
+                    style={{ background: '#FFFFFF', border: '1.5px solid #E0D5CC', color: '#1A1008' }}
+                    onFocus={e => { e.target.style.borderColor = '#C8803A'; e.target.style.boxShadow = '0 0 0 3px rgba(200,128,58,0.12)'; }}
+                    onBlur={e => { e.target.style.borderColor = '#E0D5CC'; e.target.style.boxShadow = 'none'; }}
+                  />
+                </div>
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-semibold uppercase tracking-wider" style={{ color: '#4A3020' }}>Mot de passe</label>
+                    <button type="button" onClick={openForgot}
+                      className="text-xs transition-colors"
+                      style={{ color: '#C8803A' }}
+                      onMouseEnter={e => (e.currentTarget.style.color = '#A06828')}
+                      onMouseLeave={e => (e.currentTarget.style.color = '#C8803A')}>
+                      Mot de passe oublié ?
+                    </button>
+                  </div>
+                  <input type="password" value={password} onChange={e => setPassword(e.target.value)} required
+                    placeholder="••••••••"
+                    className="w-full px-4 py-3 rounded-lg text-sm outline-none transition-all"
+                    style={{ background: '#FFFFFF', border: '1.5px solid #E0D5CC', color: '#1A1008' }}
+                    onFocus={e => { e.target.style.borderColor = '#C8803A'; e.target.style.boxShadow = '0 0 0 3px rgba(200,128,58,0.12)'; }}
+                    onBlur={e => { e.target.style.borderColor = '#E0D5CC'; e.target.style.boxShadow = 'none'; }}
+                  />
+                </div>
 
-            {error && (
-              <div className="text-sm rounded-lg px-4 py-3" style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C' }}>
-                {error}
-              </div>
-            )}
+                {error && (
+                  <div className="text-sm rounded-lg px-4 py-3" style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C' }}>
+                    {error}
+                  </div>
+                )}
 
-            <button type="submit" disabled={loading}
-              className="w-full font-semibold py-3 px-4 rounded-lg text-sm transition-all"
-              style={{ background: loading ? '#A06828' : '#C8803A', color: '#FFFFFF', letterSpacing: '0.03em', boxShadow: '0 2px 8px rgba(200,128,58,0.35)' }}
-              onMouseEnter={e => { if (!loading) (e.currentTarget as HTMLElement).style.background = '#A86C2E'; }}
-              onMouseLeave={e => { if (!loading) (e.currentTarget as HTMLElement).style.background = '#C8803A'; }}
-            >
-              {loading ? 'Connexion...' : 'Se connecter →'}
-            </button>
-          </form>
+                <button type="submit" disabled={loading}
+                  className="w-full font-semibold py-3 px-4 rounded-lg text-sm transition-all"
+                  style={{ background: loading ? '#A06828' : '#C8803A', color: '#FFFFFF', letterSpacing: '0.03em', boxShadow: '0 2px 8px rgba(200,128,58,0.35)' }}
+                  onMouseEnter={e => { if (!loading) (e.currentTarget as HTMLElement).style.background = '#A86C2E'; }}
+                  onMouseLeave={e => { if (!loading) (e.currentTarget as HTMLElement).style.background = '#C8803A'; }}
+                >
+                  {loading ? 'Connexion...' : 'Se connecter →'}
+                </button>
+              </form>
+            </>
+          ) : (
+            <>
+              <button onClick={() => setForgotOpen(false)} className="flex items-center gap-1.5 text-xs mb-6 transition-colors" style={{ color: '#8A7060' }}
+                onMouseEnter={e => (e.currentTarget.style.color = '#C8803A')}
+                onMouseLeave={e => (e.currentTarget.style.color = '#8A7060')}>
+                ← Retour à la connexion
+              </button>
+              <h2 className="text-2xl font-bold mb-1" style={{ color: '#1A1008' }}>Mot de passe oublié</h2>
+              <p className="text-sm mb-8" style={{ color: '#8A7060' }}>Entrez votre adresse email pour recevoir un lien de réinitialisation.</p>
+
+              {forgotDone ? (
+                <div className="rounded-xl px-5 py-6 text-center space-y-3" style={{ background: '#F0FDF4', border: '1px solid #BBF7D0' }}>
+                  <p className="text-3xl">✓</p>
+                  <p className="font-semibold text-sm" style={{ color: '#16A34A' }}>Email envoyé</p>
+                  <p className="text-xs" style={{ color: '#4A3020' }}>Si cet email existe dans notre système, vous recevrez un lien dans quelques minutes.</p>
+                  <button onClick={() => setForgotOpen(false)}
+                    className="mt-2 text-xs font-semibold transition-colors"
+                    style={{ color: '#C8803A' }}>
+                    Retour à la connexion →
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleForgot} className="space-y-5">
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: '#4A3020' }}>Email</label>
+                    <input type="email" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} required
+                      placeholder="vous@inee.lu"
+                      className="w-full px-4 py-3 rounded-lg text-sm outline-none transition-all"
+                      style={{ background: '#FFFFFF', border: '1.5px solid #E0D5CC', color: '#1A1008' }}
+                      onFocus={e => { e.target.style.borderColor = '#C8803A'; e.target.style.boxShadow = '0 0 0 3px rgba(200,128,58,0.12)'; }}
+                      onBlur={e => { e.target.style.borderColor = '#E0D5CC'; e.target.style.boxShadow = 'none'; }}
+                    />
+                  </div>
+                  {forgotError && (
+                    <div className="text-sm rounded-lg px-4 py-3" style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C' }}>
+                      {forgotError}
+                    </div>
+                  )}
+                  <button type="submit" disabled={forgotLoading}
+                    className="w-full font-semibold py-3 px-4 rounded-lg text-sm transition-all"
+                    style={{ background: forgotLoading ? '#A06828' : '#C8803A', color: '#FFFFFF', letterSpacing: '0.03em', boxShadow: '0 2px 8px rgba(200,128,58,0.35)' }}>
+                    {forgotLoading ? 'Envoi...' : 'Envoyer le lien →'}
+                  </button>
+                </form>
+              )}
+            </>
+          )}
         </div>
       </div>
     </div>

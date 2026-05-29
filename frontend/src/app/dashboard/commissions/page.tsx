@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { commissions, companies, Commission, Company } from '@/lib/api';
 import { Modal } from '@/components/Modal';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
-import { PageHeader, AddButton, FilterBar, DataTable, Td, StatusBadge, FormActions } from '@/components/PageShell';
+import { PageHeader, AddButton, FilterBar, DataTable, Td, StatusBadge, FormActions, usePagination, useSort, TableFooter } from '@/components/PageShell';
 
 const STATUS_ST: Record<string, { bg: string; color: string }> = {
   PENDING:   { bg: '#FDF3E8', color: '#C8803A' },
@@ -32,6 +32,8 @@ export default function CommissionsPage() {
   const [form, setForm] = useState(empty);
   const [saving, setSaving] = useState(false);
 
+  const { sort, toggle: sortToggle, sorted } = useSort(list, null);
+  const pagination = usePagination(sorted);
   const load = (s?: string) => { setLoading(true); commissions.list(s || undefined).then(setList).finally(() => setLoading(false)); };
   useEffect(() => { load(); companies.list().then(setCompList); }, []);
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
@@ -50,9 +52,9 @@ export default function CommissionsPage() {
       <PageHeader title="Commissions" action={<AddButton onClick={() => setOpen(true)} />} />
       <FilterBar filters={FILTERS} active={filter} onChange={v => { setFilter(v); load(v || undefined); }} />
 
-      <DataTable loading={loading} empty="Aucune commission — cliquez sur «+ Ajouter»"
-        headers={[{ label: 'Référence' }, { label: 'Apporteur' }, { label: 'Client' }, { label: 'Affaire', align: 'right' }, { label: 'Taux', align: 'center' }, { label: 'Commission', align: 'right' }, { label: 'Statut', align: 'center' }]}>
-        {list.map((c, i) => {
+      <DataTable loading={loading} empty="Aucune commission — cliquez sur «+ Ajouter»" sort={sort} onSort={sortToggle}
+        headers={[{ label: 'Référence' }, { label: 'Apporteur', key: 'brokerName' }, { label: 'Client' }, { label: 'Affaire', key: 'dealValue', align: 'right' }, { label: 'Taux', align: 'center' }, { label: 'Commission', key: 'commissionAmount', align: 'right' }, { label: 'Statut', key: 'status', align: 'center' }]}>
+        {pagination.paged.map((c, i) => {
           const ss = STATUS_ST[c.status] ?? { bg: '#F5F5F5', color: '#888' };
           return (
             <tr key={c.id} style={{ borderTop: i > 0 ? `1px solid ${T.rowDiv}` : undefined }}>
@@ -67,6 +69,7 @@ export default function CommissionsPage() {
           );
         })}
       </DataTable>
+      <TableFooter pagination={pagination} export={{ getData: () => sorted.map(c => ({ Référence: c.reference, Apporteur: c.brokerName, Client: c.company?.name ?? '', 'Affaire (€)': c.dealValue, 'Taux (%)': c.commissionRate, 'Commission (€)': c.commissionAmount, Statut: STATUS_FR[c.status] ?? c.status })), filename: 'commissions', title: 'Commissions' }} />
 
       <Modal title="Nouvelle commission" open={open} onClose={() => setOpen(false)}>
         <form onSubmit={handleSubmit} className="space-y-4">

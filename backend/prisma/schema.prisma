@@ -24,14 +24,27 @@ model User {
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
-  contacts      Contact[]
-  deals         Deal[]
-  tasks         Task[]
-  timeEntries   TimeEntry[]
-  invoices      Invoice[]
-  quotes        Quote[]
-  commissions   Commission[]
-  calendarEvents CalendarEvent[]
+  contacts            Contact[]
+  deals               Deal[]
+  tasks               Task[]
+  timeEntries         TimeEntry[]
+  invoices            Invoice[]
+  quotes              Quote[]
+  commissions         Commission[]
+  creditNotes         CreditNote[]
+  calendarEvents      CalendarEvent[]
+  passwordResetTokens PasswordResetToken[]
+  leaveRequests       LeaveRequest[]
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
 }
 
 enum Role {
@@ -44,6 +57,8 @@ enum Role {
 
 model Contact {
   id           String   @id @default(cuid())
+  reference    String?  @unique
+  isActive     Boolean  @default(true)
   firstName    String
   lastName     String
   email        String?
@@ -52,13 +67,14 @@ model Contact {
   jobTitle     String?
   notes        String?
   tags         String[]
-  companyId    String?
-  company      Company? @relation(fields: [companyId], references: [id])
-  assignedToId String?
-  assignedTo   User?    @relation(fields: [assignedToId], references: [id])
-  deals        Deal[]
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  companyId           String?
+  company             Company? @relation(fields: [companyId], references: [id])
+  assignedToId        String?
+  assignedTo          User?    @relation(fields: [assignedToId], references: [id])
+  canReceiveInvoices  Boolean  @default(false)
+  deals               Deal[]
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 }
 
 enum ClientType {
@@ -68,6 +84,8 @@ enum ClientType {
 
 model Company {
   id              String     @id @default(cuid())
+  reference       String?    @unique
+  isActive        Boolean    @default(true)
   clientType      ClientType @default(SOCIETE)
   name            String
   denomination    String?
@@ -89,6 +107,7 @@ model Company {
   quotes      Quote[]
   commissions Commission[]
   projects    Project[]
+  creditNotes CreditNote[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 }
@@ -113,6 +132,7 @@ model Stage {
 
 model Deal {
   id                String     @id @default(cuid())
+  reference         String?    @unique
   title             String
   value             Float      @default(0)
   currency          String     @default("EUR")
@@ -142,6 +162,7 @@ enum DealStatus {
 
 model Project {
   id          String        @id @default(cuid())
+  reference   String?       @unique
   name        String
   description String?
   status      ProjectStatus @default(ACTIVE)
@@ -241,16 +262,20 @@ enum QuoteStatus {
 }
 
 model QuoteLine {
-  id          String   @id @default(cuid())
-  quoteId     String
-  quote       Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
-  serviceId   String?
-  service     Service? @relation(fields: [serviceId], references: [id])
-  description String
-  quantity    Float    @default(1)
-  unitPrice   Float
-  unite       String?
-  total       Float
+  id           String    @id @default(cuid())
+  quoteId      String
+  quote        Quote     @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  serviceId    String?
+  service      Service?  @relation(fields: [serviceId], references: [id])
+  description  String
+  quantity     Float     @default(1)
+  unitPrice    Float
+  unite        String?
+  discountRate Float     @default(0)
+  lineVatRate  Float?
+  periodStart  DateTime?
+  periodEnd    DateTime?
+  total        Float
 }
 
 model Invoice {
@@ -271,6 +296,7 @@ model Invoice {
   paidAmount  Float         @default(0)
   vatMention  String?
   notes       String?
+  creditNotes CreditNote[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 }
@@ -284,16 +310,20 @@ enum InvoiceStatus {
 }
 
 model InvoiceLine {
-  id          String   @id @default(cuid())
-  invoiceId   String
-  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-  serviceId   String?
-  service     Service? @relation(fields: [serviceId], references: [id])
-  description String
-  quantity    Float    @default(1)
-  unitPrice   Float
-  unite       String?
-  total       Float
+  id           String    @id @default(cuid())
+  invoiceId    String
+  invoice      Invoice   @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  serviceId    String?
+  service      Service?  @relation(fields: [serviceId], references: [id])
+  description  String
+  quantity     Float     @default(1)
+  unitPrice    Float
+  unite        String?
+  discountRate Float     @default(0)
+  lineVatRate  Float?
+  periodStart  DateTime?
+  periodEnd    DateTime?
+  total        Float
 }
 
 // ─── CATALOGUE DE SERVICES ────────────────────────────────────────────────────
@@ -310,8 +340,9 @@ model Service {
   isActive     Boolean       @default(true)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
-  quoteLines   QuoteLine[]
-  invoiceLines InvoiceLine[]
+  quoteLines       QuoteLine[]
+  invoiceLines     InvoiceLine[]
+  creditNoteLines  CreditNoteLine[]
 }
 
 // ─── COMMISSIONS (spécifique INEE) ────────────────────────────────────────────
@@ -342,6 +373,39 @@ enum CommissionStatus {
   CANCELLED
 }
 
+// ─── CONGÉS ───────────────────────────────────────────────────────────────────
+
+model LeaveType {
+  id             String         @id @default(cuid())
+  name           String
+  color          String         @default("#6B7280")
+  maxDaysPerYear Int            @default(25)
+  isActive       Boolean        @default(true)
+  createdAt      DateTime       @default(now())
+  leaveRequests  LeaveRequest[]
+}
+
+model LeaveRequest {
+  id          String             @id @default(cuid())
+  userId      String
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  leaveTypeId String
+  leaveType   LeaveType          @relation(fields: [leaveTypeId], references: [id])
+  startDate   DateTime
+  endDate     DateTime
+  daysCount   Float
+  status      LeaveRequestStatus @default(PENDING)
+  notes       String?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+}
+
+enum LeaveRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 // ─── CALENDRIER ───────────────────────────────────────────────────────────────
 
 model CalendarEvent {
@@ -363,4 +427,47 @@ enum EventType {
   CALL
   TASK
   OTHER
+}
+
+// ─── NOTES DE CRÉDIT ──────────────────────────────────────────────────────────
+
+model CreditNote {
+  id          String           @id @default(cuid())
+  number      String           @unique
+  status      CreditNoteStatus @default(DRAFT)
+  issueDate   DateTime         @default(now())
+  invoiceId   String
+  invoice     Invoice          @relation(fields: [invoiceId], references: [id])
+  companyId   String?
+  company     Company?         @relation(fields: [companyId], references: [id])
+  createdById String?
+  createdBy   User?            @relation(fields: [createdById], references: [id])
+  lines       CreditNoteLine[]
+  subtotal    Float            @default(0)
+  vatRate     Float            @default(17)
+  vatAmount   Float            @default(0)
+  total       Float            @default(0)
+  vatMention  String?
+  notes       String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+enum CreditNoteStatus {
+  DRAFT
+  ISSUED
+  CANCELLED
+}
+
+model CreditNoteLine {
+  id           String     @id @default(cuid())
+  creditNoteId String
+  creditNote   CreditNote @relation(fields: [creditNoteId], references: [id], onDelete: Cascade)
+  serviceId    String?
+  service      Service?   @relation(fields: [serviceId], references: [id])
+  description  String
+  quantity     Float      @default(1)
+  unitPrice    Float
+  unite        String?
+  total        Float
 }

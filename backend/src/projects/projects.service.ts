@@ -16,6 +16,12 @@ const PROJECT_INCLUDE = {
 export class ProjectsService {
   constructor(private prisma: PrismaService) {}
 
+  private async nextReference(): Promise<string> {
+    const year = new Date().getFullYear();
+    const count = await this.prisma.project.count();
+    return `Proj / ${year} - ${String(count + 1).padStart(3, '0')}`;
+  }
+
   findAll(status?: string) {
     return this.prisma.project.findMany({
       where: status ? { status: status as any } : undefined,
@@ -34,14 +40,16 @@ export class ProjectsService {
     return p;
   }
 
-  create(dto: CreateProjectDto) {
+  async create(dto: CreateProjectDto) {
     const { startDate, endDate, ...rest } = dto;
+    const reference = await this.nextReference();
     return this.prisma.project.create({
       data: {
         ...rest,
+        reference,
         startDate: startDate ? new Date(startDate) : undefined,
         endDate: endDate ? new Date(endDate) : undefined,
-      },
+      } as any,
       include: PROJECT_INCLUDE,
     });
   }

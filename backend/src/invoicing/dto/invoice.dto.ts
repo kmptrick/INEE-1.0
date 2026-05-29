@@ -16,6 +16,18 @@ export class InvoiceLineDto {
 
   @IsOptional() @IsString()
   unite?: string;
+
+  @IsOptional() @IsNumber() @Min(0)
+  discountRate?: number;
+
+  @IsOptional() @IsNumber() @Min(0)
+  lineVatRate?: number;
+
+  @IsOptional() @IsDateString()
+  periodStart?: string;
+
+  @IsOptional() @IsDateString()
+  periodEnd?: string;
 }
 
 export class CreateInvoiceDto {

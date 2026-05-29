@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { companies, Company } from '@/lib/api';
 import { Modal } from '@/components/Modal';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
-import { PageHeader, AddButton, DataTable, Td, FormActions } from '@/components/PageShell';
+import { PageHeader, AddButton, DataTable, Td, FormActions, usePagination, useSort, useColumns, TableFooter } from '@/components/PageShell';
 
 const FORMES = ['Sàrl', 'SA', 'SNC', 'SCS', 'SC', 'GIE', 'ASBL', 'Fondation', 'Autre'];
 
@@ -20,6 +20,15 @@ export default function ClientsPage() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(emptyForm());
   const [saving, setSaving] = useState(false);
+  const [toggling, setToggling] = useState<string | null>(null);
+  const { sort, toggle: sortToggle, sorted } = useSort(list, null);
+  const pagination = usePagination(sorted);
+  const { visible, toggle: colToggle } = useColumns('companies', [
+    { key: 'reference', label: 'Réf.' }, { key: 'name', label: 'Nom' },
+    { key: 'email', label: 'Email' }, { key: 'phone', label: 'Téléphone' },
+    { key: 'city', label: 'Ville' }, { key: 'country', label: 'Pays' },
+    { key: 'status', label: 'Statut' },
+  ]);
 
   const load = (q?: string) => { setLoading(true); companies.list(q).then(setList).finally(() => setLoading(false)); };
   useEffect(() => { load(); }, []);
@@ -29,6 +38,14 @@ export default function ClientsPage() {
     e.preventDefault(); setSaving(true);
     try { await companies.create(form); setOpen(false); setForm(emptyForm()); load(search || undefined); }
     finally { setSaving(false); }
+  };
+
+  const toggleActive = async (c: Company) => {
+    setToggling(c.id);
+    try {
+      const updated = c.isActive === false ? await companies.activate(c.id) : await companies.deactivate(c.id);
+      setList(l => l.map(x => x.id === c.id ? { ...x, isActive: updated.isActive } : x));
+    } finally { setToggling(null); }
   };
 
   const isSociete = form.clientType === 'SOCIETE';
@@ -47,35 +64,57 @@ export default function ClientsPage() {
         />
       </div>
 
-      <DataTable loading={loading} empty="Aucun client — cliquez sur «+ Ajouter»"
+      <DataTable loading={loading} empty="Aucun client — cliquez sur «+ Ajouter»" sort={sort} onSort={sortToggle}
         headers={[
-          { label: 'Type' }, { label: 'Nom' }, { label: 'Email' }, { label: 'Ville' },
-          { label: 'N° TVA' }, { label: 'Contacts', align: 'center' }, { label: 'Affaires', align: 'center' },
+          { label: 'Type' },
+          ...(visible.includes('reference') ? [{ label: 'Réf.' }] : []),
+          ...(visible.includes('name')    ? [{ label: 'Nom',       key: 'name' }] : []),
+          ...(visible.includes('email')   ? [{ label: 'Email' }] : []),
+          ...(visible.includes('city')    ? [{ label: 'Ville',     key: 'city' }] : []),
+          ...(visible.includes('country') ? [{ label: 'Pays' }] : []),
+          ...(visible.includes('status')  ? [{ label: 'Statut' }] : []),
+          { label: '', align: 'center' as const },
         ]}>
-        {list.map((c, i) => (
-          <tr key={c.id} style={{ borderTop: i > 0 ? `1px solid ${T.rowDiv}` : undefined }}>
-            <td className="px-4 py-3">
-              <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
-                style={c.clientType === 'SOCIETE'
-                  ? { background: '#EFF6FF', color: '#1D6FD8' }
-                  : { background: '#F0FDF4', color: '#16A34A' }}>
-                {c.clientType === 'SOCIETE' ? 'Société' : 'Particulier'}
-              </span>
-            </td>
-            <Td bold>{c.name}</Td>
-            <Td>{c.email ?? '—'}</Td>
-            <Td>{c.city ?? '—'}</Td>
-            <td className="px-4 py-3 text-xs font-mono" style={{ color: T.muted }}>{c.vatNumber ?? '—'}</td>
-            <td className="px-4 py-3 text-center text-sm font-semibold" style={{ color: T.dark }}>{c._count?.contacts ?? 0}</td>
-            <td className="px-4 py-3 text-center text-sm font-semibold" style={{ color: T.dark }}>{c._count?.deals ?? 0}</td>
-          </tr>
-        ))}
+        {pagination.paged.map((c, i) => {
+          const inactive = c.isActive === false;
+          return (
+            <tr key={c.id} style={{ borderTop: i > 0 ? `1px solid ${T.rowDiv}` : undefined, opacity: inactive ? 0.55 : 1 }}>
+              <td className="px-4 py-3">
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                  style={c.clientType === 'SOCIETE' ? { background: '#EFF6FF', color: '#1D6FD8' } : { background: '#F0FDF4', color: '#16A34A' }}>
+                  {c.clientType === 'SOCIETE' ? 'Société' : 'Particulier'}
+                </span>
+              </td>
+              {visible.includes('reference') && <td className="px-4 py-3 font-mono text-xs" style={{ color: T.muted }}>{(c as any).reference ?? '—'}</td>}
+              {visible.includes('name') && (
+                <td className="px-4 py-3 font-semibold text-sm" style={{ color: T.dark }}>
+                  {c.name}
+                  {inactive && <span className="ml-2 text-xs px-1.5 py-0.5 rounded-full" style={{ background: '#F5F5F5', color: '#999' }}>Inactif</span>}
+                </td>
+              )}
+              {visible.includes('email')   && <Td>{c.email ?? '—'}</Td>}
+              {visible.includes('city')    && <Td>{c.city ?? '—'}</Td>}
+              {visible.includes('country') && <Td>{c.country ?? '—'}</Td>}
+              {visible.includes('status')  && <td className="px-4 py-3 text-xs font-semibold" style={{ color: inactive ? '#999' : '#16A34A' }}>{inactive ? 'Inactif' : 'Actif'}</td>}
+              <td className="px-4 py-3 text-center">
+                <button onClick={() => toggleActive(c)} disabled={toggling === c.id}
+                  className="text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors cursor-pointer"
+                  style={inactive ? { color: '#16A34A', borderColor: '#BBF7D0', background: 'transparent', opacity: toggling === c.id ? 0.5 : 1 }
+                                  : { color: '#DC2626', borderColor: '#FECACA', background: 'transparent', opacity: toggling === c.id ? 0.5 : 1 }}>
+                  {inactive ? 'Réactiver' : 'Désactiver'}
+                </button>
+              </td>
+            </tr>
+          );
+        })}
       </DataTable>
+      <TableFooter pagination={pagination} export={{ getData: () => sorted.map(c => ({ Référence: (c as any).reference ?? '', Type: c.clientType === 'SOCIETE' ? 'Société' : 'Particulier', Nom: c.name, Email: c.email ?? '', Téléphone: c.phone ?? '', Ville: c.city ?? '', Pays: c.country ?? '', Statut: c.isActive === false ? 'Inactif' : 'Actif' })), filename: 'clients', title: 'Clients' }} columnSelector={{ allCols: [
+        { key: 'reference', label: 'Réf.' }, { key: 'name', label: 'Nom' }, { key: 'email', label: 'Email' },
+        { key: 'city', label: 'Ville' }, { key: 'country', label: 'Pays' }, { key: 'status', label: 'Statut' },
+      ], visible, toggle: colToggle }} />
 
       <Modal title="Nouveau client" open={open} onClose={() => setOpen(false)}>
         <form onSubmit={handleSubmit} className="space-y-4">
-
-          {/* Type toggle */}
           <div className="flex rounded-lg overflow-hidden border" style={{ borderColor: T.border }}>
             {(['SOCIETE', 'PARTICULIER'] as const).map(t => (
               <button key={t} type="button"

@@ -6,6 +6,12 @@ import { CreateDealDto, UpdateDealDto } from './dto/deal.dto';
 export class DealsService {
   constructor(private prisma: PrismaService) {}
 
+  private async nextReference(): Promise<string> {
+    const year = new Date().getFullYear();
+    const count = await this.prisma.deal.count();
+    return `Aff / ${year} - ${String(count + 1).padStart(3, '0')}`;
+  }
+
   findAll(status?: string) {
     return this.prisma.deal.findMany({
       where: status ? { status: status as any } : undefined,
@@ -33,9 +39,10 @@ export class DealsService {
     return deal;
   }
 
-  create(data: CreateDealDto, userId: string) {
+  async create(data: CreateDealDto, userId: string) {
+    const reference = await this.nextReference();
     return this.prisma.deal.create({
-      data: { ...data, assignedToId: userId },
+      data: { ...data, assignedToId: userId, reference } as any,
       include: { contact: true, company: true, stage: true },
     });
   }

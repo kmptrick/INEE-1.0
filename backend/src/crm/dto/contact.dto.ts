@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsEmail, IsArray } from 'class-validator';
+import { IsString, IsOptional, IsEmail, IsArray, IsBoolean } from 'class-validator';
 
 export class CreateContactDto {
   @IsString()
@@ -27,6 +27,9 @@ export class CreateContactDto {
 
   @IsOptional() @IsString()
   companyId?: string;
+
+  @IsOptional() @IsBoolean()
+  canReceiveInvoices?: boolean;
 }
 
 export class UpdateContactDto extends CreateContactDto {}

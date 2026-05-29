@@ -6,10 +6,10 @@ import { CreateCommissionDto, UpdateCommissionDto } from './dto/commission.dto';
 export class CommissionsService {
   constructor(private prisma: PrismaService) {}
 
-  private generateReference(): string {
+  private async generateReference(): Promise<string> {
     const year = new Date().getFullYear();
-    const rand = Math.floor(Math.random() * 9000) + 1000;
-    return `COM-${year}-${rand}`;
+    const count = await this.prisma.commission.count();
+    return `Ref / ${year} - ${String(count + 1).padStart(3, '0')}`;
   }
 
   private calcAmount(dealValue: number, rate: number): number {
@@ -39,13 +39,14 @@ export class CommissionsService {
     return commission;
   }
 
-  create(data: CreateCommissionDto) {
+  async create(data: CreateCommissionDto) {
     const commissionAmount = this.calcAmount(data.dealValue, data.commissionRate);
+    const reference = await this.generateReference();
     return this.prisma.commission.create({
       data: {
         ...data,
         commissionAmount,
-        reference: this.generateReference(),
+        reference,
       },
       include: { company: true },
     });
