@@ -218,7 +218,8 @@ export function DataTable({ headers, children, empty, loading, sort, onSort }: {
   );
   return (
     <div className="rounded-xl overflow-hidden" style={{ background: '#FFF', border: `1px solid ${T.border}`, boxShadow: '0 1px 3px rgba(26,16,8,0.04)' }}>
-      <table className="w-full text-sm">
+      <div className="overflow-x-auto">
+      <table className="w-full text-sm" style={{ minWidth: 600 }}>
         <thead style={{ background: T.head, borderBottom: `1px solid ${T.border}` }}>
           <tr>
             {headers.map((h, i) => (
@@ -244,6 +245,7 @@ export function DataTable({ headers, children, empty, loading, sort, onSort }: {
             : children}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }
