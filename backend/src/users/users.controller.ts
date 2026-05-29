@@ -28,8 +28,7 @@ export class UsersController {
   constructor(private service: UsersService) {}
 
   @Get()
-  @Roles('ADMIN')
-  findAll() { return this.service.findAll(); }
+  findAll() { return this.service.findAll(); } // All authenticated users can list users (for calendar selector)
 
   @Post()
   @Roles('ADMIN')

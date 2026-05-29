@@ -15,7 +15,8 @@ export class CalendarController {
     @Query('end') end?: string,
     @CurrentUser() user?: { sub: string; role: string },
   ) {
-    const filteredUserId = user?.role === 'ADMIN' ? userId : user?.sub;
+    // All authenticated users can view any user's calendar; default to own if no userId given
+    const filteredUserId = userId ?? user?.sub;
     return this.service.findAll(filteredUserId, start, end);
   }
 

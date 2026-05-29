@@ -14,8 +14,8 @@ export class LeaveRequestsController {
     @Query('status') status?: string,
     @CurrentUser() user?: { sub: string; role: string },
   ) {
-    // Non-admin users can only see their own
-    const filteredUserId = user?.role === 'ADMIN' ? userId : user?.sub;
+    // All authenticated users can view any user's leaves; default to own if no userId given
+    const filteredUserId = userId ?? user?.sub;
     return this.service.findAll(filteredUserId, status);
   }
 
