@@ -112,7 +112,7 @@ export default function ContactsPage() {
           );
         })}
       </DataTable>
-      <TableFooter pagination={pagination} export={{ getData: () => filtered.map(c => ({ Référence: (c as any).reference ?? '', Prénom: c.firstName, Nom: c.lastName, Email: c.email ?? '', Téléphone: c.phone ?? '', Mobile: c.mobile ?? '', Poste: c.jobTitle ?? '', Client: c.company?.name ?? '', 'Reçoit factures': c.canReceiveInvoices ? 'Oui' : 'Non', Statut: c.isActive === false ? 'Inactif' : 'Actif' })), filename: 'contacts', title: 'Contacts' }} />
+      <TableFooter pagination={pagination} export={{ getData: () => filtered.map(c => ({ Référence: (c as any).reference ?? '', Prénom: c.firstName, Nom: c.lastName, Email: c.email ?? '', Téléphone: c.phone ?? '', Poste: c.jobTitle ?? '', Client: c.company?.name ?? '', 'Reçoit factures': c.canReceiveInvoices ? 'Oui' : 'Non', Statut: c.isActive === false ? 'Inactif' : 'Actif' })), filename: 'contacts', title: 'Contacts' }} />
 
       <Modal title="Nouveau contact" open={open} onClose={() => setOpen(false)}>
         <form onSubmit={handleSubmit} className="space-y-4">
