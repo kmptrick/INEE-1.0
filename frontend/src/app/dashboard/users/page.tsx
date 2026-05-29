@@ -121,7 +121,7 @@ export default function UsersPage() {
 
       <DataTable loading={loading} empty="Aucun utilisateur" sort={sort} onSort={sortToggle}
         headers={[
-          { label: 'Nom', key: 'lastName' }, { label: 'Nom d\'utilisateur' }, { label: 'Email', key: 'email' },
+          { label: 'Nom', key: 'lastName' }, { label: 'Email', key: 'email' },
           { label: 'Fonction' }, { label: 'Rôle', key: 'role', align: 'center' },
           { label: 'Statut', align: 'center' }, { label: '', align: 'right' },
         ]}>
@@ -134,7 +134,6 @@ export default function UsersPage() {
                 {u.firstName} {u.lastName}
                 {isMe && <span className="ml-2 text-xs px-1.5 py-0.5 rounded-full" style={{ background: T.copperBg, color: T.copper }}>Moi</span>}
               </td>
-              <Td>{u.username ?? '—'}</Td>
               <td className="px-4 py-3 text-sm" style={{ color: T.muted }}>{u.email}</td>
               <Td>{u.jobTitle ?? '—'}</Td>
               <td className="px-4 py-3 text-center">
@@ -188,7 +187,7 @@ export default function UsersPage() {
           );
         })}
       </DataTable>
-      <TableFooter pagination={pagination} export={{ getData: () => sorted.map(u => ({ Prénom: u.firstName, Nom: u.lastName, Utilisateur: u.username ?? '', Email: u.email, Fonction: u.jobTitle ?? '', Rôle: ROLE_FR[u.role] ?? u.role, Statut: u.isActive ? 'Actif' : 'Inactif' })), filename: 'utilisateurs', title: 'Utilisateurs' }} />
+      <TableFooter pagination={pagination} export={{ getData: () => sorted.map(u => ({ Prénom: u.firstName, Nom: u.lastName, Email: u.email, Fonction: u.jobTitle ?? '', Rôle: ROLE_FR[u.role] ?? u.role, Statut: u.isActive ? 'Actif' : 'Inactif' })), filename: 'utilisateurs', title: 'Utilisateurs' }} />
 
       {/* Modale nouvel utilisateur */}
       {newOpen && (
