@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { projects, companies, Project, Task, Company } from '@/lib/api';
 import { Modal } from '@/components/Modal';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
-import { PageHeader, AddButton, FilterBar, FormActions, DataTable, Td, usePagination, useSort, TableFooter } from '@/components/PageShell';
+import { PageHeader, AddButton, FilterBar, FormActions, DataTable, Td, usePagination, useSort, TableFooter, useColumnFilters, ColumnFilterBar, FilterDef } from '@/components/PageShell';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -33,6 +33,11 @@ const PROJ_FILTERS = [
   { value: 'ACTIVE',    label: 'Actifs'     },
   { value: 'ON_HOLD',   label: 'En pause'   },
   { value: 'COMPLETED', label: 'Terminés'   },
+];
+
+const FILTER_DEFS: FilterDef[] = [
+  { key: 'name',    label: 'Nom',    type: 'text', placeholder: 'Projet...', getValue: (p) => p.name },
+  { key: 'company', label: 'Client', type: 'text', placeholder: 'ACME...',   getValue: (p) => p.company?.name ?? '' },
 ];
 
 const fmtDate = (d?: string) => d ? new Date(d).toLocaleDateString('fr-LU') : null;
@@ -91,7 +96,8 @@ export default function ProjectsPage() {
   const [editTask, setEditTask] = useState<Task | null>(null);
 
   const { sort, toggle: sortToggle, sorted } = useSort(list, null);
-  const pagination = usePagination(sorted);
+  const { values: fv, set: fset, reset: freset, filtered, activeCount: fCount } = useColumnFilters(sorted, FILTER_DEFS);
+  const pagination = usePagination(filtered);
 
   const load = (s?: string) => {
     setLoading(true);
@@ -169,6 +175,7 @@ export default function ProjectsPage() {
     <div className="p-6">
       <PageHeader title="Projets" action={<AddButton onClick={() => { setProjectForm(emptyProjectForm()); setCreateOpen(true); }} label="+ Nouveau projet" />} />
       <FilterBar filters={PROJ_FILTERS} active={filter} onChange={v => { setFilter(v); load(v || undefined); }} />
+      <ColumnFilterBar defs={FILTER_DEFS} values={fv} set={fset} reset={freset} activeCount={fCount} />
 
       <DataTable loading={loading} empty="Aucun projet — cliquez sur «+ Nouveau projet»" sort={sort} onSort={sortToggle}
         headers={[
@@ -200,7 +207,7 @@ export default function ProjectsPage() {
           </tr>
         ))}
       </DataTable>
-      <TableFooter pagination={pagination} export={{ getData: () => sorted.map(p => ({ Référence: (p as any).reference ?? '', Nom: p.name, Client: p.company?.name ?? '', Statut: PROJ_STATUS[p.status]?.label ?? p.status, 'Budget (€)': p.budget ?? '', Tâches: `${(p.tasks ?? []).filter(t => t.status === 'DONE').length}/${(p.tasks ?? []).length}`, Début: p.startDate ? new Date(p.startDate).toLocaleDateString('fr-LU') : '', Fin: p.endDate ? new Date(p.endDate).toLocaleDateString('fr-LU') : '' })), filename: 'projets', title: 'Projets' }} />
+      <TableFooter pagination={pagination} export={{ getData: () => filtered.map(p => ({ Référence: (p as any).reference ?? '', Nom: p.name, Client: p.company?.name ?? '', Statut: PROJ_STATUS[p.status]?.label ?? p.status, 'Budget (€)': p.budget ?? '', Tâches: `${(p.tasks ?? []).filter(t => t.status === 'DONE').length}/${(p.tasks ?? []).length}`, Début: p.startDate ? new Date(p.startDate).toLocaleDateString('fr-LU') : '', Fin: p.endDate ? new Date(p.endDate).toLocaleDateString('fr-LU') : '' })), filename: 'projets', title: 'Projets' }} />
 
       {/* ── Nouveau projet ── */}
       <Modal title="Nouveau projet" open={createOpen} onClose={() => setCreateOpen(false)}>

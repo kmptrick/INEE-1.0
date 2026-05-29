@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { commissions, companies, Commission, Company } from '@/lib/api';
 import { Modal } from '@/components/Modal';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
-import { PageHeader, AddButton, FilterBar, DataTable, Td, StatusBadge, FormActions, usePagination, useSort, TableFooter } from '@/components/PageShell';
+import { PageHeader, AddButton, FilterBar, DataTable, Td, StatusBadge, FormActions, usePagination, useSort, TableFooter, useColumnFilters, ColumnFilterBar, FilterDef } from '@/components/PageShell';
 
 const STATUS_ST: Record<string, { bg: string; color: string }> = {
   PENDING:   { bg: '#FDF3E8', color: '#C8803A' },
@@ -23,6 +23,11 @@ const FILTERS = [
 const fmt = (n: number) => new Intl.NumberFormat('fr-LU', { style: 'currency', currency: 'EUR' }).format(n);
 const empty = { brokerName: '', dealValue: '', commissionRate: '10', currency: 'EUR', companyId: '', notes: '' };
 
+const FILTER_DEFS: FilterDef[] = [
+  { key: 'broker',  label: 'Apporteur', type: 'text', placeholder: 'Nom...', getValue: (c) => c.brokerName },
+  { key: 'company', label: 'Client',    type: 'text', placeholder: 'ACME...', getValue: (c) => c.company?.name ?? '' },
+];
+
 export default function CommissionsPage() {
   const [list, setList] = useState<Commission[]>([]);
   const [compList, setCompList] = useState<Company[]>([]);
@@ -33,7 +38,8 @@ export default function CommissionsPage() {
   const [saving, setSaving] = useState(false);
 
   const { sort, toggle: sortToggle, sorted } = useSort(list, null);
-  const pagination = usePagination(sorted);
+  const { values: fv, set: fset, reset: freset, filtered, activeCount: fCount } = useColumnFilters(sorted, FILTER_DEFS);
+  const pagination = usePagination(filtered);
   const load = (s?: string) => { setLoading(true); commissions.list(s || undefined).then(setList).finally(() => setLoading(false)); };
   useEffect(() => { load(); companies.list().then(setCompList); }, []);
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
@@ -51,6 +57,7 @@ export default function CommissionsPage() {
     <div className="p-6">
       <PageHeader title="Commissions" action={<AddButton onClick={() => setOpen(true)} />} />
       <FilterBar filters={FILTERS} active={filter} onChange={v => { setFilter(v); load(v || undefined); }} />
+      <ColumnFilterBar defs={FILTER_DEFS} values={fv} set={fset} reset={freset} activeCount={fCount} />
 
       <DataTable loading={loading} empty="Aucune commission — cliquez sur «+ Ajouter»" sort={sort} onSort={sortToggle}
         headers={[{ label: 'Référence' }, { label: 'Apporteur', key: 'brokerName' }, { label: 'Client' }, { label: 'Affaire', key: 'dealValue', align: 'right' }, { label: 'Taux', align: 'center' }, { label: 'Commission', key: 'commissionAmount', align: 'right' }, { label: 'Statut', key: 'status', align: 'center' }]}>
@@ -69,7 +76,7 @@ export default function CommissionsPage() {
           );
         })}
       </DataTable>
-      <TableFooter pagination={pagination} export={{ getData: () => sorted.map(c => ({ Référence: c.reference, Apporteur: c.brokerName, Client: c.company?.name ?? '', 'Affaire (€)': c.dealValue, 'Taux (%)': c.commissionRate, 'Commission (€)': c.commissionAmount, Statut: STATUS_FR[c.status] ?? c.status })), filename: 'commissions', title: 'Commissions' }} />
+      <TableFooter pagination={pagination} export={{ getData: () => filtered.map(c => ({ Référence: c.reference, Apporteur: c.brokerName, Client: c.company?.name ?? '', 'Affaire (€)': c.dealValue, 'Taux (%)': c.commissionRate, 'Commission (€)': c.commissionAmount, Statut: STATUS_FR[c.status] ?? c.status })), filename: 'commissions', title: 'Commissions' }} />
 
       <Modal title="Nouvelle commission" open={open} onClose={() => setOpen(false)}>
         <form onSubmit={handleSubmit} className="space-y-4">

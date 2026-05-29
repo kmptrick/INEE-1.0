@@ -4,17 +4,21 @@ import { services, Service } from '@/lib/api';
 import { Modal } from '@/components/Modal';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
 import { LU_VAT_RATES } from '@/lib/vat-rules';
-import { PageHeader, AddButton, DataTable, Td, FormActions, usePagination, useSort, useColumns, TableFooter } from '@/components/PageShell';
+import { PageHeader, AddButton, DataTable, Td, FormActions, usePagination, useSort, useColumns, TableFooter, useColumnFilters, ColumnFilterBar, FilterDef } from '@/components/PageShell';
 
 const UNITES = ['/h', '/mois', '/déclaration', '/facture', '/employé/mois', '/session', '/personne', '/groupe', '/module', '/post', '/envoi', '/consultation', '/jour', 'forfait'];
 
 const emptyForm = { idPrestation: '', categorie: '', description: '', prixHT: '', vatRate: '17', unite: '', remarques: '' };
 
+const FILTER_DEFS: FilterDef[] = [
+  { key: 'id',          label: 'ID Prestation', type: 'text',   placeholder: 'PREST-001...', getValue: (s) => s.idPrestation },
+  { key: 'description', label: 'Description',   type: 'text',   placeholder: 'Comptabilité...', getValue: (s) => s.description },
+  { key: 'categorie',   label: 'Catégorie',      type: 'text',   placeholder: 'Social...', getValue: (s) => s.categorie ?? '' },
+  { key: 'vatRate',     label: 'TVA',            type: 'select', options: [{ value: '17', label: '17%' }, { value: '8', label: '8%' }, { value: '3', label: '3%' }, { value: '0', label: '0%' }], getValue: (s) => String(s.vatRate ?? 17) },
+];
+
 export default function PrestationsPage() {
   const [list, setList] = useState<Service[]>([]);
-  const [cats, setCats] = useState<string[]>([]);
-  const [search, setSearch] = useState('');
-  const [catFilter, setCatFilter] = useState('');
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Service | null>(null);
@@ -22,7 +26,8 @@ export default function PrestationsPage() {
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<Service | null>(null);
   const { sort, toggle: sortToggle, sorted } = useSort(list, null);
-  const pagination = usePagination(sorted);
+  const { values: fv, set: fset, reset: freset, filtered, activeCount: fCount } = useColumnFilters(sorted, FILTER_DEFS);
+  const pagination = usePagination(filtered);
   const { visible, toggle: colToggle } = useColumns('prestations', [
     { key: 'id', label: 'ID Prestation' }, { key: 'categorie', label: 'Catégorie' },
     { key: 'description', label: 'Description' }, { key: 'prix', label: 'Prix HT' },
@@ -31,10 +36,9 @@ export default function PrestationsPage() {
 
   const load = () => {
     setLoading(true);
-    services.list(search || undefined, catFilter || undefined).then(setList).finally(() => setLoading(false));
+    services.list().then(setList).finally(() => setLoading(false));
   };
-  useEffect(() => { load(); services.categories().then(setCats); }, []);
-  useEffect(() => { load(); }, [search, catFilter]);
+  useEffect(() => { load(); }, []);
 
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
 
@@ -69,31 +73,7 @@ export default function PrestationsPage() {
     <div className="p-6">
       <PageHeader title="Catalogue de prestations"
         action={<AddButton onClick={openCreate} label="+ Nouvelle prestation" />} />
-
-      {/* Filtres */}
-      <div className="mb-5 flex gap-3 flex-wrap items-center">
-        <input type="text" placeholder="Rechercher ID ou description..." value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="px-4 py-2.5 rounded-lg text-sm outline-none transition-all w-64"
-          style={{ background: '#FFF', border: `1.5px solid ${T.border}`, color: T.dark }}
-          onFocus={e => { e.target.style.borderColor = T.copper; e.target.style.boxShadow = '0 0 0 3px rgba(200,128,58,0.1)'; }}
-          onBlur={e => { e.target.style.borderColor = T.border; e.target.style.boxShadow = 'none'; }}
-        />
-        <select value={catFilter} onChange={e => setCatFilter(e.target.value)}
-          className="px-3 py-2.5 rounded-lg text-sm outline-none"
-          style={{ background: '#FFF', border: `1.5px solid ${T.border}`, color: catFilter ? T.dark : T.muted }}>
-          <option value="">Toutes les catégories</option>
-          {cats.map(c => <option key={c} value={c}>{c}</option>)}
-        </select>
-        {(search || catFilter) && (
-          <button onClick={() => { setSearch(''); setCatFilter(''); }}
-            className="text-xs px-3 py-2 rounded-lg border transition-colors"
-            style={{ color: T.muted, borderColor: T.border }}>
-            Effacer
-          </button>
-        )}
-        <span className="text-xs ml-auto" style={{ color: T.muted }}>{list.length} prestation(s)</span>
-      </div>
+      <ColumnFilterBar defs={FILTER_DEFS} values={fv} set={fset} reset={freset} activeCount={fCount} />
 
       <DataTable loading={loading} empty="Aucune prestation — cliquez sur &quot;+ Nouvelle prestation&quot;" sort={sort} onSort={sortToggle}
         headers={[
@@ -136,7 +116,7 @@ export default function PrestationsPage() {
           </tr>
         ))}
       </DataTable>
-      <TableFooter pagination={pagination} export={{ getData: () => sorted.map(s => ({ ID: s.idPrestation, Catégorie: s.categorie, Description: s.description, 'Prix HT (€)': s.prixHT, 'TVA (%)': s.vatRate ?? 17, Unité: s.unite ?? '', Remarques: s.remarques ?? '' })), filename: 'prestations', title: 'Catalogue de prestations' }} columnSelector={{ allCols: [
+      <TableFooter pagination={pagination} export={{ getData: () => filtered.map(s => ({ ID: s.idPrestation, Catégorie: s.categorie, Description: s.description, 'Prix HT (€)': s.prixHT, 'TVA (%)': s.vatRate ?? 17, Unité: s.unite ?? '', Remarques: s.remarques ?? '' })), filename: 'prestations', title: 'Catalogue de prestations' }} columnSelector={{ allCols: [
         { key: 'id', label: 'ID Prestation' }, { key: 'categorie', label: 'Catégorie' },
         { key: 'description', label: 'Description' }, { key: 'prix', label: 'Prix HT' },
         { key: 'tva', label: 'TVA' }, { key: 'unite', label: 'Unité' }, { key: 'remarques', label: 'Remarques' },

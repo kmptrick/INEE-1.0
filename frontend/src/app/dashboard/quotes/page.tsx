@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic';
 import { invoicing, companies, Quote, Company, Service } from '@/lib/api';
 import { Modal } from '@/components/Modal';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
-import { PageHeader, AddButton, FilterBar, DataTable, Td, StatusBadge, FormActions, usePagination, useSort, useColumns, TableFooter } from '@/components/PageShell';
+import { PageHeader, AddButton, FilterBar, DataTable, Td, StatusBadge, FormActions, usePagination, useSort, useColumns, TableFooter, useColumnFilters, ColumnFilterBar, FilterDef } from '@/components/PageShell';
 import { NotesWidget } from '@/components/NotesWidget';
 import { ServicePicker } from '@/components/ServicePicker';
 import { computeVat, LU_VAT_RATES } from '@/lib/vat-rules';
@@ -39,6 +39,11 @@ type LineForm = { serviceId: string; description: string; quantity: string; unit
 const emptyLine = (): LineForm => ({ serviceId: '', description: '', quantity: '1', unitPrice: '', unite: '', discountRate: '', lineVatRate: '', periodStart: '', periodEnd: '' });
 const emptyForm = () => ({ companyId: '', vatRate: '17', vatMention: '', notes: '', lines: [emptyLine()] });
 const lineTotal = (l: LineForm) => { const q = parseFloat(l.quantity)||0; const p = parseFloat(l.unitPrice)||0; const d = parseFloat(l.discountRate)||0; return q * p * (1 - d/100); };
+const FILTER_DEFS_Q: FilterDef[] = [
+  { key: 'number',  label: 'Numéro',  type: 'text', placeholder: 'DEV-2026...', getValue: (q) => q.number },
+  { key: 'company', label: 'Client',  type: 'text', placeholder: 'ACME...',     getValue: (q) => q.company?.name ?? '' },
+];
+
 const ALL_COLS_Q = [
   { key: 'number', label: 'Numéro' }, { key: 'company', label: 'Client' },
   { key: 'subtotal', label: 'HT' }, { key: 'vatAmount', label: 'TVA' },
@@ -65,7 +70,8 @@ export default function QuotesPage() {
   const [saving, setSaving] = useState(false);
   const [fullQuotes, setFullQuotes] = useState<Record<string, Quote>>({});
   const { sort, toggle: sortToggle, sorted } = useSort(list, null);
-  const pagination = usePagination(sorted);
+  const { values: fv, set: fset, reset: freset, filtered, activeCount: fCount } = useColumnFilters(sorted, FILTER_DEFS_Q);
+  const pagination = usePagination(filtered);
   const { visible, toggle: colToggle } = useColumns('quotes', ALL_COLS_Q);
 
   // Detail / action modal
@@ -169,6 +175,7 @@ export default function QuotesPage() {
     <div className="p-6">
       <PageHeader title="Devis" action={<AddButton onClick={() => setOpen(true)} />} />
       <FilterBar filters={FILTERS} active={filter} onChange={v => { setFilter(v); load(v || undefined); }} />
+      <ColumnFilterBar defs={FILTER_DEFS_Q} values={fv} set={fset} reset={freset} activeCount={fCount} />
 
       <DataTable loading={loading} empty="Aucun devis" sort={sort} onSort={sortToggle}
         headers={[
@@ -200,7 +207,7 @@ export default function QuotesPage() {
           );
         })}
       </DataTable>
-      <TableFooter pagination={pagination} export={{ getData: () => sorted.map(q => ({ Numéro: q.number, Client: q.company?.name ?? '', 'HT (€)': q.subtotal, 'TVA (€)': q.vatAmount, 'TTC (€)': q.total, Statut: STATUS_FR[q.status] ?? q.status, Validité: q.validUntil ? new Date(q.validUntil).toLocaleDateString('fr-LU') : '' })), filename: 'devis', title: 'Devis' }} columnSelector={{ allCols: ALL_COLS_Q, visible, toggle: colToggle }} />
+      <TableFooter pagination={pagination} export={{ getData: () => filtered.map(q => ({ Numéro: q.number, Client: q.company?.name ?? '', 'HT (€)': q.subtotal, 'TVA (€)': q.vatAmount, 'TTC (€)': q.total, Statut: STATUS_FR[q.status] ?? q.status, Validité: q.validUntil ? new Date(q.validUntil).toLocaleDateString('fr-LU') : '' })), filename: 'devis', title: 'Devis' }} columnSelector={{ allCols: ALL_COLS_Q, visible, toggle: colToggle }} />
 
       {/* ── Detail / Actions modal ── */}
       {viewItem && (

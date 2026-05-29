@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import { invoicing, companies, creditNotes, Invoice, Company, Service } from '@/lib/api';
 import { Modal } from '@/components/Modal';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
-import { PageHeader, AddButton, FilterBar, DataTable, Td, StatusBadge, FormActions, usePagination, useSort, useColumns, TableFooter } from '@/components/PageShell';
+import { PageHeader, AddButton, FilterBar, DataTable, Td, StatusBadge, FormActions, usePagination, useSort, useColumns, TableFooter, useColumnFilters, ColumnFilterBar, FilterDef } from '@/components/PageShell';
 import { NotesWidget } from '@/components/NotesWidget';
 import { ServicePicker } from '@/components/ServicePicker';
 import { computeVat, LU_VAT_RATES } from '@/lib/vat-rules';
@@ -40,6 +40,11 @@ type LineForm = { serviceId: string; description: string; quantity: string; unit
 const emptyLine = (): LineForm => ({ serviceId: '', description: '', quantity: '1', unitPrice: '', unite: '', discountRate: '', lineVatRate: '', periodStart: '', periodEnd: '' });
 const emptyForm = () => ({ companyId: '', vatRate: '17', vatMention: '', dueDate: '', notes: '', lines: [emptyLine()] });
 const lineTotal = (l: LineForm) => { const q = parseFloat(l.quantity)||0; const p = parseFloat(l.unitPrice)||0; const d = parseFloat(l.discountRate)||0; return q * p * (1 - d/100); };
+const FILTER_DEFS_INV: FilterDef[] = [
+  { key: 'number',  label: 'Numéro',  type: 'text', placeholder: 'FAC-2026...', getValue: (inv) => inv.number },
+  { key: 'company', label: 'Client',  type: 'text', placeholder: 'ACME...',     getValue: (inv) => inv.company?.name ?? '' },
+];
+
 const ALL_COLS_INV = [
   { key: 'number', label: 'Numéro' }, { key: 'company', label: 'Client' },
   { key: 'subtotal', label: 'HT' }, { key: 'vatAmount', label: 'TVA' },
@@ -68,7 +73,8 @@ export default function InvoicesPage() {
   const [saving, setSaving] = useState(false);
   const [fullInvoices, setFullInvoices] = useState<Record<string, Invoice>>({});
   const { sort, toggle: sortToggle, sorted } = useSort(list, null);
-  const pagination = usePagination(sorted);
+  const { values: fv, set: fset, reset: freset, filtered, activeCount: fCount } = useColumnFilters(sorted, FILTER_DEFS_INV);
+  const pagination = usePagination(filtered);
   const { visible, toggle: colToggle } = useColumns('invoices', ALL_COLS_INV);
 
   // Detail / action modal
@@ -159,6 +165,7 @@ export default function InvoicesPage() {
     <div className="p-6">
       <PageHeader title="Factures" action={<AddButton onClick={() => setOpen(true)} />} />
       <FilterBar filters={FILTERS} active={filter} onChange={v => { setFilter(v); load(v || undefined); }} />
+      <ColumnFilterBar defs={FILTER_DEFS_INV} values={fv} set={fset} reset={freset} activeCount={fCount} />
 
       <DataTable loading={loading} empty="Aucune facture" sort={sort} onSort={sortToggle}
         headers={[
@@ -192,7 +199,7 @@ export default function InvoicesPage() {
           );
         })}
       </DataTable>
-      <TableFooter pagination={pagination} export={{ getData: () => sorted.map(inv => ({ Numéro: inv.number, Client: inv.company?.name ?? '', 'HT (€)': inv.subtotal, 'TVA (€)': inv.vatAmount, 'TTC (€)': inv.total, Statut: STATUS_FR[inv.status] ?? inv.status, Échéance: inv.dueDate ? new Date(inv.dueDate).toLocaleDateString('fr-LU') : '' })), filename: 'factures', title: 'Factures' }} columnSelector={{ allCols: ALL_COLS_INV, visible, toggle: colToggle }} />
+      <TableFooter pagination={pagination} export={{ getData: () => filtered.map(inv => ({ Numéro: inv.number, Client: inv.company?.name ?? '', 'HT (€)': inv.subtotal, 'TVA (€)': inv.vatAmount, 'TTC (€)': inv.total, Statut: STATUS_FR[inv.status] ?? inv.status, Échéance: inv.dueDate ? new Date(inv.dueDate).toLocaleDateString('fr-LU') : '' })), filename: 'factures', title: 'Factures' }} columnSelector={{ allCols: ALL_COLS_INV, visible, toggle: colToggle }} />
 
       {/* ── Detail / Actions modal ── */}
       {viewItem && (

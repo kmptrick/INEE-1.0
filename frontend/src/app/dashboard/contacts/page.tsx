@@ -3,14 +3,22 @@ import { useEffect, useState } from 'react';
 import { contacts, companies, Contact, Company } from '@/lib/api';
 import { Modal } from '@/components/Modal';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
-import { PageHeader, AddButton, DataTable, Td, FormActions, usePagination, useSort, TableFooter } from '@/components/PageShell';
+import { PageHeader, AddButton, DataTable, Td, FormActions, usePagination, useSort, TableFooter, useColumnFilters, ColumnFilterBar, FilterDef } from '@/components/PageShell';
 
 const empty = { firstName: '', lastName: '', email: '', phone: '', mobile: '', jobTitle: '', companyId: '', notes: '' };
+
+const FILTER_DEFS: FilterDef[] = [
+  { key: 'name',     label: 'Nom',              type: 'text',   placeholder: 'Dupont...', getValue: (c) => `${c.firstName} ${c.lastName}` },
+  { key: 'email',    label: 'Email',             type: 'text',   placeholder: '@...', getValue: (c) => c.email ?? '' },
+  { key: 'jobTitle', label: 'Poste',             type: 'text',   placeholder: 'Comptable...', getValue: (c) => c.jobTitle ?? '' },
+  { key: 'company',  label: 'Client',            type: 'text',   placeholder: 'ACME...', getValue: (c) => c.company?.name ?? '' },
+  { key: 'status',   label: 'Statut',            type: 'select', options: [{ value: 'actif', label: 'Actif' }, { value: 'inactif', label: 'Inactif' }], getValue: (c) => c.isActive === false ? 'inactif' : 'actif' },
+  { key: 'invoices', label: 'Reçoit factures',   type: 'select', options: [{ value: 'oui', label: 'Oui' }, { value: 'non', label: 'Non' }], getValue: (c) => c.canReceiveInvoices ? 'oui' : 'non' },
+];
 
 export default function ContactsPage() {
   const [list, setList] = useState<Contact[]>([]);
   const [compList, setCompList] = useState<Company[]>([]);
-  const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(empty);
@@ -18,9 +26,10 @@ export default function ContactsPage() {
   const [toggling, setToggling] = useState<string | null>(null);
   const [togglingActive, setTogglingActive] = useState<string | null>(null);
   const { sort, toggle: sortToggle, sorted } = useSort(list, null);
-  const pagination = usePagination(sorted);
+  const { values: fv, set: fset, reset: freset, filtered, activeCount: fCount } = useColumnFilters(sorted, FILTER_DEFS);
+  const pagination = usePagination(filtered);
 
-  const load = (q?: string) => { setLoading(true); contacts.list(q).then(setList).finally(() => setLoading(false)); };
+  const load = () => { setLoading(true); contacts.list().then(setList).finally(() => setLoading(false)); };
   useEffect(() => { load(); companies.list().then(setCompList); }, []);
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
 
@@ -29,7 +38,7 @@ export default function ContactsPage() {
     try {
       const data: any = { ...form };
       if (!data.companyId) delete data.companyId;
-      await contacts.create(data); setOpen(false); setForm(empty); load(search || undefined);
+      await contacts.create(data); setOpen(false); setForm(empty); load();
     } finally { setSaving(false); }
   };
 
@@ -52,16 +61,7 @@ export default function ContactsPage() {
   return (
     <div className="p-6">
       <PageHeader title="Contacts" action={<AddButton onClick={() => setOpen(true)} />} />
-
-      <div className="mb-5">
-        <input type="text" placeholder="Rechercher un contact..." value={search}
-          onChange={e => { setSearch(e.target.value); load(e.target.value || undefined); }}
-          className="px-4 py-2.5 rounded-lg text-sm outline-none w-full max-w-xs transition-all"
-          style={{ background: '#FFF', border: `1.5px solid ${T.border}`, color: T.dark }}
-          onFocus={e => { e.target.style.borderColor = T.copper; e.target.style.boxShadow = '0 0 0 3px rgba(200,128,58,0.1)'; }}
-          onBlur={e => { e.target.style.borderColor = T.border; e.target.style.boxShadow = 'none'; }}
-        />
-      </div>
+      <ColumnFilterBar defs={FILTER_DEFS} values={fv} set={fset} reset={freset} activeCount={fCount} />
 
       <DataTable loading={loading} empty="Aucun contact — cliquez sur «+ Ajouter»" sort={sort} onSort={sortToggle}
         headers={[
@@ -112,7 +112,7 @@ export default function ContactsPage() {
           );
         })}
       </DataTable>
-      <TableFooter pagination={pagination} export={{ getData: () => sorted.map(c => ({ Référence: (c as any).reference ?? '', Prénom: c.firstName, Nom: c.lastName, Email: c.email ?? '', Téléphone: c.phone ?? '', Mobile: c.mobile ?? '', Poste: c.jobTitle ?? '', Client: c.company?.name ?? '', 'Reçoit factures': c.canReceiveInvoices ? 'Oui' : 'Non', Statut: c.isActive === false ? 'Inactif' : 'Actif' })), filename: 'contacts', title: 'Contacts' }} />
+      <TableFooter pagination={pagination} export={{ getData: () => filtered.map(c => ({ Référence: (c as any).reference ?? '', Prénom: c.firstName, Nom: c.lastName, Email: c.email ?? '', Téléphone: c.phone ?? '', Mobile: c.mobile ?? '', Poste: c.jobTitle ?? '', Client: c.company?.name ?? '', 'Reçoit factures': c.canReceiveInvoices ? 'Oui' : 'Non', Statut: c.isActive === false ? 'Inactif' : 'Actif' })), filename: 'contacts', title: 'Contacts' }} />
 
       <Modal title="Nouveau contact" open={open} onClose={() => setOpen(false)}>
         <form onSubmit={handleSubmit} className="space-y-4">

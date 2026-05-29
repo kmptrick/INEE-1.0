@@ -104,6 +104,95 @@ export function FilterBar({ filters, active, onChange }: {
   );
 }
 
+// ── Column Filters ────────────────────────────────────────────────────────────
+
+export type FilterDef = {
+  key: string;
+  label: string;
+  type: 'text' | 'select';
+  placeholder?: string;
+  options?: { value: string; label: string }[];
+  getValue?: (row: any) => string;
+};
+
+export function useColumnFilters<T>(data: T[], defs: FilterDef[]) {
+  const [values, setValues] = useState<Record<string, string>>(() =>
+    Object.fromEntries(defs.map(d => [d.key, '']))
+  );
+
+  const set = (key: string, val: string) =>
+    setValues(v => ({ ...v, [key]: val }));
+
+  const reset = () =>
+    setValues(Object.fromEntries(defs.map(d => [d.key, ''])));
+
+  const activeCount = Object.values(values).filter(Boolean).length;
+
+  const filtered = data.filter(row =>
+    defs.every(def => {
+      const val = values[def.key];
+      if (!val) return true;
+      const rowVal = def.getValue
+        ? def.getValue(row).toLowerCase()
+        : String((row as any)[def.key] ?? '').toLowerCase();
+      return def.type === 'select'
+        ? rowVal === val.toLowerCase()
+        : rowVal.includes(val.toLowerCase());
+    })
+  );
+
+  return { values, set, reset, filtered, activeCount };
+}
+
+export function ColumnFilterBar({ defs, values, set, reset, activeCount }: {
+  defs: FilterDef[];
+  values: Record<string, string>;
+  set: (key: string, val: string) => void;
+  reset: () => void;
+  activeCount: number;
+}) {
+  if (defs.length === 0) return null;
+  return (
+    <div className="mb-5 px-4 py-3 rounded-xl flex flex-wrap gap-x-4 gap-y-3 items-end"
+      style={{ background: '#FFF', border: `1px solid ${T.border}`, boxShadow: '0 1px 3px rgba(26,16,8,0.04)' }}>
+      <span className="text-xs font-bold uppercase tracking-wider self-end pb-1.5" style={{ color: T.muted }}>🔍 Filtres</span>
+      {defs.map(def => (
+        <div key={def.key} className="flex flex-col gap-1 min-w-[130px]">
+          <label className="text-xs font-semibold" style={{ color: T.muted }}>{def.label}</label>
+          {def.type === 'select' ? (
+            <select
+              value={values[def.key]}
+              onChange={e => set(def.key, e.target.value)}
+              className="px-2 py-1.5 rounded-lg text-xs outline-none cursor-pointer"
+              style={{ background: '#F8F5F2', border: `1.5px solid ${values[def.key] ? T.copper : T.border}`, color: T.dark }}>
+              <option value="">— Tous —</option>
+              {def.options?.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+          ) : (
+            <input
+              type="text"
+              placeholder={def.placeholder ?? 'Filtrer...'}
+              value={values[def.key]}
+              onChange={e => set(def.key, e.target.value)}
+              className="px-2 py-1.5 rounded-lg text-xs outline-none transition-all"
+              style={{ background: '#F8F5F2', border: `1.5px solid ${values[def.key] ? T.copper : T.border}`, color: T.dark }}
+              onFocus={e => (e.target.style.borderColor = T.copper)}
+              onBlur={e => (e.target.style.borderColor = values[def.key] ? T.copper : T.border)}
+            />
+          )}
+        </div>
+      ))}
+      {activeCount > 0 && (
+        <button onClick={reset}
+          className="px-3 py-1.5 rounded-lg text-xs font-semibold self-end cursor-pointer transition-all"
+          style={{ background: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA' }}>
+          ✕ Effacer ({activeCount})
+        </button>
+      )}
+    </div>
+  );
+}
+
 // ── Sort helpers ──────────────────────────────────────────────────────────────
 
 export type SortState = { key: string; dir: 'asc' | 'desc' };

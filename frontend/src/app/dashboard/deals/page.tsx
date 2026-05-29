@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { deals, companies, contacts, Deal, Company, Contact } from '@/lib/api';
 import { Modal } from '@/components/Modal';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
-import { PageHeader, AddButton, FilterBar, DataTable, Td, StatusBadge, FormActions, usePagination, useSort, TableFooter } from '@/components/PageShell';
+import { PageHeader, AddButton, FilterBar, DataTable, Td, StatusBadge, FormActions, usePagination, useSort, TableFooter, useColumnFilters, ColumnFilterBar, FilterDef } from '@/components/PageShell';
 
 const STATUS_FR: Record<string, string> = { OPEN: 'En cours', WON: 'Gagné', LOST: 'Perdu' };
 const STATUS_ST: Record<string, { bg: string; color: string }> = {
@@ -21,6 +21,12 @@ const FILTERS = [
 const fmt = (n: number) => new Intl.NumberFormat('fr-LU', { style: 'currency', currency: 'EUR' }).format(n);
 const empty = { title: '', value: '', probability: '50', currency: 'EUR', companyId: '', contactId: '', notes: '' };
 
+const FILTER_DEFS: FilterDef[] = [
+  { key: 'title',   label: 'Titre',   type: 'text', placeholder: 'Projet...', getValue: (d) => d.title },
+  { key: 'company', label: 'Client',  type: 'text', placeholder: 'ACME...',   getValue: (d) => d.company?.name ?? '' },
+  { key: 'contact', label: 'Contact', type: 'text', placeholder: 'Dupont...',  getValue: (d) => d.contact ? `${d.contact.firstName ?? ''} ${d.contact.lastName ?? ''}` : '' },
+];
+
 export default function DealsPage() {
   const [list, setList] = useState<Deal[]>([]);
   const [compList, setCompList] = useState<Company[]>([]);
@@ -32,7 +38,8 @@ export default function DealsPage() {
   const [saving, setSaving] = useState(false);
 
   const { sort, toggle: sortToggle, sorted } = useSort(list, null);
-  const pagination = usePagination(sorted);
+  const { values: fv, set: fset, reset: freset, filtered, activeCount: fCount } = useColumnFilters(sorted, FILTER_DEFS);
+  const pagination = usePagination(filtered);
   const load = (s?: string) => { setLoading(true); deals.list(s || undefined).then(setList).finally(() => setLoading(false)); };
   useEffect(() => { load(); companies.list().then(setCompList); contacts.list().then(setContList); }, []);
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
@@ -51,6 +58,7 @@ export default function DealsPage() {
     <div className="p-6">
       <PageHeader title="Affaires" action={<AddButton onClick={() => setOpen(true)} />} />
       <FilterBar filters={FILTERS} active={filter} onChange={v => { setFilter(v); load(v || undefined); }} />
+      <ColumnFilterBar defs={FILTER_DEFS} values={fv} set={fset} reset={freset} activeCount={fCount} />
 
       <DataTable loading={loading} empty="Aucune affaire — cliquez sur «+ Ajouter»" sort={sort} onSort={sortToggle}
         headers={[{ label: 'Titre', key: 'title' }, { label: 'Client' }, { label: 'Valeur', key: 'value', align: 'right' }, { label: 'Proba.', align: 'center' }, { label: 'Statut', key: 'status', align: 'center' }]}>
@@ -67,7 +75,7 @@ export default function DealsPage() {
           );
         })}
       </DataTable>
-      <TableFooter pagination={pagination} export={{ getData: () => sorted.map(d => ({ Titre: d.title, Client: d.company?.name ?? '', 'Valeur (€)': d.value, 'Probabilité (%)': d.probability, Statut: STATUS_FR[d.status] ?? d.status })), filename: 'affaires', title: 'Affaires' }} />
+      <TableFooter pagination={pagination} export={{ getData: () => filtered.map(d => ({ Titre: d.title, Client: d.company?.name ?? '', 'Valeur (€)': d.value, 'Probabilité (%)': d.probability, Statut: STATUS_FR[d.status] ?? d.status })), filename: 'affaires', title: 'Affaires' }} />
 
       <Modal title="Nouvelle affaire" open={open} onClose={() => setOpen(false)}>
         <form onSubmit={handleSubmit} className="space-y-4">

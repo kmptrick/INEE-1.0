@@ -4,9 +4,16 @@ import { users, UserProfile } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { Modal } from '@/components/Modal';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
-import { PageHeader, AddButton, DataTable, Td, FormActions, usePagination, useSort, TableFooter } from '@/components/PageShell';
+import { PageHeader, AddButton, DataTable, Td, FormActions, usePagination, useSort, TableFooter, useColumnFilters, ColumnFilterBar, FilterDef } from '@/components/PageShell';
 
 const ROLE_FR: Record<string, string> = { ADMIN: 'Administrateur', MANAGER: 'Manager', MEMBER: 'Membre' };
+
+const FILTER_DEFS: FilterDef[] = [
+  { key: 'name',  label: 'Nom',     type: 'text',   placeholder: 'Dupont...', getValue: (u) => `${u.firstName ?? ''} ${u.lastName ?? ''}` },
+  { key: 'email', label: 'Email',   type: 'text',   placeholder: '@...', getValue: (u) => u.email ?? '' },
+  { key: 'role',  label: 'Rôle',    type: 'select', options: [{ value: 'ADMIN', label: 'Administrateur' }, { value: 'MANAGER', label: 'Manager' }, { value: 'MEMBER', label: 'Membre' }], getValue: (u) => u.role ?? '' },
+  { key: 'status', label: 'Statut', type: 'select', options: [{ value: 'actif', label: 'Actif' }, { value: 'inactif', label: 'Inactif' }], getValue: (u) => u.isActive ? 'actif' : 'inactif' },
+];
 const ROLE_COLORS: Record<string, { bg: string; color: string }> = {
   ADMIN:   { bg: '#FEF3C7', color: '#92400E' },
   MANAGER: { bg: '#EFF6FF', color: '#1D6FD8' },
@@ -69,7 +76,8 @@ export default function UsersPage() {
   };
 
   const { sort, toggle: sortToggle, sorted } = useSort(list, { key: 'role', dir: 'asc' });
-  const pagination = usePagination(sorted);
+  const { values: fv, set: fset, reset: freset, filtered, activeCount: fCount } = useColumnFilters(sorted, FILTER_DEFS);
+  const pagination = usePagination(filtered);
 
   const load = () => { setLoading(true); users.list().then(setList).finally(() => setLoading(false)); };
   useEffect(() => { load(); }, []);
@@ -118,6 +126,7 @@ export default function UsersPage() {
   return (
     <div className="p-6">
       <PageHeader title="Utilisateurs" action={<AddButton onClick={openNew} label="+ Nouveau" />} />
+      <ColumnFilterBar defs={FILTER_DEFS} values={fv} set={fset} reset={freset} activeCount={fCount} />
 
       <DataTable loading={loading} empty="Aucun utilisateur" sort={sort} onSort={sortToggle}
         headers={[
@@ -187,7 +196,7 @@ export default function UsersPage() {
           );
         })}
       </DataTable>
-      <TableFooter pagination={pagination} export={{ getData: () => sorted.map(u => ({ Prénom: u.firstName, Nom: u.lastName, Email: u.email, Fonction: u.jobTitle ?? '', Rôle: ROLE_FR[u.role] ?? u.role, Statut: u.isActive ? 'Actif' : 'Inactif' })), filename: 'utilisateurs', title: 'Utilisateurs' }} />
+      <TableFooter pagination={pagination} export={{ getData: () => filtered.map(u => ({ Prénom: u.firstName, Nom: u.lastName, Email: u.email, Fonction: u.jobTitle ?? '', Rôle: ROLE_FR[u.role] ?? u.role, Statut: u.isActive ? 'Actif' : 'Inactif' })), filename: 'utilisateurs', title: 'Utilisateurs' }} />
 
       {/* Modale nouvel utilisateur */}
       {newOpen && (

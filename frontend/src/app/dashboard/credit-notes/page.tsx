@@ -4,7 +4,7 @@ import { useSearchParams } from 'next/navigation';
 import { creditNotes, invoicing, companies, CreditNote, Invoice, Company, Service } from '@/lib/api';
 import { Modal } from '@/components/Modal';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
-import { PageHeader, AddButton, FilterBar, DataTable, Td, StatusBadge, FormActions, usePagination, useSort, TableFooter } from '@/components/PageShell';
+import { PageHeader, AddButton, FilterBar, DataTable, Td, StatusBadge, FormActions, usePagination, useSort, TableFooter, useColumnFilters, ColumnFilterBar, FilterDef } from '@/components/PageShell';
 import { ServicePicker } from '@/components/ServicePicker';
 
 const STATUS_ST: Record<string, { bg: string; color: string }> = {
@@ -21,6 +21,12 @@ const FILTERS = [
 ];
 
 const fmt = (n: number) => new Intl.NumberFormat('fr-LU', { style: 'currency', currency: 'EUR' }).format(n);
+
+const FILTER_DEFS: FilterDef[] = [
+  { key: 'number',  label: 'Numéro',          type: 'text', placeholder: 'NC-2026...', getValue: (cn) => cn.number },
+  { key: 'invoice', label: 'Facture liée',     type: 'text', placeholder: 'FAC-2026...', getValue: (cn) => cn.invoice?.number ?? '' },
+  { key: 'company', label: 'Client',           type: 'text', placeholder: 'ACME...',     getValue: (cn) => cn.company?.name ?? '' },
+];
 
 type LineForm = { serviceId: string; description: string; quantity: string; unitPrice: string; unite: string };
 const emptyLine = (): LineForm => ({ serviceId: '', description: '', quantity: '1', unitPrice: '', unite: '' });
@@ -55,7 +61,8 @@ function CreditNotesContent() {
   const [actioning, setActioning] = useState(false);
   const [fullCNs, setFullCNs] = useState<Record<string, CreditNote>>({});
   const { sort, toggle: sortToggle, sorted } = useSort(list, null);
-  const pagination = usePagination(sorted);
+  const { values: fv, set: fset, reset: freset, filtered, activeCount: fCount } = useColumnFilters(sorted, FILTER_DEFS);
+  const pagination = usePagination(filtered);
 
   const load = (s?: string) => {
     setLoading(true);
@@ -142,6 +149,7 @@ function CreditNotesContent() {
     <div className="p-6">
       <PageHeader title="Notes de crédit" action={<AddButton onClick={() => { setForm(emptyForm()); setOpen(true); }} />} />
       <FilterBar filters={FILTERS} active={filter} onChange={v => { setFilter(v); load(v || undefined); }} />
+      <ColumnFilterBar defs={FILTER_DEFS} values={fv} set={fset} reset={freset} activeCount={fCount} />
 
       <DataTable loading={loading} empty="Aucune note de crédit" sort={sort} onSort={sortToggle}
         headers={[
@@ -167,7 +175,7 @@ function CreditNotesContent() {
           );
         })}
       </DataTable>
-      <TableFooter pagination={pagination} export={{ getData: () => sorted.map(cn => ({ Numéro: cn.number, 'Facture liée': cn.invoice?.number ?? '', Client: cn.company?.name ?? '', 'HT (€)': cn.subtotal, 'TVA (€)': cn.vatAmount, 'TTC (€)': cn.total, Statut: STATUS_FR[cn.status] ?? cn.status })), filename: 'notes-de-credit', title: 'Notes de crédit' }} />
+      <TableFooter pagination={pagination} export={{ getData: () => filtered.map(cn => ({ Numéro: cn.number, 'Facture liée': cn.invoice?.number ?? '', Client: cn.company?.name ?? '', 'HT (€)': cn.subtotal, 'TVA (€)': cn.vatAmount, 'TTC (€)': cn.total, Statut: STATUS_FR[cn.status] ?? cn.status })), filename: 'notes-de-credit', title: 'Notes de crédit' }} />
 
       {/* ── Detail modal ── */}
       {viewItem && (

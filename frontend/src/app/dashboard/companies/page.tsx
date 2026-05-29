@@ -3,9 +3,18 @@ import { useEffect, useState } from 'react';
 import { companies, Company } from '@/lib/api';
 import { Modal } from '@/components/Modal';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
-import { PageHeader, AddButton, DataTable, Td, FormActions, usePagination, useSort, useColumns, TableFooter } from '@/components/PageShell';
+import { PageHeader, AddButton, DataTable, Td, FormActions, usePagination, useSort, useColumns, TableFooter, useColumnFilters, ColumnFilterBar, FilterDef } from '@/components/PageShell';
 
 const FORMES = ['Sàrl', 'SA', 'SNC', 'SCS', 'SC', 'GIE', 'ASBL', 'Fondation', 'Autre'];
+
+const FILTER_DEFS: FilterDef[] = [
+  { key: 'type',    label: 'Type',    type: 'select', options: [{ value: 'SOCIETE', label: 'Société' }, { value: 'PARTICULIER', label: 'Particulier' }], getValue: (c) => c.clientType },
+  { key: 'name',    label: 'Nom',     type: 'text',   placeholder: 'ACME...', getValue: (c) => c.name },
+  { key: 'email',   label: 'Email',   type: 'text',   placeholder: '@...', getValue: (c) => c.email ?? '' },
+  { key: 'city',    label: 'Ville',   type: 'text',   placeholder: 'Luxembourg...', getValue: (c) => c.city ?? '' },
+  { key: 'country', label: 'Pays',    type: 'text',   placeholder: 'LU...', getValue: (c) => c.country ?? '' },
+  { key: 'status',  label: 'Statut',  type: 'select', options: [{ value: 'actif', label: 'Actif' }, { value: 'inactif', label: 'Inactif' }], getValue: (c) => c.isActive === false ? 'inactif' : 'actif' },
+];
 
 const emptyForm = () => ({
   clientType: 'SOCIETE' as 'SOCIETE' | 'PARTICULIER',
@@ -15,14 +24,14 @@ const emptyForm = () => ({
 
 export default function ClientsPage() {
   const [list, setList] = useState<Company[]>([]);
-  const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(emptyForm());
   const [saving, setSaving] = useState(false);
   const [toggling, setToggling] = useState<string | null>(null);
   const { sort, toggle: sortToggle, sorted } = useSort(list, null);
-  const pagination = usePagination(sorted);
+  const { values: fv, set: fset, reset: freset, filtered, activeCount: fCount } = useColumnFilters(sorted, FILTER_DEFS);
+  const pagination = usePagination(filtered);
   const { visible, toggle: colToggle } = useColumns('companies', [
     { key: 'reference', label: 'Réf.' }, { key: 'name', label: 'Nom' },
     { key: 'email', label: 'Email' }, { key: 'phone', label: 'Téléphone' },
@@ -30,13 +39,13 @@ export default function ClientsPage() {
     { key: 'status', label: 'Statut' },
   ]);
 
-  const load = (q?: string) => { setLoading(true); companies.list(q).then(setList).finally(() => setLoading(false)); };
+  const load = () => { setLoading(true); companies.list().then(setList).finally(() => setLoading(false)); };
   useEffect(() => { load(); }, []);
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); setSaving(true);
-    try { await companies.create(form); setOpen(false); setForm(emptyForm()); load(search || undefined); }
+    try { await companies.create(form); setOpen(false); setForm(emptyForm()); load(); }
     finally { setSaving(false); }
   };
 
@@ -53,16 +62,7 @@ export default function ClientsPage() {
   return (
     <div className="p-6">
       <PageHeader title="Clients" action={<AddButton onClick={() => { setForm(emptyForm()); setOpen(true); }} />} />
-
-      <div className="mb-5">
-        <input type="text" placeholder="Rechercher un client..." value={search}
-          onChange={e => { setSearch(e.target.value); load(e.target.value || undefined); }}
-          className="px-4 py-2.5 rounded-lg text-sm outline-none w-full max-w-xs transition-all"
-          style={{ background: '#FFF', border: `1.5px solid ${T.border}`, color: T.dark }}
-          onFocus={e => { e.target.style.borderColor = T.copper; e.target.style.boxShadow = '0 0 0 3px rgba(200,128,58,0.1)'; }}
-          onBlur={e => { e.target.style.borderColor = T.border; e.target.style.boxShadow = 'none'; }}
-        />
-      </div>
+      <ColumnFilterBar defs={FILTER_DEFS} values={fv} set={fset} reset={freset} activeCount={fCount} />
 
       <DataTable loading={loading} empty="Aucun client — cliquez sur «+ Ajouter»" sort={sort} onSort={sortToggle}
         headers={[
@@ -108,7 +108,7 @@ export default function ClientsPage() {
           );
         })}
       </DataTable>
-      <TableFooter pagination={pagination} export={{ getData: () => sorted.map(c => ({ Référence: (c as any).reference ?? '', Type: c.clientType === 'SOCIETE' ? 'Société' : 'Particulier', Nom: c.name, Email: c.email ?? '', Téléphone: c.phone ?? '', Ville: c.city ?? '', Pays: c.country ?? '', Statut: c.isActive === false ? 'Inactif' : 'Actif' })), filename: 'clients', title: 'Clients' }} columnSelector={{ allCols: [
+      <TableFooter pagination={pagination} export={{ getData: () => filtered.map(c => ({ Référence: (c as any).reference ?? '', Type: c.clientType === 'SOCIETE' ? 'Société' : 'Particulier', Nom: c.name, Email: c.email ?? '', Téléphone: c.phone ?? '', Ville: c.city ?? '', Pays: c.country ?? '', Statut: c.isActive === false ? 'Inactif' : 'Actif' })), filename: 'clients', title: 'Clients' }} columnSelector={{ allCols: [
         { key: 'reference', label: 'Réf.' }, { key: 'name', label: 'Nom' }, { key: 'email', label: 'Email' },
         { key: 'city', label: 'Ville' }, { key: 'country', label: 'Pays' }, { key: 'status', label: 'Statut' },
       ], visible, toggle: colToggle }} />
