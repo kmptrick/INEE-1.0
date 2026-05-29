@@ -19,6 +19,7 @@ const FILTER_DEFS: FilterDef[] = [
 
 export default function PrestationsPage() {
   const [list, setList] = useState<Service[]>([]);
+  const [cats, setCats] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Service | null>(null);
@@ -38,7 +39,7 @@ export default function PrestationsPage() {
     setLoading(true);
     services.list().then(setList).finally(() => setLoading(false));
   };
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); services.categories().then(setCats); }, []);
 
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
 
