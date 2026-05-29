@@ -207,7 +207,7 @@ export default function QuotesPage() {
           );
         })}
       </DataTable>
-      <TableFooter pagination={pagination} export={{ getData: () => filtered.map(q => ({ Numéro: q.number, Client: q.company?.name ?? '', 'HT (€)': q.subtotal, 'TVA (€)': q.vatAmount, 'TTC (€)': q.total, Statut: STATUS_FR[q.status] ?? q.status, Validité: q.validUntil ? new Date(q.validUntil).toLocaleDateString('fr-LU') : '' })), filename: 'devis', title: 'Devis' }} columnSelector={{ allCols: ALL_COLS_Q, visible, toggle: colToggle }} />
+      <TableFooter pagination={pagination} export={{ getData: () => filtered.map(q => ({ Numéro: q.number, Client: q.company?.name ?? '', 'HT (€)': q.subtotal, 'TVA (€)': q.vatAmount, 'TTC (€)': q.total, Statut: STATUS_FR[q.status] ?? q.status, Validité: (q as any).validUntil ? new Date((q as any).validUntil).toLocaleDateString('fr-LU') : '' })), filename: 'devis', title: 'Devis' }} columnSelector={{ allCols: ALL_COLS_Q, visible, toggle: colToggle }} />
 
       {/* ── Detail / Actions modal ── */}
       {viewItem && (
