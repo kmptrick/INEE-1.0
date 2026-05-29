@@ -72,7 +72,7 @@ export default function InvoicesPage() {
   const [form, setForm] = useState(emptyForm());
   const [saving, setSaving] = useState(false);
   const [fullInvoices, setFullInvoices] = useState<Record<string, Invoice>>({});
-  const { sort, toggle: sortToggle, sorted } = useSort(list, null);
+  const { sort, toggle: sortToggle, sorted } = useSort(list);
   const { values: fv, set: fset, reset: freset, filtered, activeCount: fCount } = useColumnFilters(sorted, FILTER_DEFS_INV);
   const pagination = usePagination(filtered);
   const { visible, toggle: colToggle } = useColumns('invoices', ALL_COLS_INV);

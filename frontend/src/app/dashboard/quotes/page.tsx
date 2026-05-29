@@ -69,7 +69,7 @@ export default function QuotesPage() {
   const [form, setForm] = useState(emptyForm());
   const [saving, setSaving] = useState(false);
   const [fullQuotes, setFullQuotes] = useState<Record<string, Quote>>({});
-  const { sort, toggle: sortToggle, sorted } = useSort(list, null);
+  const { sort, toggle: sortToggle, sorted } = useSort(list);
   const { values: fv, set: fset, reset: freset, filtered, activeCount: fCount } = useColumnFilters(sorted, FILTER_DEFS_Q);
   const pagination = usePagination(filtered);
   const { visible, toggle: colToggle } = useColumns('quotes', ALL_COLS_Q);

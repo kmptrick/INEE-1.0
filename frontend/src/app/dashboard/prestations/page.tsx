@@ -25,7 +25,7 @@ export default function PrestationsPage() {
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<Service | null>(null);
-  const { sort, toggle: sortToggle, sorted } = useSort(list, null);
+  const { sort, toggle: sortToggle, sorted } = useSort(list);
   const { values: fv, set: fset, reset: freset, filtered, activeCount: fCount } = useColumnFilters(sorted, FILTER_DEFS);
   const pagination = usePagination(filtered);
   const { visible, toggle: colToggle } = useColumns('prestations', [

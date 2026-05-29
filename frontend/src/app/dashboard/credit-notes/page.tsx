@@ -60,7 +60,7 @@ function CreditNotesContent() {
   const [viewItem, setViewItem] = useState<CreditNote | null>(null);
   const [actioning, setActioning] = useState(false);
   const [fullCNs, setFullCNs] = useState<Record<string, CreditNote>>({});
-  const { sort, toggle: sortToggle, sorted } = useSort(list, null);
+  const { sort, toggle: sortToggle, sorted } = useSort(list);
   const { values: fv, set: fset, reset: freset, filtered, activeCount: fCount } = useColumnFilters(sorted, FILTER_DEFS);
   const pagination = usePagination(filtered);
 

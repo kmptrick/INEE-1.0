@@ -37,7 +37,7 @@ export default function DealsPage() {
   const [form, setForm] = useState(empty);
   const [saving, setSaving] = useState(false);
 
-  const { sort, toggle: sortToggle, sorted } = useSort(list, null);
+  const { sort, toggle: sortToggle, sorted } = useSort(list);
   const { values: fv, set: fset, reset: freset, filtered, activeCount: fCount } = useColumnFilters(sorted, FILTER_DEFS);
   const pagination = usePagination(filtered);
   const load = (s?: string) => { setLoading(true); deals.list(s || undefined).then(setList).finally(() => setLoading(false)); };

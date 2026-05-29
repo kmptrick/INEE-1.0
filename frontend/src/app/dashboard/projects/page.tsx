@@ -95,7 +95,7 @@ export default function ProjectsPage() {
   const [savingTask, setSavingTask] = useState(false);
   const [editTask, setEditTask] = useState<Task | null>(null);
 
-  const { sort, toggle: sortToggle, sorted } = useSort(list, null);
+  const { sort, toggle: sortToggle, sorted } = useSort(list);
   const { values: fv, set: fset, reset: freset, filtered, activeCount: fCount } = useColumnFilters(sorted, FILTER_DEFS);
   const pagination = usePagination(filtered);
 
