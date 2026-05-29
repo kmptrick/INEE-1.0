@@ -56,8 +56,9 @@ const ALL_COLS_INV = [
   { key: 'vatAmount', label: 'TVA'      },
   { key: 'total',     label: 'TTC'      },
   { key: 'paidAmount',label: 'Payé'     },
-  { key: 'dueDate',   label: 'Échéance' },
-  { key: 'status',    label: 'Statut'   },
+  { key: 'dueDate',   label: 'Échéance'  },
+  { key: 'createdAt', label: 'Création'  },
+  { key: 'status',    label: 'Statut'    },
 ];
 
 function ActionBtn({ label, color, bg, border, onClick, disabled }: { label: string; color: string; bg: string; border: string; onClick: () => void; disabled?: boolean }) {
@@ -183,8 +184,9 @@ export default function InvoicesPage() {
           ...(visible.includes('vatAmount') ? [{ label: 'TVA',    key: 'vatAmount', align: 'right' as const }] : []),
           ...(visible.includes('total')     ? [{ label: 'TTC',    key: 'total',     align: 'right' as const }] : []),
           ...(visible.includes('paidAmount')? [{ label: 'Payé',     key: 'paidAmount', align: 'right' as const }] : []),
-          ...(visible.includes('dueDate')   ? [{ label: 'Échéance', key: 'dueDate' }] : []),
-          ...(visible.includes('status')    ? [{ label: 'Statut',   key: 'status',    align: 'center' as const }] : []),
+          ...(visible.includes('dueDate')   ? [{ label: 'Échéance',  key: 'dueDate'  }] : []),
+          ...(visible.includes('createdAt') ? [{ label: 'Création',  key: 'createdAt' }] : []),
+          ...(visible.includes('status')    ? [{ label: 'Statut',    key: 'status',    align: 'center' as const }] : []),
           { label: '', align: 'center' as const },
         ]}>
         {pagination.paged.map((inv, i) => {
@@ -201,6 +203,7 @@ export default function InvoicesPage() {
               {visible.includes('total')      && <td className="px-4 py-3 text-right text-sm font-bold" style={{ color: T.dark }}>{fmt(inv.total)}</td>}
               {visible.includes('paidAmount') && <td className="px-4 py-3 text-right text-sm font-semibold" style={{ color: '#16A34A' }}>{fmt(inv.paidAmount)}</td>}
               {visible.includes('dueDate')    && <Td>{inv.dueDate ? new Date(inv.dueDate).toLocaleDateString('fr-LU') : '—'}</Td>}
+              {visible.includes('createdAt')  && <Td>{inv.createdAt ? new Date(inv.createdAt).toLocaleDateString('fr-LU') : '—'}</Td>}
               {visible.includes('status')     && <td className="px-4 py-3 text-center"><StatusBadge label={STATUS_FR[inv.status] ?? inv.status} bg={ss.bg} color={ss.color} /></td>}
               <td className="px-4 py-3 text-center" onClick={e => e.stopPropagation()}>
                 <PdfDownloadButton {...buildPdfProps(full)} />

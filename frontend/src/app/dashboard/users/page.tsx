@@ -133,6 +133,7 @@ export default function UsersPage() {
         headers={[
           { label: 'Nom', key: 'lastName' }, { label: 'Email', key: 'email' },
           { label: 'Fonction' }, { label: 'Rôle', key: 'role', align: 'center' },
+          { label: 'Création', key: 'createdAt' },
           { label: 'Statut', align: 'center' }, { label: '', align: 'right' },
         ]}>
         {pagination.paged.map((u, i) => {
@@ -151,6 +152,7 @@ export default function UsersPage() {
                   {ROLE_FR[u.role] ?? u.role}
                 </span>
               </td>
+              <Td>{u.createdAt ? new Date(u.createdAt).toLocaleDateString('fr-LU') : '—'}</Td>
               <td className="px-4 py-3 text-center">
                 <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
                   style={u.isActive ? { background: '#F0FDF4', color: '#16A34A' } : { background: '#F5F5F5', color: '#999' }}>

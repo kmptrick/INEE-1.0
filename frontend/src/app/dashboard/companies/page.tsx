@@ -37,7 +37,7 @@ export default function ClientsPage() {
     { key: 'reference', label: 'Réf.' }, { key: 'name', label: 'Nom' },
     { key: 'email', label: 'Email' }, { key: 'phone', label: 'Téléphone' },
     { key: 'city', label: 'Ville' }, { key: 'country', label: 'Pays' },
-    { key: 'status', label: 'Statut' },
+    { key: 'status', label: 'Statut' }, { key: 'createdAt', label: 'Création' },
   ]);
 
   const load = () => { setLoading(true); companies.list().then(setList).finally(() => setLoading(false)); };
@@ -73,7 +73,8 @@ export default function ClientsPage() {
           ...(visible.includes('email')   ? [{ label: 'Email' }] : []),
           ...(visible.includes('city')    ? [{ label: 'Ville',     key: 'city' }] : []),
           ...(visible.includes('country') ? [{ label: 'Pays' }] : []),
-          ...(visible.includes('status')  ? [{ label: 'Statut' }] : []),
+          ...(visible.includes('status')    ? [{ label: 'Statut' }] : []),
+          ...(visible.includes('createdAt') ? [{ label: 'Création', key: 'createdAt' }] : []),
           { label: '', align: 'center' as const },
         ]}>
         {pagination.paged.map((c, i) => {
@@ -96,7 +97,8 @@ export default function ClientsPage() {
               {visible.includes('email')   && <Td>{c.email ?? '—'}</Td>}
               {visible.includes('city')    && <Td>{c.city ?? '—'}</Td>}
               {visible.includes('country') && <Td>{c.country ?? '—'}</Td>}
-              {visible.includes('status')  && <td className="px-4 py-3 text-xs font-semibold" style={{ color: inactive ? '#999' : '#16A34A' }}>{inactive ? 'Inactif' : 'Actif'}</td>}
+              {visible.includes('status')    && <td className="px-4 py-3 text-xs font-semibold" style={{ color: inactive ? '#999' : '#16A34A' }}>{inactive ? 'Inactif' : 'Actif'}</td>}
+              {visible.includes('createdAt') && <Td>{c.createdAt ? new Date(c.createdAt).toLocaleDateString('fr-LU') : '—'}</Td>}
               <td className="px-4 py-3 text-center">
                 <button onClick={() => toggleActive(c)} disabled={toggling === c.id}
                   className="text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors cursor-pointer"
@@ -111,7 +113,7 @@ export default function ClientsPage() {
       </DataTable>
       <TableFooter pagination={pagination} export={{ getData: () => filtered.map(c => ({ Référence: (c as any).reference ?? '', Type: c.clientType === 'SOCIETE' ? 'Société' : 'Particulier', Nom: c.name, Email: c.email ?? '', Téléphone: c.phone ?? '', Ville: c.city ?? '', Pays: c.country ?? '', Statut: c.isActive === false ? 'Inactif' : 'Actif' })), filename: 'clients', title: 'Clients' }} columnSelector={{ allCols: [
         { key: 'reference', label: 'Réf.' }, { key: 'name', label: 'Nom' }, { key: 'email', label: 'Email' },
-        { key: 'city', label: 'Ville' }, { key: 'country', label: 'Pays' }, { key: 'status', label: 'Statut' },
+        { key: 'city', label: 'Ville' }, { key: 'country', label: 'Pays' }, { key: 'status', label: 'Statut' }, { key: 'createdAt', label: 'Création' },
       ], visible, toggle: colToggle }} />
 
       <Modal title="Nouveau client" open={open} onClose={() => setOpen(false)}>

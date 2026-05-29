@@ -64,7 +64,7 @@ export default function DealsPage() {
       <SegmentFilterBar search={search} onSearch={setSearch} placeholder="Rechercher une affaire..." defs={SEGMENT_DEFS} rules={rules} addRule={addRule} removeRule={removeRule} updateRule={updateRule} clearRules={clearRules} clearAll={clearAll} activeCount={activeCount} />
 
       <DataTable loading={loading} empty="Aucune affaire — cliquez sur «+ Ajouter»" sort={sort} onSort={sortToggle}
-        headers={[{ label: 'Titre', key: 'title' }, { label: 'Client' }, { label: 'Valeur', key: 'value', align: 'right' }, { label: 'Proba.', align: 'center' }, { label: 'Statut', key: 'status', align: 'center' }]}>
+        headers={[{ label: 'Titre', key: 'title' }, { label: 'Client' }, { label: 'Valeur', key: 'value', align: 'right' }, { label: 'Proba.', align: 'center' }, { label: 'Création', key: 'createdAt' }, { label: 'Statut', key: 'status', align: 'center' }]}>
         {pagination.paged.map((d, i) => {
           const ss = STATUS_ST[d.status] ?? { bg: '#F5F5F5', color: '#888' };
           return (
@@ -73,6 +73,7 @@ export default function DealsPage() {
               <Td>{d.company?.name ?? '—'}</Td>
               <td className="px-4 py-3 text-right text-sm font-bold" style={{ color: T.dark }}>{fmt(d.value)}</td>
               <td className="px-4 py-3 text-center text-sm" style={{ color: T.muted }}>{d.probability}%</td>
+              <Td>{d.createdAt ? new Date(d.createdAt).toLocaleDateString('fr-LU') : '—'}</Td>
               <td className="px-4 py-3 text-center"><StatusBadge label={STATUS_FR[d.status] ?? d.status} bg={ss.bg} color={ss.color} /></td>
             </tr>
           );

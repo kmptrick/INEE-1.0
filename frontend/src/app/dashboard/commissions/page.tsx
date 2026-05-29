@@ -63,7 +63,7 @@ export default function CommissionsPage() {
       <SegmentFilterBar search={search} onSearch={setSearch} placeholder="Rechercher une commission..." defs={SEGMENT_DEFS} rules={rules} addRule={addRule} removeRule={removeRule} updateRule={updateRule} clearRules={clearRules} clearAll={clearAll} activeCount={activeCount} />
 
       <DataTable loading={loading} empty="Aucune commission — cliquez sur «+ Ajouter»" sort={sort} onSort={sortToggle}
-        headers={[{ label: 'Référence' }, { label: 'Apporteur', key: 'brokerName' }, { label: 'Client' }, { label: 'Affaire', key: 'dealValue', align: 'right' }, { label: 'Taux', align: 'center' }, { label: 'Commission', key: 'commissionAmount', align: 'right' }, { label: 'Statut', key: 'status', align: 'center' }]}>
+        headers={[{ label: 'Référence' }, { label: 'Apporteur', key: 'brokerName' }, { label: 'Client' }, { label: 'Affaire', key: 'dealValue', align: 'right' }, { label: 'Taux', align: 'center' }, { label: 'Commission', key: 'commissionAmount', align: 'right' }, { label: 'Création', key: 'createdAt' }, { label: 'Statut', key: 'status', align: 'center' }]}>
         {pagination.paged.map((c, i) => {
           const ss = STATUS_ST[c.status] ?? { bg: '#F5F5F5', color: '#888' };
           return (
@@ -74,6 +74,7 @@ export default function CommissionsPage() {
               <td className="px-4 py-3 text-right text-sm" style={{ color: T.dark }}>{fmt(c.dealValue)}</td>
               <td className="px-4 py-3 text-center text-sm" style={{ color: T.muted }}>{c.commissionRate}%</td>
               <td className="px-4 py-3 text-right text-sm font-bold" style={{ color: T.copper }}>{fmt(c.commissionAmount)}</td>
+              <Td>{c.createdAt ? new Date(c.createdAt).toLocaleDateString('fr-LU') : '—'}</Td>
               <td className="px-4 py-3 text-center"><StatusBadge label={STATUS_FR[c.status] ?? c.status} bg={ss.bg} color={ss.color} /></td>
             </tr>
           );

@@ -48,9 +48,13 @@ const SEGMENT_DEFS_Q: FilterRuleDef[] = [
 ];
 
 const ALL_COLS_Q = [
-  { key: 'number', label: 'Numéro' }, { key: 'company', label: 'Client' },
-  { key: 'subtotal', label: 'HT' }, { key: 'vatAmount', label: 'TVA' },
-  { key: 'total', label: 'TTC' }, { key: 'status', label: 'Statut' },
+  { key: 'number',    label: 'Numéro'  },
+  { key: 'company',   label: 'Client'  },
+  { key: 'subtotal',  label: 'HT'      },
+  { key: 'vatAmount', label: 'TVA'     },
+  { key: 'total',     label: 'TTC'     },
+  { key: 'createdAt', label: 'Création'},
+  { key: 'status',    label: 'Statut'  },
 ];
 
 function ActionBtn({ label, color, bg, border, onClick, disabled }: { label: string; color: string; bg: string; border: string; onClick: () => void; disabled?: boolean }) {
@@ -186,8 +190,9 @@ export default function QuotesPage() {
           ...(visible.includes('company')  ? [{ label: 'Client' }] : []),
           ...(visible.includes('subtotal') ? [{ label: 'HT',      key: 'subtotal',  align: 'right' as const }] : []),
           ...(visible.includes('vatAmount')? [{ label: 'TVA',     key: 'vatAmount', align: 'right' as const }] : []),
-          ...(visible.includes('total')    ? [{ label: 'TTC',     key: 'total',     align: 'right' as const }] : []),
-          ...(visible.includes('status')   ? [{ label: 'Statut',  key: 'status',    align: 'center' as const }] : []),
+          ...(visible.includes('total')     ? [{ label: 'TTC',      key: 'total',     align: 'right' as const }] : []),
+          ...(visible.includes('createdAt') ? [{ label: 'Création', key: 'createdAt' }] : []),
+          ...(visible.includes('status')    ? [{ label: 'Statut',   key: 'status',    align: 'center' as const }] : []),
           { label: '', align: 'center' as const },
         ]}>
         {pagination.paged.map((q, i) => {
@@ -202,6 +207,7 @@ export default function QuotesPage() {
               {visible.includes('subtotal')  && <td className="px-4 py-3 text-right text-sm" style={{ color: T.dark }}>{fmt(q.subtotal)}</td>}
               {visible.includes('vatAmount') && <td className="px-4 py-3 text-right text-sm" style={{ color: T.muted }}>{fmt(q.vatAmount)}</td>}
               {visible.includes('total')     && <td className="px-4 py-3 text-right text-sm font-bold" style={{ color: T.dark }}>{fmt(q.total)}</td>}
+              {visible.includes('createdAt') && <Td>{q.createdAt ? new Date(q.createdAt).toLocaleDateString('fr-LU') : '—'}</Td>}
               {visible.includes('status')    && <td className="px-4 py-3 text-center"><StatusBadge label={STATUS_FR[q.status] ?? q.status} bg={ss.bg} color={ss.color} /></td>}
               <td className="px-4 py-3 text-center" onClick={e => e.stopPropagation()}>
                 <PdfDownloadButton {...buildPdfProps(full)} />

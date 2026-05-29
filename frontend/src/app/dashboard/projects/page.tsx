@@ -189,6 +189,7 @@ export default function ProjectsPage() {
           { label: 'Tâches' },
           { label: 'Début', key: 'startDate' },
           { label: 'Fin', key: 'endDate' },
+          { label: 'Création', key: 'createdAt' },
         ]}>
         {pagination.paged.map((p, i) => (
           <tr key={p.id} onClick={() => openDetail(p)}
@@ -206,6 +207,7 @@ export default function ProjectsPage() {
             <td className="px-4 py-3 text-sm" style={{ color: p.endDate && new Date(p.endDate) < new Date() && p.status !== 'COMPLETED' ? '#DC2626' : T.muted }}>
               {fmtDate(p.endDate) ?? '—'}
             </td>
+            <Td>{p.createdAt ? new Date(p.createdAt).toLocaleDateString('fr-LU') : '—'}</Td>
           </tr>
         ))}
       </DataTable>

@@ -68,6 +68,7 @@ export default function ContactsPage() {
         headers={[
           { label: 'Réf.' }, { label: 'Nom', key: 'lastName' }, { label: 'Email' }, { label: 'Téléphone' },
           { label: 'Poste' }, { label: 'Client' },
+          { label: 'Création', key: 'createdAt' },
           { label: 'Reçoit factures', align: 'center' },
           { label: '', align: 'center' },
         ]}>
@@ -84,6 +85,7 @@ export default function ContactsPage() {
               <Td>{c.phone ?? '—'}</Td>
               <Td>{c.jobTitle ?? '—'}</Td>
               <Td>{c.company?.name ?? '—'}</Td>
+              <Td>{c.createdAt ? new Date(c.createdAt).toLocaleDateString('fr-LU') : '—'}</Td>
               <td className="px-4 py-3 text-center">
                 <button
                   onClick={() => toggleInvoice(c)}

@@ -157,6 +157,7 @@ function CreditNotesContent() {
         headers={[
           { label: 'Numéro', key: 'number' }, { label: 'Facture liée' }, { label: 'Client' },
           { label: 'HT', key: 'subtotal', align: 'right' }, { label: 'TVA', align: 'right' }, { label: 'TTC', key: 'total', align: 'right' },
+          { label: 'Création', key: 'createdAt' },
           { label: 'Statut', key: 'status', align: 'center' },
         ]}>
         {pagination.paged.map((cn, i) => {
@@ -172,6 +173,7 @@ function CreditNotesContent() {
               <td className="px-4 py-3 text-right text-sm" style={{ color: T.dark }}>{fmt(cn.subtotal)}</td>
               <td className="px-4 py-3 text-right text-sm" style={{ color: T.muted }}>{fmt(cn.vatAmount)}</td>
               <td className="px-4 py-3 text-right text-sm font-bold" style={{ color: T.dark }}>{fmt(cn.total)}</td>
+              <Td>{cn.createdAt ? new Date(cn.createdAt).toLocaleDateString('fr-LU') : '—'}</Td>
               <td className="px-4 py-3 text-center"><StatusBadge label={STATUS_FR[cn.status] ?? cn.status} bg={ss.bg} color={ss.color} /></td>
             </tr>
           );
