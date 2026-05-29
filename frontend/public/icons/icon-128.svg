@@ -1,0 +1,9 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='128' height='128' viewBox='0 0 128 128'>
+  <rect width='128' height='128' fill='#1A1008'/>
+  <polygon points='64,5.119999999999997 122.88,64 64,122.88 5.119999999999997,64' fill='none' stroke='#C8803A' stroke-width='5.12'/>
+  <polygon points='64,22.784 105.21600000000001,64 64,105.21600000000001 22.784,64' fill='none' stroke='#C8803A' stroke-width='3.072'/>
+  <line x1='64' y1='35.1488' x2='64' y2='92.8512' stroke='#F5EDE4' stroke-width='7.68' stroke-linecap='round'/>
+  <line x1='43.391999999999996' y1='35.1488' x2='84.608' y2='35.1488' stroke='#F5EDE4' stroke-width='7.68' stroke-linecap='round'/>
+  <line x1='43.391999999999996' y1='92.8512' x2='84.608' y2='92.8512' stroke='#F5EDE4' stroke-width='7.68' stroke-linecap='round'/>
+  <circle cx='64' cy='64' r='7.68' fill='#C8803A'/>
+</svg>
