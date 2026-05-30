@@ -67,11 +67,12 @@ export default function Contact() {
   }, [])
 
   useEffect(() => {
-    const handleHash = () => {
-      if (window.location.hash === '#contact') resetForm()
+    const handleClick = (e: MouseEvent) => {
+      const link = (e.target as HTMLElement).closest('a[href="#contact"]')
+      if (link) resetForm()
     }
-    window.addEventListener('hashchange', handleHash)
-    return () => window.removeEventListener('hashchange', handleHash)
+    document.addEventListener('click', handleClick)
+    return () => document.removeEventListener('click', handleClick)
   }, [])
 
   async function handleSubmit(e: FormEvent) {
