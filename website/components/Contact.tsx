@@ -192,7 +192,7 @@ export default function Contact() {
 
             <div style={{ height: '1px', background: 'rgba(250,246,241,0.08)', margin: '16px 0 32px' }} />
             <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '10px', letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(250,246,241,0.3)', lineHeight: 1.7 }}>
-              Membre de l&apos;Ordre des Experts-Comptables<br />du Grand-Duché de Luxembourg (OEC)
+              Société de services aux entreprises<br />basée à Mamer, Grand-Duché de Luxembourg
             </p>
           </div>
         </div>

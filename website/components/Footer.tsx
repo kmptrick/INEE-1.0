@@ -42,7 +42,7 @@ export default function Footer() {
               <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '22px', fontWeight: 600, color: 'var(--copper)', letterSpacing: '6px' }}>INEE</span>
             </div>
             <p style={{ fontSize: '13px', color: 'rgba(250,246,241,0.45)', lineHeight: 1.75, marginBottom: '20px' }}>
-              Cabinet de services aux entreprises basé à Mamer, Luxembourg. Comptabilité, fiscalité, conseil et communication digitale.
+              Services aux entreprises au Luxembourg et dans la Grande Région. Comptabilité, fiscalité, RH, conseil et communication digitale.
             </p>
             <button
               onClick={() => {

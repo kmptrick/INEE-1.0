@@ -146,11 +146,13 @@ export default function Hero() {
                 margin: 0,
               }}
             >
-              Votre expert
+              Votre partenaire de
               <br />
-              comptable au
+              services aux entreprises
               <br />
-              <em style={{ fontStyle: 'italic', color: 'var(--copper)' }}>Luxembourg</em>
+              au Luxembourg et
+              <br />
+              <em style={{ fontStyle: 'italic', color: 'var(--copper)' }}>les trois frontières</em>
             </motion.h1>
 
             {/* Copper line */}
@@ -256,9 +258,9 @@ export default function Hero() {
               }}
             >
               {[
-                'Agréé OEC Luxembourg',
-                'Expert-comptable certifié',
-                'Conseiller fiscal agréé',
+                'Services aux entreprises',
+                'Grande Région & Luxembourg',
+                'Conseil & Accompagnement',
               ].map((item) => (
                 <li
                   key={item}

@@ -2,9 +2,9 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'INEE — Cabinet Comptable & Conseil | Luxembourg',
+  title: 'INEE — Services aux Entreprises | Luxembourg & Grande Région',
   description:
-    'Cabinet comptable et de conseil aux entreprises basé à Mamer, Luxembourg. Expertise en comptabilité, fiscalité, audit et conseil aux PME depuis 2020.',
+    'INEE accompagne les entrepreneurs et PME au Luxembourg et dans la Grande Région. Comptabilité, fiscalité, RH, administratif, conseil stratégique et communication digitale. Mamer, Luxembourg.',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

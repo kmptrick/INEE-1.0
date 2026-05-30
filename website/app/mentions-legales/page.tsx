@@ -18,7 +18,7 @@ export default function MentionsLegales() {
         {[
           {
             title: '1. Éditeur du site',
-            content: `Raison sociale : INEE S.à r.l.-S.\nForme juridique : Société à Responsabilité Limitée Simplifiée (S.à r.l.-S.)\nSiège social : 37, Rue du Baumbusch — 8213 Mamer, Grand-Duché de Luxembourg\nN° TVA intracommunautaire : LU36332830\nEmail : contact@inee.lu\nTéléphone : +352 691 845 660`,
+            content: `Raison sociale : INEE S.à r.l.-S.\nForme juridique : Société à Responsabilité Limitée Simplifiée (S.à r.l.-S.) — Services aux entreprises\nSiège social : 37, Rue du Baumbusch — 8213 Mamer, Grand-Duché de Luxembourg\nN° TVA intracommunautaire : LU36332830\nEmail : contact@inee.lu\nTéléphone : +352 691 845 660`,
           },
           {
             title: '2. Directeur de la publication',
