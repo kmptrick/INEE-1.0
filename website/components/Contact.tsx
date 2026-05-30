@@ -1,0 +1,188 @@
+'use client'
+
+import { useState, useEffect, useRef, FormEvent } from 'react'
+
+function InfoBlock({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '20px', marginBottom: '32px' }}>
+      <div style={{
+        width: '44px', height: '44px', flexShrink: 0,
+        border: '1px solid rgba(200,128,58,0.3)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: 'var(--copper)',
+      }}>
+        {icon}
+      </div>
+      <div>
+        <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '10px', fontWeight: 600, letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(250,246,241,0.4)', marginBottom: '6px' }}>{label}</p>
+        <p style={{ fontSize: '14px', color: 'rgba(250,246,241,0.85)', margin: 0, lineHeight: 1.6 }}>{value}</p>
+      </div>
+    </div>
+  )
+}
+
+export default function Contact() {
+  const [prenom, setPrenom] = useState('')
+  const [nom, setNom] = useState('')
+  const [societe, setSociete] = useState('')
+  const [email, setEmail] = useState('')
+  const [telephone, setTelephone] = useState('')
+  const [objet, setObjet] = useState('')
+  const [message, setMessage] = useState('')
+  const [accepte, setAccepte] = useState(false)
+  const [envoye, setEnvoye] = useState(false)
+  const [focused, setFocused] = useState<string | null>(null)
+  const sectionRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible') }),
+      { threshold: 0.08 }
+    )
+    sectionRef.current?.querySelectorAll('.reveal').forEach(el => observer.observe(el))
+    return () => observer.disconnect()
+  }, [])
+
+  function handleSubmit(e: FormEvent) {
+    e.preventDefault()
+    setEnvoye(true)
+  }
+
+  const inputBase: React.CSSProperties = {
+    width: '100%', padding: '14px 18px', marginBottom: '14px',
+    background: 'rgba(250,246,241,0.05)', border: '1px solid rgba(250,246,241,0.1)',
+    borderRadius: '2px', color: 'rgba(250,246,241,0.9)',
+    fontFamily: "'Inter', sans-serif", fontSize: '14px', outline: 'none',
+    transition: 'border-color 0.2s', boxSizing: 'border-box',
+  }
+
+  function fi(field: string): React.CSSProperties {
+    return focused === field ? { borderColor: 'var(--copper)' } : {}
+  }
+
+  return (
+    <section
+      id="contact"
+      ref={sectionRef}
+      style={{ background: 'var(--bg-dark)', padding: '112px 0', position: 'relative' }}
+    >
+      <div className="container">
+        {/* Header */}
+        <div className="reveal" style={{ marginBottom: '72px' }}>
+          <p className="section-label" style={{ color: 'var(--copper)' }}>Nous contacter</p>
+          <h2 className="section-title" style={{ color: 'var(--bg-cream)' }}>
+            Prenons <em>rendez-vous</em>
+          </h2>
+          <p style={{ fontSize: '17px', color: 'rgba(250,246,241,0.55)', maxWidth: '520px', lineHeight: 1.75 }}>
+            Une question, un projet, une urgence comptable ? Notre équipe vous répond sous 24h.
+          </p>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '80px', alignItems: 'start' }} className="contact-grid">
+
+          {/* LEFT — Formulaire */}
+          <div className="reveal" style={{
+            background: 'rgba(250,246,241,0.04)', border: '1px solid rgba(250,246,241,0.08)',
+            padding: '48px', borderRadius: '2px',
+          }}>
+            {envoye ? (
+              <div style={{ textAlign: 'center', padding: '48px 0' }}>
+                <div style={{
+                  width: '64px', height: '64px', border: '1px solid var(--copper)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  margin: '0 auto 28px', color: 'var(--copper)', fontSize: '28px',
+                }}>✓</div>
+                <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '28px', fontWeight: 400, color: 'var(--bg-cream)', marginBottom: '12px' }}>
+                  Demande envoyée
+                </h3>
+                <p style={{ color: 'rgba(250,246,241,0.55)', fontSize: '15px', lineHeight: 1.7 }}>
+                  Nous vous recontacterons dans les 24h ouvrables.<br />Merci de votre confiance.
+                </p>
+              </div>
+            ) : (
+              <>
+                <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '26px', fontWeight: 400, color: 'var(--bg-cream)', marginBottom: '8px' }}>
+                  Demande de rendez-vous
+                </h3>
+                <span className="copper-line" style={{ marginTop: '16px', marginBottom: '32px' }} />
+
+                <form onSubmit={handleSubmit}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: 0 }}>
+                    <input type="text" placeholder="Prénom" value={prenom} onChange={e => setPrenom(e.target.value)} onFocus={() => setFocused('prenom')} onBlur={() => setFocused(null)} required style={{ ...inputBase, ...fi('prenom') }} />
+                    <input type="text" placeholder="Nom" value={nom} onChange={e => setNom(e.target.value)} onFocus={() => setFocused('nom')} onBlur={() => setFocused(null)} required style={{ ...inputBase, ...fi('nom') }} />
+                  </div>
+                  <input type="text" placeholder="Société / Organisation" value={societe} onChange={e => setSociete(e.target.value)} onFocus={() => setFocused('societe')} onBlur={() => setFocused(null)} style={{ ...inputBase, ...fi('societe') }} />
+                  <input type="email" placeholder="Email professionnel" value={email} onChange={e => setEmail(e.target.value)} onFocus={() => setFocused('email')} onBlur={() => setFocused(null)} required style={{ ...inputBase, ...fi('email') }} />
+                  <input type="tel" placeholder="Téléphone" value={telephone} onChange={e => setTelephone(e.target.value)} onFocus={() => setFocused('tel')} onBlur={() => setFocused(null)} style={{ ...inputBase, ...fi('tel') }} />
+
+                  <select value={objet} onChange={e => setObjet(e.target.value)} onFocus={() => setFocused('objet')} onBlur={() => setFocused(null)} style={{ ...inputBase, ...fi('objet'), cursor: 'pointer' }}>
+                    <option value="" style={{ background: '#1A0E06' }}>Objet de la demande…</option>
+                    <option value="comptabilite" style={{ background: '#1A0E06' }}>Comptabilité & Finances</option>
+                    <option value="fiscalite" style={{ background: '#1A0E06' }}>Fiscalité & TVA</option>
+                    <option value="rh" style={{ background: '#1A0E06' }}>RH & Gestion du personnel</option>
+                    <option value="administratif" style={{ background: '#1A0E06' }}>Administratif & Secrétariat</option>
+                    <option value="creation" style={{ background: '#1A0E06' }}>Création d&apos;entreprise</option>
+                    <option value="conseil" style={{ background: '#1A0E06' }}>Conseil stratégique</option>
+                    <option value="formation" style={{ background: '#1A0E06' }}>Formation</option>
+                    <option value="communication" style={{ background: '#1A0E06' }}>Communication & Marketing</option>
+                    <option value="autre" style={{ background: '#1A0E06' }}>Autre</option>
+                  </select>
+
+                  <textarea placeholder="Votre message ou question" value={message} onChange={e => setMessage(e.target.value)} onFocus={() => setFocused('message')} onBlur={() => setFocused(null)} required style={{ ...inputBase, ...fi('message'), height: '100px', resize: 'vertical' }} />
+
+                  {/* Checkbox */}
+                  <label style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '28px', cursor: 'pointer' }}>
+                    <div onClick={() => setAccepte(!accepte)} style={{
+                      width: '18px', height: '18px', flexShrink: 0, marginTop: '2px',
+                      border: `1.5px solid ${accepte ? 'var(--copper)' : 'rgba(250,246,241,0.25)'}`,
+                      background: accepte ? 'rgba(200,128,58,0.2)' : 'transparent',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      transition: 'all 0.2s', cursor: 'pointer',
+                    }}>
+                      {accepte && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="var(--copper)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+                    </div>
+                    <input type="checkbox" checked={accepte} onChange={e => setAccepte(e.target.checked)} required style={{ display: 'none' }} />
+                    <span style={{ fontSize: '13px', color: 'rgba(250,246,241,0.45)', lineHeight: 1.6 }}>
+                      Je consens au traitement de mes données personnelles conformément à la{' '}
+                      <a href="#" style={{ color: 'var(--copper)', textDecoration: 'none' }}>politique de confidentialité</a>
+                    </span>
+                  </label>
+
+                  <button type="submit" className="btn-primary" style={{ width: '100%', justifyContent: 'center', border: 'none', cursor: 'pointer', fontSize: '11px' }}>
+                    Envoyer ma demande
+                  </button>
+                </form>
+              </>
+            )}
+          </div>
+
+          {/* RIGHT — Infos */}
+          <div className="reveal">
+            <p style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: '20px', color: 'rgba(250,246,241,0.6)', lineHeight: 1.7, marginBottom: '40px' }}>
+              &ldquo;Disponibles du lundi au vendredi, de 8h30 à 18h00, pour répondre à toutes vos questions.&rdquo;
+            </p>
+            <span className="copper-line" />
+
+            <InfoBlock label="Adresse" value={"37, Rue du Baumbusch\n8213 Mamer — Luxembourg"} icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>} />
+            <InfoBlock label="Email" value="contact@inee.lu" icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>} />
+            <InfoBlock label="N° TVA" value="LU36332830" icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>} />
+            <InfoBlock label="Horaires" value="Lun–Ven, 8h30–18h00" icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>} />
+
+            <div style={{ height: '1px', background: 'rgba(250,246,241,0.08)', margin: '16px 0 32px' }} />
+            <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '10px', letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(250,246,241,0.3)', lineHeight: 1.7 }}>
+              Membre de l&apos;Ordre des Experts-Comptables<br />du Grand-Duché de Luxembourg (OEC)
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <style>{`
+        @media (max-width: 900px) {
+          .contact-grid { grid-template-columns: 1fr !important; gap: 48px !important; }
+        }
+        textarea { font-family: 'Inter', sans-serif !important; }
+        select option { color: rgba(250,246,241,0.9); }
+      `}</style>
+    </section>
+  )
+}
