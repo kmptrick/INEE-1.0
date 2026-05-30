@@ -13,11 +13,6 @@ const transition = (delay: number) => ({
   delay,
 })
 
-const METRICS = [
-  { value: '200+', label: 'Clients accompagnés' },
-  { value: '15 ans', label: "D'expérience" },
-  { value: '98%', label: 'Satisfaction client' },
-]
 
 function DoubleDiamond() {
   return (
@@ -202,64 +197,6 @@ export default function Hero() {
               </a>
             </motion.div>
 
-            {/* Metrics */}
-            <motion.div
-              variants={fadeUp}
-              transition={transition(0.60)}
-              style={{
-                display: 'flex',
-                gap: 0,
-                marginTop: 56,
-                alignItems: 'stretch',
-              }}
-            >
-              {METRICS.map((m, i) => (
-                <div key={m.label} style={{ display: 'flex', alignItems: 'center' }}>
-                  {i > 0 && (
-                    <div
-                      style={{
-                        width: 1,
-                        height: 40,
-                        background: 'rgba(200,128,58,0.3)',
-                        marginRight: 40,
-                        flexShrink: 0,
-                      }}
-                    />
-                  )}
-                  <div
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 4,
-                      paddingRight: i < METRICS.length - 1 ? 40 : 0,
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontFamily: "'Cormorant Garamond', serif",
-                        fontSize: 48,
-                        fontWeight: 400,
-                        color: 'var(--text-dark)',
-                        lineHeight: 1,
-                      }}
-                    >
-                      {m.value}
-                    </span>
-                    <span
-                      style={{
-                        fontFamily: "'Montserrat', sans-serif",
-                        fontSize: 10,
-                        letterSpacing: 2,
-                        textTransform: 'uppercase' as const,
-                        color: 'var(--text-light)',
-                      }}
-                    >
-                      {m.label}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </motion.div>
           </motion.div>
 
           {/* RIGHT COLUMN — decorative credential card */}
