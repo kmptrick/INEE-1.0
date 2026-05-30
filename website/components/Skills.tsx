@@ -75,10 +75,8 @@ const arguments_ = [
 ];
 
 const stats = [
-  { value: "200+", label: "Clients actifs" },
+  { value: "15+", label: "Cumulé d'ancienneté" },
   { value: "6", label: "Domaines d'expertise" },
-  { value: "15 ans", label: "D'ancienneté" },
-  { value: "98%", label: "Taux de satisfaction" },
 ];
 
 export default function Skills() {
