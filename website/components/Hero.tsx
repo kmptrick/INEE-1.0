@@ -134,7 +134,7 @@ export default function Hero() {
           >
             {/* Section label */}
             <motion.div variants={fadeUp} transition={transition(0)}>
-              <span className="section-label">Cabinet Comptable &amp; Conseil</span>
+              <span className="section-label">Vous créez. On structure. C&apos;est notre expertise.</span>
             </motion.div>
 
             {/* H1 */}
