@@ -187,16 +187,18 @@ export default function Contact() {
 
                   {/* Checkbox */}
                   <label style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '28px', cursor: 'pointer' }}>
-                    <div onClick={() => setAccepte(!accepte)} style={{
-                      width: '18px', height: '18px', flexShrink: 0, marginTop: '2px',
-                      border: `1.5px solid ${accepte ? 'var(--copper)' : 'rgba(250,246,241,0.25)'}`,
-                      background: accepte ? 'rgba(200,128,58,0.2)' : 'transparent',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      transition: 'all 0.2s', cursor: 'pointer',
-                    }}>
-                      {accepte && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="var(--copper)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>}
-                    </div>
-                    <input type="checkbox" checked={accepte} onChange={e => setAccepte(e.target.checked)} style={{ display: 'none' }} />
+                    <input
+                      type="checkbox"
+                      checked={accepte}
+                      onChange={e => setAccepte(e.target.checked)}
+                      style={{
+                        appearance: 'none', WebkitAppearance: 'none',
+                        width: '18px', height: '18px', flexShrink: 0, marginTop: '2px',
+                        border: `1.5px solid ${accepte ? 'var(--copper)' : 'rgba(250,246,241,0.25)'}`,
+                        background: accepte ? `rgba(200,128,58,0.2) url("data:image/svg+xml,%3Csvg width='10' height='8' viewBox='0 0 10 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 4l3 3 5-6' stroke='%23C8803A' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/10px no-repeat` : 'transparent',
+                        cursor: 'pointer', transition: 'all 0.2s',
+                      }}
+                    />
                     <span style={{ fontSize: '13px', color: 'rgba(250,246,241,0.45)', lineHeight: 1.6 }}>
                       Je consens au traitement de mes données personnelles conformément à la{' '}
                       <a href="/confidentialite" style={{ color: 'var(--copper)', textDecoration: 'none' }}>politique de confidentialité</a>
