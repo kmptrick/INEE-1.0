@@ -9,27 +9,42 @@ interface Article {
   summary: string
 }
 
+interface Article {
+  date: string
+  category: string
+  title: string
+  summary: string
+  link: string
+  cta: string
+}
+
 const articles: Article[] = [
   {
-    date: '15 Juin 2026',
-    category: 'FISCALITÉ',
-    title: 'Nouvelles modalités TVA Luxembourg 2026 : ce qui change pour votre entreprise',
-    summary:
-      "L'Administration fiscale a publié ses nouvelles directives TVA pour 2026. Notre analyse détaille les impacts pour les PME et les mesures à prendre avant le 31 juillet.",
-  },
-  {
-    date: '03 Juillet 2026',
+    date: 'Prochainement',
     category: 'ÉVÉNEMENT',
-    title: 'Atelier : Optimiser la structure juridique de votre société',
+    title: 'Brunch Atelier INEE',
     summary:
-      'INEE organise un atelier pratique sur les structures juridiques adaptées aux PME luxembourgeoises. Places limitées à 12 participants. Présentiel à Mamer.',
+      'Rejoignez-nous pour un brunch atelier convivial organisé par INEE. Un moment d\'échanges, de partage et d\'apprentissage autour de la gestion d\'entreprise au Luxembourg. Places limitées.',
+    link: 'https://www.eventbrite.com/e/brunch-atelier-inee-tickets-1990523110206',
+    cta: 'Réserver ma place →',
   },
   {
-    date: '20 Septembre 2026',
-    category: 'CONSEIL',
-    title: 'Télétravail transfrontalier : nouvelles règles de fiscalité sociale en Grande Région',
+    date: 'À venir',
+    category: 'FORMATION',
+    title: 'Formation TVA Luxembourg : maîtrisez vos déclarations',
     summary:
-      'Les accords bilatéraux France-Luxembourg et Belgique-Luxembourg ont été actualisés. Comprendre les nouvelles limites de jours et leurs implications pour vos salariés frontaliers.',
+      'Une demi-journée de formation pratique dédiée à la TVA luxembourgeoise. Taux applicables, obligations déclaratives, cas particuliers B2B/B2C. Idéal pour dirigeants et comptables.',
+    link: '#contact',
+    cta: 'Me tenir informé →',
+  },
+  {
+    date: 'À venir',
+    category: 'CONSEIL',
+    title: 'Atelier : Créer et structurer votre société au Luxembourg',
+    summary:
+      'INEE vous guide pas à pas dans la création de votre société : choix de forme juridique, démarches RCS, obligations fiscales et sociales. Session en petit groupe à Mamer.',
+    link: '#contact',
+    cta: 'Me tenir informé →',
   },
 ]
 
@@ -145,7 +160,9 @@ export default function Events() {
                   {article.summary}
                 </p>
                 <a
-                  href="#"
+                  href={article.link}
+                  target={article.link.startsWith('http') ? '_blank' : undefined}
+                  rel={article.link.startsWith('http') ? 'noopener noreferrer' : undefined}
                   style={{
                     display: 'inline-block',
                     fontFamily: 'Inter, sans-serif',
@@ -154,6 +171,7 @@ export default function Events() {
                     marginTop: '20px',
                     textDecoration: 'none',
                     transition: 'text-decoration 0.2s',
+                    fontWeight: 500,
                   }}
                   onMouseEnter={(e) =>
                     ((e.currentTarget as HTMLAnchorElement).style.textDecoration = 'underline')
@@ -162,7 +180,7 @@ export default function Events() {
                     ((e.currentTarget as HTMLAnchorElement).style.textDecoration = 'none')
                   }
                 >
-                  Lire la suite →
+                  {article.cta}
                 </a>
               </div>
             </article>
