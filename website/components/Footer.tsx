@@ -53,13 +53,13 @@ export default function Footer() {
           <div>
             <ColTitle>Nos services</ColTitle>
             <FooterLink href="#services">Comptabilité</FooterLink>
-            <FooterLink href="#services">Fiscalité & TVA</FooterLink>
-            <FooterLink href="#services">RH & Salaires</FooterLink>
+            <FooterLink href="#services">Fiscalité & Déclarations</FooterLink>
             <FooterLink href="#services">Administratif</FooterLink>
-            <FooterLink href="#services">Création d&apos;entreprise</FooterLink>
-            <FooterLink href="#services">Conseil stratégique</FooterLink>
+            <FooterLink href="#services">Legal & Création d&apos;entreprise</FooterLink>
+            <FooterLink href="#services">RH & Salaires</FooterLink>
             <FooterLink href="#services">Formation</FooterLink>
-            <FooterLink href="#services">Communication</FooterLink>
+            <FooterLink href="#services">Communication & Marketing</FooterLink>
+            <FooterLink href="#services">Conseil & Stratégie</FooterLink>
           </div>
 
           {/* Col 3 — Cabinet */}

@@ -117,14 +117,14 @@ export default function Contact() {
 
                   <select value={objet} onChange={e => setObjet(e.target.value)} onFocus={() => setFocused('objet')} onBlur={() => setFocused(null)} style={{ ...inputBase, ...fi('objet'), cursor: 'pointer' }}>
                     <option value="" style={{ background: '#1A0E06' }}>Objet de la demande…</option>
-                    <option value="comptabilite" style={{ background: '#1A0E06' }}>Comptabilité & Finances</option>
-                    <option value="fiscalite" style={{ background: '#1A0E06' }}>Fiscalité & TVA</option>
-                    <option value="rh" style={{ background: '#1A0E06' }}>RH & Gestion du personnel</option>
+                    <option value="comptabilite" style={{ background: '#1A0E06' }}>Comptabilité</option>
+                    <option value="fiscalite" style={{ background: '#1A0E06' }}>Fiscalité & Déclarations</option>
                     <option value="administratif" style={{ background: '#1A0E06' }}>Administratif & Secrétariat</option>
-                    <option value="creation" style={{ background: '#1A0E06' }}>Création d&apos;entreprise</option>
-                    <option value="conseil" style={{ background: '#1A0E06' }}>Conseil stratégique</option>
+                    <option value="legal" style={{ background: '#1A0E06' }}>Legal & Création d&apos;entreprise</option>
                     <option value="formation" style={{ background: '#1A0E06' }}>Formation</option>
                     <option value="communication" style={{ background: '#1A0E06' }}>Communication & Marketing</option>
+                    <option value="rh" style={{ background: '#1A0E06' }}>RH & Gestion des salaires</option>
+                    <option value="conseil" style={{ background: '#1A0E06' }}>Conseil & Stratégie</option>
                     <option value="autre" style={{ background: '#1A0E06' }}>Autre</option>
                   </select>
 
