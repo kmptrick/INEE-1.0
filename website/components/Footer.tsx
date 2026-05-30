@@ -96,7 +96,7 @@ export default function Footer() {
         {/* Bottom */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
           <span style={{ fontSize: '12px', color: 'rgba(250,246,241,0.25)', fontFamily: "'Inter', sans-serif" }}>
-            © 2026 INEE S.à r.l. Tous droits réservés.
+            © 2026 INEE S.à r.l.-S. Tous droits réservés.
           </span>
           <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
             {[

@@ -19,7 +19,7 @@ export default function Confidentialite() {
         {[
           {
             title: '1. Responsable du traitement',
-            content: `INEE S.à r.l.\n37, Rue du Baumbusch — 8213 Mamer\nGrand-Duché de Luxembourg\nN° TVA : LU36332830\nEmail : contact@inee.lu`,
+            content: `INEE S.à r.l.-S.\n37, Rue du Baumbusch — 8213 Mamer\nGrand-Duché de Luxembourg\nN° TVA : LU36332830\nEmail : contact@inee.lu`,
           },
           {
             title: '2. Données collectées',
@@ -51,7 +51,7 @@ export default function Confidentialite() {
           },
           {
             title: '9. Contact',
-            content: `Pour toute question relative à la protection de vos données personnelles :\n\nINEE S.à r.l.\n37, Rue du Baumbusch — 8213 Mamer, Luxembourg\nEmail : contact@inee.lu`,
+            content: `Pour toute question relative à la protection de vos données personnelles :\n\nINEE S.à r.l.-S.\n37, Rue du Baumbusch — 8213 Mamer, Luxembourg\nEmail : contact@inee.lu`,
           },
         ].map((section, i) => (
           <div key={i} style={{ marginBottom: '48px' }}>
