@@ -20,13 +20,13 @@ interface Article {
 
 const articles: Article[] = [
   {
-    date: 'Prochainement',
-    category: 'ÉVÉNEMENT',
-    title: 'Brunch Atelier INEE',
+    date: '11 Juillet 2026 — 11h30',
+    category: 'BRUNCH & ATELIER #01',
+    title: 'Ce que ton comptable ne te dit pas !',
     summary:
-      'Rejoignez-nous pour un brunch atelier convivial organisé par INEE. Un moment d\'échanges, de partage et d\'apprentissage autour de la gestion d\'entreprise au Luxembourg. Places limitées.',
+      'Tu gères une activité au Luxembourg et tu paies sans vraiment comprendre pourquoi ? INEE t\'invite à une matinée concrète et sans jargon sur la CCSS, les impôts et la TVA. Entrée gratuite — 30 places disponibles.',
     link: 'https://www.eventbrite.com/e/brunch-atelier-inee-tickets-1990523110206',
-    cta: 'Réserver ma place →',
+    cta: 'Réserver ma place gratuite →',
   },
   {
     date: 'À venir',
@@ -159,6 +159,20 @@ export default function Events() {
                 >
                   {article.summary}
                 </p>
+                {i === 0 && (
+                  <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {[
+                      { icon: '📍', text: '20 rue des Peupliers, L-2328 Luxembourg — Paladuim Pal\'Art' },
+                      { icon: '🎟', text: 'Entrée gratuite · 30 places disponibles' },
+                      { icon: '📌', text: 'CCSS · Impôts · TVA' },
+                    ].map((item, j) => (
+                      <div key={j} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                        <span style={{ fontSize: '13px' }}>{item.icon}</span>
+                        <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: 'var(--text-light)', lineHeight: 1.5 }}>{item.text}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <a
                   href={article.link}
                   target={article.link.startsWith('http') ? '_blank' : undefined}
