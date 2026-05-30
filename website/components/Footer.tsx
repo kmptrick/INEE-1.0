@@ -44,8 +44,19 @@ export default function Footer() {
             <p style={{ fontSize: '13px', color: 'rgba(250,246,241,0.45)', lineHeight: 1.75, marginBottom: '20px' }}>
               Cabinet de services aux entreprises basé à Mamer, Luxembourg. Comptabilité, fiscalité, conseil et communication digitale.
             </p>
-            <p style={{ fontSize: '12px', color: 'rgba(250,246,241,0.25)', marginBottom: '4px' }}>37, Rue du Baumbusch — 8213 Mamer</p>
-            <p style={{ fontSize: '12px', color: 'rgba(250,246,241,0.25)', marginBottom: '4px' }}>Grand-Duché de Luxembourg</p>
+            <a
+              href="https://www.google.com/maps/search/?api=1&query=37+Rue+du+Baumbusch+8213+Mamer+Luxembourg"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ textDecoration: 'none' }}
+            >
+              <p style={{ fontSize: '12px', color: 'rgba(250,246,241,0.35)', marginBottom: '2px', transition: 'color 0.2s' }}
+                onMouseEnter={e => (e.currentTarget.style.color = 'var(--copper)')}
+                onMouseLeave={e => (e.currentTarget.style.color = 'rgba(250,246,241,0.35)')}>
+                37, Rue du Baumbusch — 8213 Mamer
+              </p>
+              <p style={{ fontSize: '12px', color: 'rgba(250,246,241,0.25)', marginBottom: '4px' }}>Grand-Duché de Luxembourg ↗</p>
+            </a>
             <p style={{ fontSize: '12px', color: 'rgba(250,246,241,0.2)' }}>TVA : LU36332830</p>
           </div>
 
