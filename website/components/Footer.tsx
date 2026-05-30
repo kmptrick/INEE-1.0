@@ -99,8 +99,12 @@ export default function Footer() {
             © 2026 INEE S.à r.l. Tous droits réservés.
           </span>
           <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
-            {['Politique de confidentialité', 'Mentions légales', 'CGV'].map(label => (
-              <a key={label} href="#" style={{ fontSize: '12px', color: 'rgba(250,246,241,0.25)', textDecoration: 'none', fontFamily: "'Inter', sans-serif", transition: 'color 0.2s' }}
+            {[
+            { label: 'Politique de confidentialité', href: '/confidentialite' },
+            { label: 'Mentions légales', href: '/mentions-legales' },
+            { label: 'CGV', href: '/cgv' },
+          ].map(({ label, href }) => (
+              <a key={label} href={href} style={{ fontSize: '12px', color: 'rgba(250,246,241,0.25)', textDecoration: 'none', fontFamily: "'Inter', sans-serif", transition: 'color 0.2s' }}
                 onMouseEnter={e => (e.currentTarget.style.color = 'var(--copper)')}
                 onMouseLeave={e => (e.currentTarget.style.color = 'rgba(250,246,241,0.25)')}>
                 {label}

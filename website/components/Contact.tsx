@@ -144,7 +144,7 @@ export default function Contact() {
                     <input type="checkbox" checked={accepte} onChange={e => setAccepte(e.target.checked)} required style={{ display: 'none' }} />
                     <span style={{ fontSize: '13px', color: 'rgba(250,246,241,0.45)', lineHeight: 1.6 }}>
                       Je consens au traitement de mes données personnelles conformément à la{' '}
-                      <a href="#" style={{ color: 'var(--copper)', textDecoration: 'none' }}>politique de confidentialité</a>
+                      <a href="/confidentialite" style={{ color: 'var(--copper)', textDecoration: 'none' }}>politique de confidentialité</a>
                     </span>
                   </label>
 
