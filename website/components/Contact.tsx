@@ -62,6 +62,10 @@ export default function Contact() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
+    if (!accepte) {
+      alert('Veuillez accepter la politique de confidentialité.')
+      return
+    }
     setLoading(true)
     setErreur(false)
     try {
@@ -175,7 +179,7 @@ export default function Contact() {
                     }}>
                       {accepte && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="var(--copper)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>}
                     </div>
-                    <input type="checkbox" checked={accepte} onChange={e => setAccepte(e.target.checked)} required style={{ display: 'none' }} />
+                    <input type="checkbox" checked={accepte} onChange={e => setAccepte(e.target.checked)} style={{ display: 'none' }} />
                     <span style={{ fontSize: '13px', color: 'rgba(250,246,241,0.45)', lineHeight: 1.6 }}>
                       Je consens au traitement de mes données personnelles conformément à la{' '}
                       <a href="/confidentialite" style={{ color: 'var(--copper)', textDecoration: 'none' }}>politique de confidentialité</a>
