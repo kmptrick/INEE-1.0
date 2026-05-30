@@ -51,6 +51,12 @@ export default function Contact() {
   const [focused, setFocused] = useState<string | null>(null)
   const sectionRef = useRef<HTMLElement>(null)
 
+  function resetForm() {
+    setPrenom(''); setNom(''); setSociete(''); setEmail('')
+    setTelephone(''); setObjet(''); setMessage('')
+    setAccepte(false); setEnvoye(false); setErreur(false)
+  }
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible') }),
@@ -58,6 +64,14 @@ export default function Contact() {
     )
     sectionRef.current?.querySelectorAll('.reveal').forEach(el => observer.observe(el))
     return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    const handleHash = () => {
+      if (window.location.hash === '#contact') resetForm()
+    }
+    window.addEventListener('hashchange', handleHash)
+    return () => window.removeEventListener('hashchange', handleHash)
   }, [])
 
   async function handleSubmit(e: FormEvent) {
@@ -133,9 +147,12 @@ export default function Contact() {
                 <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '28px', fontWeight: 400, color: 'var(--bg-cream)', marginBottom: '12px' }}>
                   Demande envoyée
                 </h3>
-                <p style={{ color: 'rgba(250,246,241,0.55)', fontSize: '15px', lineHeight: 1.7 }}>
+                <p style={{ color: 'rgba(250,246,241,0.55)', fontSize: '15px', lineHeight: 1.7, marginBottom: '28px' }}>
                   Nous vous recontacterons dans les 24h ouvrables.<br />Merci de votre confiance.
                 </p>
+                <button onClick={resetForm} className="btn-secondary" style={{ border: '1px solid rgba(250,246,241,0.2)', color: 'rgba(250,246,241,0.6)', cursor: 'pointer', fontSize: '11px' }}>
+                  Nouvelle demande
+                </button>
               </div>
             ) : (
               <>
