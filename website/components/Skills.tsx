@@ -263,7 +263,7 @@ export default function Skills() {
                 }}
               >
                 INEE, c&apos;est l&apos;assurance d&apos;un regard expert et
-                bienveillant sur votre comptabilité, chaque jour.
+                bienveillant sur votre activité, chaque jour.
               </blockquote>
             </div>
           </div>
