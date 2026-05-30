@@ -21,30 +21,12 @@ interface Article {
 const articles: Article[] = [
   {
     date: '11 Juillet 2026 — 11h30',
-    category: 'BRUNCH & ATELIER #01',
+    category: 'FORMATION & ATELIER #01',
     title: 'Ce que ton comptable ne te dit pas !',
     summary:
       'Tu gères une activité au Luxembourg et tu paies sans vraiment comprendre pourquoi ? INEE t\'invite à une matinée concrète et sans jargon sur la CCSS, les impôts et la TVA. Entrée gratuite — 30 places disponibles.',
     link: 'https://www.eventbrite.com/e/brunch-atelier-inee-tickets-1990523110206',
     cta: 'Réserver ma place gratuite →',
-  },
-  {
-    date: 'À venir',
-    category: 'FORMATION',
-    title: 'Formation TVA Luxembourg : maîtrisez vos déclarations',
-    summary:
-      'Une demi-journée de formation pratique dédiée à la TVA luxembourgeoise. Taux applicables, obligations déclaratives, cas particuliers B2B/B2C. Idéal pour dirigeants et comptables.',
-    link: '#contact',
-    cta: 'Me tenir informé →',
-  },
-  {
-    date: 'À venir',
-    category: 'CONSEIL',
-    title: 'Atelier : Créer et structurer votre société au Luxembourg',
-    summary:
-      'INEE vous guide pas à pas dans la création de votre société : choix de forme juridique, démarches RCS, obligations fiscales et sociales. Session en petit groupe à Mamer.',
-    link: '#contact',
-    cta: 'Me tenir informé →',
   },
 ]
 
