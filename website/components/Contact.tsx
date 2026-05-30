@@ -46,6 +46,8 @@ export default function Contact() {
   const [message, setMessage] = useState('')
   const [accepte, setAccepte] = useState(false)
   const [envoye, setEnvoye] = useState(false)
+  const [erreur, setErreur] = useState(false)
+  const [loading, setLoading] = useState(false)
   const [focused, setFocused] = useState<string | null>(null)
   const sectionRef = useRef<HTMLElement>(null)
 
@@ -58,9 +60,26 @@ export default function Contact() {
     return () => observer.disconnect()
   }, [])
 
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    setEnvoye(true)
+    setLoading(true)
+    setErreur(false)
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prenom, nom, societe, email, telephone, objet, message }),
+      })
+      if (res.ok) {
+        setEnvoye(true)
+      } else {
+        setErreur(true)
+      }
+    } catch {
+      setErreur(true)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const inputBase: React.CSSProperties = {
@@ -163,8 +182,13 @@ export default function Contact() {
                     </span>
                   </label>
 
-                  <button type="submit" className="btn-primary" style={{ width: '100%', justifyContent: 'center', border: 'none', cursor: 'pointer', fontSize: '11px' }}>
-                    Envoyer ma demande
+                  {erreur && (
+                    <p style={{ color: '#C0392B', fontSize: '13px', marginBottom: '12px', fontFamily: "'Inter', sans-serif" }}>
+                      Une erreur s&apos;est produite. Veuillez réessayer ou nous contacter directement à contact@inee.lu
+                    </p>
+                  )}
+                  <button type="submit" className="btn-primary" disabled={loading} style={{ width: '100%', justifyContent: 'center', border: 'none', cursor: loading ? 'wait' : 'pointer', fontSize: '11px', opacity: loading ? 0.7 : 1 }}>
+                    {loading ? 'Envoi en cours…' : 'Envoyer ma demande'}
                   </button>
                 </form>
               </>
