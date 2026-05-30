@@ -1,6 +1,21 @@
 'use client'
 
-import { useState, useEffect, useRef, FormEvent } from 'react'
+import { useState, useEffect, useRef, FormEvent, useCallback } from 'react'
+
+const MAPS_QUERY = '37+Rue+du+Baumbusch,+8213+Mamer,+Luxembourg'
+
+function openNavigation() {
+  const ua = navigator.userAgent
+  const isIOS = /iPad|iPhone|iPod/.test(ua)
+  const isAndroid = /Android/.test(ua)
+  if (isAndroid) {
+    window.open(`geo:0,0?q=${MAPS_QUERY}`, '_blank')
+  } else if (isIOS) {
+    window.open(`maps://?q=${MAPS_QUERY}`, '_blank')
+  } else {
+    window.open(`https://www.google.com/maps/search/?api=1&query=${MAPS_QUERY}`, '_blank')
+  }
+}
 
 function InfoBlock({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
@@ -163,14 +178,12 @@ export default function Contact() {
             </p>
             <span className="copper-line" />
 
-            <a
-              href="https://www.google.com/maps/search/?api=1&query=37+Rue+du+Baumbusch+8213+Mamer+Luxembourg"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ textDecoration: 'none' }}
+            <button
+              onClick={openNavigation}
+              style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', width: '100%' }}
             >
-              <InfoBlock label="Adresse — Ouvrir dans Maps" value={"37, Rue du Baumbusch\n8213 Mamer — Luxembourg"} icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>} />
-            </a>
+              <InfoBlock label="Adresse — Ouvrir la navigation" value={"37, Rue du Baumbusch\n8213 Mamer — Luxembourg"} icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>} />
+            </button>
             <a href="mailto:contact@inee.lu" style={{ textDecoration: 'none' }}>
               <InfoBlock label="Email — Écrire un message" value="contact@inee.lu" icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>} />
             </a>

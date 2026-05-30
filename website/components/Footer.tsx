@@ -44,19 +44,23 @@ export default function Footer() {
             <p style={{ fontSize: '13px', color: 'rgba(250,246,241,0.45)', lineHeight: 1.75, marginBottom: '20px' }}>
               Cabinet de services aux entreprises basé à Mamer, Luxembourg. Comptabilité, fiscalité, conseil et communication digitale.
             </p>
-            <a
-              href="https://www.google.com/maps/search/?api=1&query=37+Rue+du+Baumbusch+8213+Mamer+Luxembourg"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ textDecoration: 'none' }}
+            <button
+              onClick={() => {
+                const ua = navigator.userAgent
+                const q = '37+Rue+du+Baumbusch,+8213+Mamer,+Luxembourg'
+                if (/Android/.test(ua)) window.open(`geo:0,0?q=${q}`, '_blank')
+                else if (/iPad|iPhone|iPod/.test(ua)) window.open(`maps://?q=${q}`, '_blank')
+                else window.open(`https://www.google.com/maps/search/?api=1&query=${q}`, '_blank')
+              }}
+              style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left' }}
             >
-              <p style={{ fontSize: '12px', color: 'rgba(250,246,241,0.35)', marginBottom: '2px', transition: 'color 0.2s' }}
+              <p style={{ fontSize: '12px', color: 'rgba(250,246,241,0.35)', marginBottom: '2px', transition: 'color 0.2s', margin: 0 }}
                 onMouseEnter={e => (e.currentTarget.style.color = 'var(--copper)')}
                 onMouseLeave={e => (e.currentTarget.style.color = 'rgba(250,246,241,0.35)')}>
                 37, Rue du Baumbusch — 8213 Mamer
               </p>
               <p style={{ fontSize: '12px', color: 'rgba(250,246,241,0.25)', marginBottom: '4px' }}>Grand-Duché de Luxembourg ↗</p>
-            </a>
+            </button>
             <p style={{ fontSize: '12px', color: 'rgba(250,246,241,0.2)' }}>TVA : LU36332830</p>
           </div>
 
