@@ -349,6 +349,10 @@ export function SegmentFilterBar({ search, onSearch, placeholder, defs, rules, a
 
 export type SortState = { key: string; dir: 'asc' | 'desc' };
 
+function getNestedValue(obj: any, path: string): any {
+  return path.split('.').reduce((acc, key) => acc?.[key] ?? '', obj);
+}
+
 export function useSort<T>(data: T[], initial?: SortState) {
   const [sort, setSort] = useState<SortState | null>(initial ?? null);
 
@@ -358,9 +362,9 @@ export function useSort<T>(data: T[], initial?: SortState) {
 
   const sorted = sort
     ? [...data].sort((a: any, b: any) => {
-        const av = a[sort.key] ?? '';
-        const bv = b[sort.key] ?? '';
-        const cmp = typeof av === 'number' ? av - bv : String(av).localeCompare(String(bv), 'fr');
+        const av = getNestedValue(a, sort.key) ?? '';
+        const bv = getNestedValue(b, sort.key) ?? '';
+        const cmp = typeof av === 'number' && typeof bv === 'number' ? av - bv : String(av).localeCompare(String(bv), 'fr');
         return sort.dir === 'asc' ? cmp : -cmp;
       })
     : data;

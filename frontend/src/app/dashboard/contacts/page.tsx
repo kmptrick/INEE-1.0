@@ -132,10 +132,10 @@ export default function ContactsPage() {
 
       <DataTable loading={loading} empty="Aucun contact — cliquez sur «+ Ajouter»" sort={sort} onSort={sortToggle}
         headers={[
-          { label: 'Réf.' }, { label: 'Nom', key: 'lastName' }, { label: 'Email' },
-          { label: 'Tél. 1' }, { label: 'Poste' }, { label: 'Client' },
+          { label: 'Réf.', key: 'reference' }, { label: 'Nom', key: 'lastName' }, { label: 'Email', key: 'email' },
+          { label: 'Tél. 1', key: 'phone' }, { label: 'Poste', key: 'jobTitle' }, { label: 'Client', key: 'company.name' },
           { label: 'Création', key: 'createdAt' },
-          { label: 'Reçoit factures', align: 'center' as const },
+          { label: 'Reçoit factures', key: 'canReceiveInvoices', align: 'center' as const },
           { label: '', align: 'center' as const },
         ]}>
         {pagination.paged.map((c, i) => {

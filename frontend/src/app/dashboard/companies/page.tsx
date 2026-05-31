@@ -325,13 +325,13 @@ export default function ClientsPage() {
 
       <DataTable loading={loading} empty="Aucun client — cliquez sur «+ Ajouter»" sort={sort} onSort={sortToggle}
         headers={[
-          { label: 'Type' },
-          ...(visible.includes('reference')  ? [{ label: 'Réf.' }] : []),
+          { label: 'Type', key: 'clientType' },
+          ...(visible.includes('reference')  ? [{ label: 'Réf.', key: 'reference' }] : []),
           ...(visible.includes('name')       ? [{ label: 'Nom',      key: 'name' }] : []),
-          ...(visible.includes('email')      ? [{ label: 'Email' }] : []),
+          ...(visible.includes('email')      ? [{ label: 'Email',    key: 'email' }] : []),
           ...(visible.includes('city')       ? [{ label: 'Ville',    key: 'city' }] : []),
-          ...(visible.includes('country')    ? [{ label: 'Pays' }] : []),
-          ...(visible.includes('status')     ? [{ label: 'Statut' }] : []),
+          ...(visible.includes('country')    ? [{ label: 'Pays',     key: 'country' }] : []),
+          ...(visible.includes('status')     ? [{ label: 'Statut',   key: 'isActive' }] : []),
           ...(visible.includes('createdAt')  ? [{ label: 'Création', key: 'createdAt' }] : []),
           { label: '', align: 'center' as const },
         ]}>

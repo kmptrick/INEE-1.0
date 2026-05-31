@@ -67,7 +67,7 @@ export default function DealsPage() {
       <SegmentFilterBar search={search} onSearch={setSearch} placeholder="Rechercher une affaire..." defs={SEGMENT_DEFS} rules={rules} addRule={addRule} removeRule={removeRule} updateRule={updateRule} clearRules={clearRules} clearAll={clearAll} activeCount={activeCount} />
 
       <DataTable loading={loading} empty="Aucune affaire — cliquez sur «+ Ajouter»" sort={sort} onSort={sortToggle}
-        headers={[{ label: 'Titre', key: 'title' }, { label: 'Client' }, { label: 'Valeur', key: 'value', align: 'right' }, { label: 'Proba.', align: 'center' }, { label: 'Création', key: 'createdAt' }, { label: 'Statut', key: 'status', align: 'center' }]}>
+        headers={[{ label: 'Titre', key: 'title' }, { label: 'Client', key: 'company.name' }, { label: 'Valeur', key: 'value', align: 'right' }, { label: 'Proba.', key: 'probability', align: 'center' }, { label: 'Création', key: 'createdAt' }, { label: 'Statut', key: 'status', align: 'center' }]}>
         {pagination.paged.map((d, i) => {
           const ss = STATUS_ST[d.status] ?? { bg: '#F5F5F5', color: '#888' };
           return (

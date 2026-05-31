@@ -157,8 +157,8 @@ export default function CommissionsPage() {
 
       <DataTable loading={loading} empty="Aucune commission — cliquez sur «+ Ajouter»" sort={sort} onSort={sortToggle}
         headers={[
-          { label: 'Référence' }, { label: 'Apporteur', key: 'brokerName' }, { label: 'Client' },
-          { label: 'Affaire', key: 'dealValue', align: 'right' as const }, { label: 'Taux', align: 'center' as const },
+          { label: 'Référence', key: 'reference' }, { label: 'Apporteur', key: 'brokerName' }, { label: 'Client', key: 'company.name' },
+          { label: 'Affaire', key: 'dealValue', align: 'right' as const }, { label: 'Taux', key: 'commissionRate', align: 'center' as const },
           { label: 'Commission', key: 'commissionAmount', align: 'right' as const },
           { label: 'Création', key: 'createdAt' }, { label: 'Statut', key: 'status', align: 'center' as const },
           { label: '', align: 'center' as const },
