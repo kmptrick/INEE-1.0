@@ -15,6 +15,7 @@ import { CreditNotesModule } from './credit-notes/credit-notes.module';
 import { LeaveTypesModule } from './leave-types/leave-types.module';
 import { LeaveRequestsModule } from './leave-requests/leave-requests.module';
 import { CalendarModule } from './calendar/calendar.module';
+import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { CalendarModule } from './calendar/calendar.module';
     LeaveTypesModule,
     LeaveRequestsModule,
     CalendarModule,
+    SubscriptionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

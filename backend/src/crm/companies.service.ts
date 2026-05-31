@@ -49,6 +49,13 @@ export class CompaniesService {
 
   async setActive(id: string, isActive: boolean) {
     await this.findOne(id);
+    // Si désactivation : mettre en inactif toutes les souscriptions du client
+    if (!isActive) {
+      await (this.prisma as any).subscription.updateMany({
+        where: { companyId: id },
+        data: { status: 'INACTIVE' },
+      });
+    }
     return this.prisma.company.update({ where: { id }, data: { isActive } as any });
   }
 

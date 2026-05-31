@@ -32,9 +32,10 @@ const nav = [
   {
     label: 'Facturation',
     items: [
-      { href: '/dashboard/invoices',     label: 'Factures',        icon: '🧾' },
-      { href: '/dashboard/credit-notes', label: 'Notes de crédit', icon: '↩' },
-      { href: '/dashboard/prestations',  label: 'Prestations',     icon: '📋' },
+      { href: '/dashboard/invoices',       label: 'Factures',        icon: '🧾' },
+      { href: '/dashboard/credit-notes',  label: 'Notes de crédit', icon: '↩' },
+      { href: '/dashboard/subscriptions', label: 'Souscriptions',   icon: '🔄' },
+      { href: '/dashboard/prestations',   label: 'Prestations',     icon: '📋' },
     ],
   },
 ];

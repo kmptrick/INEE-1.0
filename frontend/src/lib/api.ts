@@ -237,6 +237,47 @@ export interface CalendarEvent {
   userId: string; user?: { id: string; firstName: string; lastName: string };
 }
 
+export const subscriptions = {
+  list: (status?: string) => api.get<Subscription[]>(`/subscriptions${status ? `?status=${status}` : ''}`),
+  get: (id: string) => api.get<Subscription>(`/subscriptions/${id}`),
+  create: (data: Partial<Subscription> & { lines: any[] }) => api.post<Subscription>('/subscriptions', data),
+  update: (id: string, data: any) => api.put<Subscription>(`/subscriptions/${id}`, data),
+  activate: (id: string) => api.patch<Subscription>(`/subscriptions/${id}/activate`, {}),
+  deactivate: (id: string) => api.patch<Subscription>(`/subscriptions/${id}/deactivate`, {}),
+  delete: (id: string) => api.delete(`/subscriptions/${id}`),
+  generate: () => api.post<{ generated: number; invoices: any[] }>('/subscriptions/generate', {}),
+};
+
+export interface Subscription {
+  id: string;
+  number: string;
+  status: string; // ACTIVE | INACTIVE
+  frequency: string; // MONTHLY | QUARTERLY | SEMI_ANNUAL | ANNUAL
+  startDate: string;
+  nextBillingDate: string;
+  createdAt?: string;
+  subtotal: number;
+  vatRate: number;
+  vatAmount: number;
+  total: number;
+  vatMention?: string;
+  notes?: string;
+  company?: { id: string; name: string };
+  lines?: SubscriptionLine[];
+}
+
+export interface SubscriptionLine {
+  id: string;
+  serviceId?: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  unite?: string;
+  discountRate?: number;
+  lineVatRate?: number;
+  total: number;
+}
+
 export const leaveTypes = {
   list: () => api.get<LeaveType[]>('/leave-types'),
   create: (data: Partial<LeaveType>) => api.post<LeaveType>('/leave-types', data),
