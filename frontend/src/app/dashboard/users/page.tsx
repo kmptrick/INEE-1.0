@@ -134,7 +134,7 @@ export default function UsersPage() {
           { label: 'Nom', key: 'lastName' }, { label: 'Email', key: 'email' },
           { label: 'Fonction' }, { label: 'Rôle', key: 'role', align: 'center' },
           { label: 'Création', key: 'createdAt' },
-          { label: 'Statut', align: 'center' }, { label: '', align: 'right' },
+          { label: 'Statut', key: 'isActive', align: 'center' }, { label: '', align: 'right' },
         ]}>
         {pagination.paged.map((u, i) => {
           const rc = ROLE_COLORS[u.role] ?? ROLE_COLORS.MEMBER;

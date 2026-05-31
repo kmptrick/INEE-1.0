@@ -214,7 +214,7 @@ export default function InvoicesPage() {
       <DataTable loading={loading} empty="Aucune facture" sort={sort} onSort={sortToggle}
         headers={[
           ...(visible.includes('number')    ? [{ label: 'Numéro',  key: 'number' }] : []),
-          ...(visible.includes('company')   ? [{ label: 'Client' }] : []),
+          ...(visible.includes('company')   ? [{ label: 'Client', key: 'company.name' }] : []),
           ...(visible.includes('subtotal')  ? [{ label: 'HT',     key: 'subtotal',  align: 'right' as const }] : []),
           ...(visible.includes('vatAmount') ? [{ label: 'TVA',    key: 'vatAmount', align: 'right' as const }] : []),
           ...(visible.includes('total')     ? [{ label: 'TTC',    key: 'total',     align: 'right' as const }] : []),

@@ -181,12 +181,12 @@ export default function ProjectsPage() {
 
       <DataTable loading={loading} empty="Aucun projet — cliquez sur «+ Nouveau projet»" sort={sort} onSort={sortToggle}
         headers={[
-          { label: 'Réf.' },
+          { label: 'Réf.', key: 'reference' },
           { label: 'Nom', key: 'name' },
-          { label: 'Client' },
+          { label: 'Client', key: 'company.name' },
           { label: 'Statut', key: 'status' },
           { label: 'Budget', key: 'budget', align: 'right' },
-          { label: 'Tâches' },
+          { label: 'Tâches', key: '_count.tasks' },
           { label: 'Début', key: 'startDate' },
           { label: 'Fin', key: 'endDate' },
           { label: 'Création', key: 'createdAt' },

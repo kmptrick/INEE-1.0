@@ -84,9 +84,9 @@ export default function PrestationsPage() {
           { label: 'Catégorie', key: 'categorie' },
           { label: 'Description', key: 'description' },
           { label: 'Prix HT', key: 'prixHT', align: 'right' },
-          { label: 'TVA', align: 'center' },
-          { label: 'Unité' },
-          { label: 'Remarques' },
+          { label: 'TVA', key: 'vatRate', align: 'center' },
+          { label: 'Unité', key: 'unite' },
+          { label: 'Remarques', key: 'remarques' },
           { label: '', align: 'right' },
         ]}>
         {pagination.paged.map((s, i) => (

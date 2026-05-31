@@ -209,12 +209,12 @@ export default function SubscriptionsPage() {
         headers={[
           ...(visible.includes('number')    ? [{ label: 'Numéro',    key: 'number' }] : []),
           ...(visible.includes('company')   ? [{ label: 'Client',    key: 'company' }] : []),
-          ...(visible.includes('frequency') ? [{ label: 'Fréquence' }] : []),
-          ...(visible.includes('subtotal')  ? [{ label: 'HT',        align: 'right' as const }] : []),
-          ...(visible.includes('total')     ? [{ label: 'TTC',       align: 'right' as const }] : []),
-          ...(visible.includes('nextDate')  ? [{ label: 'Prochaine facture' }] : []),
+          ...(visible.includes('frequency') ? [{ label: 'Fréquence', key: 'frequency' }] : []),
+          ...(visible.includes('subtotal')  ? [{ label: 'HT', key: 'subtotal', align: 'right' as const }] : []),
+          ...(visible.includes('total')     ? [{ label: 'TTC', key: 'total', align: 'right' as const }] : []),
+          ...(visible.includes('nextDate')  ? [{ label: 'Prochaine facture', key: 'nextBillingDate' }] : []),
           ...(visible.includes('createdAt') ? [{ label: 'Création',  key: 'createdAt' }] : []),
-          ...(visible.includes('status')    ? [{ label: 'Statut' }] : []),
+          ...(visible.includes('status')    ? [{ label: 'Statut', key: 'status' }] : []),
           { label: '', align: 'center' as const },
         ]}>
         {pagination.paged.map((s, i) => {
