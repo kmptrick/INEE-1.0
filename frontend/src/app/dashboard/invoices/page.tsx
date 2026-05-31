@@ -345,13 +345,15 @@ export default function InvoicesPage() {
             </select>
           </FormField>
 
-          <div className="rounded-lg px-3 py-2.5 text-xs" style={{ background: vatResult.mention ? '#FEF3C7' : '#F0FDF4', border: `1px solid ${vatResult.mention ? '#FDE68A' : '#BBF7D0'}` }}>
-            <span className="font-semibold" style={{ color: T.dark }}>{vatResult.label}</span>
-            {vatResult.mention && <span className="block mt-0.5" style={{ color: '#92400E' }}>Mention : «{vatResult.mention}»</span>}
-            {vatResult.regime === 'EU_B2B' && selectedClient && !selectedClient.vatNumber && (
-              <span className="block mt-0.5 font-semibold" style={{ color: '#DC2626' }}>N° TVA client requis pour l&apos;autoliquidation</span>
-            )}
-          </div>
+          {vatResult.mention && (
+            <div className="rounded-lg px-3 py-2.5 text-xs" style={{ background: '#FEF3C7', border: '1px solid #FDE68A' }}>
+              <span className="font-semibold" style={{ color: T.dark }}>{vatResult.label}</span>
+              <span className="block mt-0.5" style={{ color: '#92400E' }}>Mention : «{vatResult.mention}»</span>
+              {vatResult.regime === 'EU_B2B' && selectedClient && !selectedClient.vatNumber && (
+                <span className="block mt-0.5 font-semibold" style={{ color: '#DC2626' }}>N° TVA client requis pour l&apos;autoliquidation</span>
+              )}
+            </div>
+          )}
 
           <FormField label="Echéance"><input type="date" className={inputClass} value={form.dueDate} onChange={e => setField('dueDate', e.target.value)} /></FormField>
 
