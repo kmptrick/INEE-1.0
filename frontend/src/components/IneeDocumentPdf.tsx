@@ -7,7 +7,11 @@ import { INEE } from '@/lib/inee-brand';
 
 Font.register({
   family: 'Helvetica',
-  fonts: [{ src: 'Helvetica' }, { src: 'Helvetica-Bold', fontWeight: 'bold' }],
+  fonts: [
+    { src: 'Helvetica' },
+    { src: 'Helvetica-Bold',    fontWeight: 'bold' },
+    { src: 'Helvetica-Oblique', fontStyle:  'italic' },
+  ],
 });
 
 // ── Couleurs ──────────────────────────────────────────────────────────────────
@@ -81,7 +85,7 @@ const s = StyleSheet.create({
   footer:      { position: 'absolute', bottom: 20, left: 30, right: 30, borderTop: `0.5 solid ${BORDER}`, paddingTop: 5 },
   footerRow:   { flexDirection: 'row', justifyContent: 'space-between' },
   footerText:  { fontSize: 7, color: GRAY },
-  footerItalic:{ fontSize: 7, color: GRAY, fontStyle: 'italic' },
+  footerItalic:{ fontSize: 7, color: GRAY },
 });
 
 // ── Logo SVG ──────────────────────────────────────────────────────────────────

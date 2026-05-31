@@ -196,7 +196,6 @@ export default function InvoicesPage() {
       total: l.total,
       vatRate: l.lineVatRate ?? inv.vatRate,
       discountRate: l.discountRate,
-      period: l.periodStart ? `${new Date(l.periodStart).toLocaleDateString('fr-LU')} - ${l.periodEnd ? new Date(l.periodEnd).toLocaleDateString('fr-LU') : ''}` : undefined,
     })),
     subtotal: inv.subtotal,
     vatRate: inv.vatRate,
