@@ -142,11 +142,11 @@ function ContactBlock({
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold" style={{ color: T.dark }}>{ct.firstName} {ct.lastName}</p>
-                <p className="text-xs" style={{ color: T.muted }}>
-                  {ct.email ?? ''}
-                  {ct.phone ? (ct.email ? ` · ${ct.phone}` : ct.phone) : ''}
-                  {(ct as any).mobile ? ` · ${(ct as any).mobile}` : ''}
-                </p>
+                <div className="text-xs space-y-0.5" style={{ color: T.muted }}>
+                  {ct.email && <p><span className="font-medium">Email : </span>{ct.email}</p>}
+                  {ct.phone && <p><span className="font-medium">Tél : </span>{ct.phone}</p>}
+                  {(ct as any).mobile && <p><span className="font-medium">Tél 2 : </span>{(ct as any).mobile}</p>}
+                </div>
               </div>
               <span className="text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0"
                 style={{ background: color + '15', color }}>
