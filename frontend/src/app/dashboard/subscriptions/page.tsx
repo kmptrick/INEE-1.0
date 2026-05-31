@@ -295,8 +295,8 @@ export default function SubscriptionsPage() {
           {/* Totaux multi-TVA */}
           <div className="rounded-xl p-4 space-y-1.5 text-sm" style={{ background: T.head, border: `1px solid ${T.border}` }}>
             <div className="flex justify-between"><span style={{ color: T.muted }}>Sous-total HT</span><span style={{ color: T.dark }}>{fmt(subtotal)}</span></div>
-            {Object.entries(vatGroups).sort(([a],[b])=>Number(a)-Number(b)).map(([rate,base])=>(
-              <div key={rate} className="flex justify-between"><span style={{ color: T.muted }}>TVA {rate}%</span><span style={{ color: T.dark }}>{fmt(Math.round(base*Number(rate)/100*100)/100)}</span></div>
+            {Object.entries(vatGroups).sort((a, b) => Number(a[0]) - Number(b[0])).map(([rate, base]) => (
+              <div key={rate} className="flex justify-between"><span style={{ color: T.muted }}>TVA {rate}%</span><span style={{ color: T.dark }}>{fmt(Math.round(base * Number(rate) / 100 * 100) / 100)}</span></div>
             ))}
             <div className="flex justify-between font-bold text-base pt-1" style={{ borderTop: `1px solid ${T.border}` }}>
               <span style={{ color: T.dark }}>Total TTC</span><span style={{ color: T.copper }}>{fmt(total)}</span>

@@ -177,6 +177,7 @@ export default function QuotesPage() {
 
   const selectedClient = compList.find(c => c.id === form.companyId) ?? null;
   const vatResult = computeVat(selectedClient, parseFloat(form.vatRate) || 17);
+  const formTotals = calcVatGroups(form.lines, parseFloat(form.vatRate) || 17);
 
   const buildPdfProps = (q: Quote): IneeDocumentProps & { filename: string } => ({
     type: 'DEVIS', number: q.number, date: today(), status: q.status,
@@ -371,17 +372,15 @@ export default function QuotesPage() {
           </div>
 
           {/* Totaux multi-TVA */}
-          {(() => { const { subtotal, vatGroups, total } = calcVatGroups(form.lines, parseFloat(form.vatRate)||17); return (
-            <div className="rounded-xl p-4 space-y-1.5 text-sm" style={{ background: T.head, border: `1px solid ${T.border}` }}>
-              <div className="flex justify-between"><span style={{ color: T.muted }}>Sous-total HT</span><span style={{ color: T.dark }}>{fmt(subtotal)}</span></div>
-              {Object.entries(vatGroups).sort(([a],[b])=>Number(a)-Number(b)).map(([rate,base])=>(
-                <div key={rate} className="flex justify-between"><span style={{ color: T.muted }}>TVA {rate}%</span><span style={{ color: T.dark }}>{fmt(Math.round(base*Number(rate)/100*100)/100)}</span></div>
-              ))}
-              <div className="flex justify-between font-bold text-base pt-1" style={{ borderTop:`1px solid ${T.border}` }}>
-                <span style={{ color: T.dark }}>Total TTC</span><span style={{ color: T.copper }}>{fmt(total)}</span>
-              </div>
+          <div className="rounded-xl p-4 space-y-1.5 text-sm" style={{ background: T.head, border: `1px solid ${T.border}` }}>
+            <div className="flex justify-between"><span style={{ color: T.muted }}>Sous-total HT</span><span style={{ color: T.dark }}>{fmt(formTotals.subtotal)}</span></div>
+            {Object.entries(formTotals.vatGroups).sort((a, b) => Number(a[0]) - Number(b[0])).map(([rate, base]) => (
+              <div key={rate} className="flex justify-between"><span style={{ color: T.muted }}>TVA {rate}%</span><span style={{ color: T.dark }}>{fmt(Math.round(base * Number(rate) / 100 * 100) / 100)}</span></div>
+            ))}
+            <div className="flex justify-between font-bold text-base pt-1" style={{ borderTop: `1px solid ${T.border}` }}>
+              <span style={{ color: T.dark }}>Total TTC</span><span style={{ color: T.copper }}>{fmt(formTotals.total)}</span>
             </div>
-          ); })()}
+          </div>
 
           <FormField label="Notes"><textarea className={inputClass} rows={2} value={form.notes} onChange={e => setField('notes', e.target.value)} /></FormField>
           <FormField label="Remarque"><textarea className={inputClass} rows={2} value={form.remarque} onChange={e => setField('remarque', e.target.value)} /></FormField>
