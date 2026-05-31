@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     })
 
     await transporter.sendMail({
-      from: `"Site INEE" <${process.env.SMTP_USER}>`,
+      from: '"Site INEE" <pkuete@inee.lu>',
       to: 'contact@inee.lu',
       replyTo: email,
       subject: `[inee.lu] Nouveau message — ${objet || 'Contact'}`,
