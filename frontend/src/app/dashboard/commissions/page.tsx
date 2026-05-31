@@ -81,12 +81,22 @@ export default function CommissionsPage() {
     } finally { setSaving(false); }
   };
 
-  const handleCancel = async (c: Commission) => {
-    if (!confirm(`Annuler la commission ${c.reference} ?`)) return;
+  const handleDelete = async (c: Commission) => {
+    if (!confirm(`Supprimer définitivement la commission ${c.reference} ?`)) return;
     setCancelling(c.id);
     try {
-      await commissions.update(c.id, { status: 'CANCELLED' });
-      setList(l => l.map(x => x.id === c.id ? { ...x, status: 'CANCELLED' } : x));
+      await commissions.delete(c.id);
+      setList(l => l.filter(x => x.id !== c.id));
+    } finally { setCancelling(null); }
+  };
+
+  const handleStatus = async (c: Commission, status: string) => {
+    setCancelling(c.id);
+    try {
+      const updated = await commissions.update(c.id, { status } as any);
+      setList(l => l.map(x => x.id === c.id ? { ...x, status: updated.status } : x));
+      if (viewItem?.id === c.id) setViewItem(v => v ? { ...v, status: updated.status } : v);
+      if (editItem?.id === c.id) setEditItem(v => v ? { ...v, status: updated.status } : v);
     } finally { setCancelling(null); }
   };
 
@@ -112,6 +122,28 @@ export default function CommissionsPage() {
       <FormField label="Notes">
         <textarea className={inputClass} rows={2} value={form.notes} onChange={e => set('notes', e.target.value)} />
       </FormField>
+      {editItem && (
+        <div className="rounded-xl p-3 space-y-2" style={{ background: T.head, border: `1px solid ${T.border}` }}>
+          <p className="text-xs font-bold uppercase tracking-wider" style={{ color: T.muted }}>Changer le statut</p>
+          <div className="flex flex-wrap gap-2">
+            {editItem.status !== 'APPROVED' && (
+              <button type="button" onClick={() => handleStatus(editItem, 'APPROVED')} disabled={cancelling === editItem.id}
+                className="text-xs px-3 py-1.5 rounded-lg border font-semibold cursor-pointer"
+                style={{ color: '#1D6FD8', borderColor: '#BFDBFE', background: '#EFF6FF' }}>✓ Approuver</button>
+            )}
+            {editItem.status !== 'PAID' && (
+              <button type="button" onClick={() => handleStatus(editItem, 'PAID')} disabled={cancelling === editItem.id}
+                className="text-xs px-3 py-1.5 rounded-lg border font-semibold cursor-pointer"
+                style={{ color: '#16A34A', borderColor: '#BBF7D0', background: '#F0FDF4' }}>💰 Marquer payée</button>
+            )}
+            {editItem.status !== 'CANCELLED' && (
+              <button type="button" onClick={() => handleStatus(editItem, 'CANCELLED')} disabled={cancelling === editItem.id}
+                className="text-xs px-3 py-1.5 rounded-lg border font-semibold cursor-pointer"
+                style={{ color: '#888', borderColor: '#E5E7EB', background: '#F5F5F5' }}>✕ Annuler</button>
+            )}
+          </div>
+        </div>
+      )}
       <FormActions onCancel={onCancel} saving={saving} label="Enregistrer" />
     </form>
   );
@@ -155,11 +187,11 @@ export default function CommissionsPage() {
                       ✎ Modifier
                     </button>
                   )}
-                  {!isCancelled && (
-                    <button onClick={() => handleCancel(c)} disabled={cancelling === c.id}
+                  {c.status === 'PENDING' && (
+                    <button onClick={() => handleDelete(c)} disabled={cancelling === c.id}
                       className="text-xs px-3 py-1.5 rounded-lg border font-medium cursor-pointer transition-colors"
                       style={{ color: '#DC2626', borderColor: '#FECACA', background: 'transparent', opacity: cancelling === c.id ? 0.5 : 1 }}>
-                      ✕ Annuler
+                      🗑 Supprimer
                     </button>
                   )}
                 </div>
