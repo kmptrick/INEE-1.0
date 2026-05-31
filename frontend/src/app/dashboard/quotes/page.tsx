@@ -378,7 +378,7 @@ export default function QuotesPage() {
           </div>
 
           <FormField label="Notes"><textarea className={inputClass} rows={2} value={form.notes} onChange={e => setField('notes', e.target.value)} /></FormField>
-          <FormField label="Remarque"><textarea className={inputClass} rows={2} value={form.remarque} onChange={e => setField('remarque', e.target.value)} /></FormField>
+          
           <FormActions onCancel={() => setOpen(false)} saving={saving} />
         </form>
       </Modal>
