@@ -10,6 +10,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr">
+      <head>
+        <script defer src="https://stats.inee.lu/script.js" data-website-id="eb3067fa-ef36-43f0-ae06-ce07d6169f29" />
+      </head>
       <body>{children}</body>
     </html>
   )
