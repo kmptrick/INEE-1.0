@@ -100,9 +100,33 @@ export default function InvoicesPage() {
   const pagination = usePagination(filtered);
   const { visible, toggle: colToggle } = useColumns('invoices', ALL_COLS_INV);
 
+  const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
+
   // Detail / action modal
   const [viewItem, setViewItem] = useState<Invoice | null>(null);
   const [actioning, setActioning] = useState(false);
+
+  const openEditInvoice = (inv: Invoice) => {
+    setViewItem(null);
+    setForm({
+      companyId: inv.company?.id ?? '',
+      vatRate: String(inv.vatRate),
+      vatMention: inv.vatMention ?? '',
+      paymentTerms: '14',
+      notes: inv.notes ?? '',
+      lines: (inv.lines ?? []).map(l => ({
+        serviceId: l.serviceId ?? '',
+        description: l.description,
+        quantity: String(l.quantity),
+        unitPrice: String(l.unitPrice),
+        unite: l.unite ?? '',
+        discountRate: l.discountRate ? String(l.discountRate) : '',
+        lineVatRate: l.lineVatRate ? String(l.lineVatRate) : '',
+      })),
+    });
+    setEditingInvoice(inv);
+    setOpen(true);
+  };
 
   const load = (s?: string) => { setLoading(true); invoicing.invoices.list(s || undefined).then(setList).finally(() => setLoading(false)); };
   useEffect(() => { load(); companies.list().then(setCompList); }, []);
@@ -169,7 +193,13 @@ export default function InvoicesPage() {
       const days = parseInt(form.paymentTerms) || 14;
       const due = new Date(); due.setDate(due.getDate() + days);
       data.dueDate = due.toISOString();
-      await invoicing.invoices.create(data); setOpen(false); setForm(emptyForm()); load(filter || undefined);
+      if (editingInvoice) {
+        await invoicing.invoices.update(editingInvoice.id, data as any);
+        setEditingInvoice(null);
+      } else {
+        await invoicing.invoices.create(data);
+      }
+      setOpen(false); setForm(emptyForm()); load(filter || undefined);
     } finally { setSaving(false); }
   };
 
@@ -264,6 +294,12 @@ export default function InvoicesPage() {
               {(() => { const ss = STATUS_ST[viewItem.status] ?? { bg: '#F5F5F5', color: '#888' }; return <StatusBadge label={STATUS_FR[viewItem.status] ?? viewItem.status} bg={ss.bg} color={ss.color} />; })()}
               <div className="flex flex-wrap gap-2 ml-auto">
                 {viewItem.number && <PdfDownloadButton {...buildPdfProps(viewItem)} />}
+                {/* Modifier : uniquement si brouillon sans numéro */}
+                {!viewItem.number && (
+                  <ActionBtn label="✎ Modifier" color={T.copper} bg={T.head} border={T.border}
+                    onClick={() => openEditInvoice(fullInvoices[viewItem.id] ?? viewItem)}
+                    disabled={actioning} />
+                )}
                 {/* Comptabiliser : uniquement si pas encore de numéro */}
                 {!viewItem.number && (
                   <ActionBtn label="✓ Comptabiliser" color="#FFF" bg={T.copper} border={T.copper}
@@ -391,7 +427,7 @@ export default function InvoicesPage() {
       )}
 
       {/* ── Nouvelle facture ── */}
-      <Modal title="Nouvelle facture" open={open} onClose={() => setOpen(false)} wide>
+      <Modal title={editingInvoice ? `Modifier la facture (${editingInvoice.number ?? 'Brouillon'})` : 'Nouvelle facture'} open={open} onClose={() => { setOpen(false); setEditingInvoice(null); setForm(emptyForm()); }} wide>
         <form onSubmit={handleSubmit} className="space-y-4">
           <FormField label="Client">
             <select className={selectClass} value={form.companyId} onChange={e => onClientChange(e.target.value)}>

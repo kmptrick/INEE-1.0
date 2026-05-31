@@ -82,6 +82,7 @@ export default function QuotesPage() {
   const [filter, setFilter] = useState('');
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+  const [editingQuote, setEditingQuote] = useState<Quote | null>(null);
   const [form, setForm] = useState(emptyForm());
   const [saving, setSaving] = useState(false);
   const [fullQuotes, setFullQuotes] = useState<Record<string, Quote>>({});
@@ -172,8 +173,38 @@ export default function QuotesPage() {
         })),
       };
       if (form.companyId) data.companyId = form.companyId;
-      await invoicing.quotes.create(data); setOpen(false); setForm(emptyForm()); load(filter || undefined);
+      if (editingQuote) {
+        await invoicing.quotes.update(editingQuote.id, data as any);
+        setEditingQuote(null);
+      } else {
+        await invoicing.quotes.create(data);
+      }
+      setOpen(false); setForm(emptyForm()); load(filter || undefined);
     } finally { setSaving(false); }
+  };
+
+  const openEditQuote = (q: Quote) => {
+    setViewItem(null);
+    setForm({
+      companyId: q.company?.id ?? '',
+      vatRate: String(q.vatRate),
+      vatMention: q.vatMention ?? '',
+      notes: q.notes ?? '',
+      remarque: '',
+      lines: (q.lines ?? []).map(l => ({
+        serviceId: l.serviceId ?? '',
+        description: l.description,
+        quantity: String(l.quantity),
+        unitPrice: String(l.unitPrice),
+        unite: l.unite ?? '',
+        discountRate: l.discountRate ? String(l.discountRate) : '',
+        lineVatRate: l.lineVatRate ? String(l.lineVatRate) : '',
+        periodStart: (l as any).periodStart ?? '',
+        periodEnd: (l as any).periodEnd ?? '',
+      })),
+    });
+    setEditingQuote(q);
+    setOpen(true);
   };
 
   const selectedClient = compList.find(c => c.id === form.companyId) ?? null;
@@ -249,6 +280,12 @@ export default function QuotesPage() {
               {(() => { const ss = STATUS_ST[viewItem.status] ?? { bg: '#F5F5F5', color: '#888' }; return <StatusBadge label={STATUS_FR[viewItem.status] ?? viewItem.status} bg={ss.bg} color={ss.color} />; })()}
               <div className="flex flex-wrap gap-2 ml-auto">
                 <PdfDownloadButton {...buildPdfProps(viewItem)} />
+                {/* Modifier : DRAFT ou SENT uniquement */}
+                {['DRAFT', 'SENT'].includes(viewItem.status) && (
+                  <ActionBtn label="✎ Modifier" color={T.copper} bg={T.head} border={T.border}
+                    onClick={() => openEditQuote(fullQuotes[viewItem.id] ?? viewItem)}
+                    disabled={actioning} />
+                )}
                 {viewItem.status === 'ACCEPTED' && (
                   <ActionBtn label="📧 Envoyer" color="#16A34A" bg="#F0FDF4" border="#BBF7D0"
                     onClick={async () => {
@@ -352,7 +389,7 @@ export default function QuotesPage() {
       </Modal>
 
       {/* ── Nouveau devis ── */}
-      <Modal title="Nouveau devis" open={open} onClose={() => setOpen(false)} wide>
+      <Modal title={editingQuote ? `Modifier le devis ${editingQuote.number}` : 'Nouveau devis'} open={open} onClose={() => { setOpen(false); setEditingQuote(null); setForm(emptyForm()); }} wide>
         <form onSubmit={handleSubmit} className="space-y-4">
           <FormField label="Client">
             <select className={selectClass} value={form.companyId} onChange={e => onClientChange(e.target.value)}>

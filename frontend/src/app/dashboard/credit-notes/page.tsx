@@ -72,6 +72,7 @@ function CreditNotesContent() {
   const [filter, setFilter] = useState('');
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+  const [editingCN, setEditingCN] = useState<CreditNote | null>(null);
   const [form, setForm] = useState(emptyForm(prefillInvoiceId, prefillInvoiceNumber));
   const [saving, setSaving] = useState(false);
   const [viewItem, setViewItem] = useState<CreditNote | null>(null);
@@ -179,7 +180,12 @@ function CreditNotesContent() {
         })),
       };
       if (form.companyId) data.companyId = form.companyId;
-      await creditNotes.create(data);
+      if (editingCN) {
+        await creditNotes.update(editingCN.id, data);
+        setEditingCN(null);
+      } else {
+        await creditNotes.create(data);
+      }
       setOpen(false);
       setForm(emptyForm());
       load(filter || undefined);
@@ -228,6 +234,34 @@ function CreditNotesContent() {
             <div className="flex flex-wrap items-center gap-2 pb-3" style={{ borderBottom: `1px solid ${T.border}` }}>
               {(() => { const ss = STATUS_ST[viewItem.status] ?? { bg: '#F5F5F5', color: '#888' }; return <StatusBadge label={STATUS_FR[viewItem.status] ?? viewItem.status} bg={ss.bg} color={ss.color} />; })()}
               <div className="flex flex-wrap gap-2 ml-auto">
+                {viewItem.status === 'DRAFT' && (
+                  <ActionBtn label="✎ Modifier" color={T.copper} bg={T.head} border={T.border}
+                    onClick={() => {
+                      const full = fullCNs[viewItem.id] ?? viewItem;
+                      setViewItem(null);
+                      setForm({
+                        invoiceId: (full as any).invoiceId ?? '',
+                        invoiceNumber: full.invoice?.number ?? '',
+                        companyId: full.company?.id ?? '',
+                        vatRate: String(full.vatRate),
+                        vatMention: full.vatMention ?? '',
+                        notes: full.notes ?? '',
+                        remarque: '',
+                        lines: (full.lines ?? []).map((l: any) => ({
+                          serviceId: l.serviceId ?? '',
+                          description: l.description,
+                          quantity: String(l.quantity),
+                          unitPrice: String(l.unitPrice),
+                          unite: l.unite ?? '',
+                          discountRate: l.discountRate ? String(l.discountRate) : '',
+                          lineVatRate: l.lineVatRate ? String(l.lineVatRate) : '',
+                        })),
+                      });
+                      setEditingCN(full);
+                      setOpen(true);
+                    }}
+                    disabled={actioning} />
+                )}
                 {viewItem.status === 'DRAFT' && (
                   <ActionBtn label="Émettre" color="#1D6FD8" bg="#EFF6FF" border="#BFDBFE" onClick={() => updateStatus(viewItem, 'ISSUED')} disabled={actioning} />
                 )}
@@ -304,7 +338,7 @@ function CreditNotesContent() {
       )}
 
       {/* ── Nouvelle note de crédit ── */}
-      <Modal title="Nouvelle note de crédit" open={open} onClose={() => setOpen(false)} wide>
+      <Modal title={editingCN ? `Modifier la note de crédit ${editingCN.number}` : 'Nouvelle note de crédit'} open={open} onClose={() => { setOpen(false); setEditingCN(null); setForm(emptyForm()); }} wide>
         <form onSubmit={handleSubmit} className="space-y-4">
           <FormField label="Facture liée" required>
             <select className={selectClass} value={form.invoiceId} onChange={e => onInvoiceChange(e.target.value)} required>
