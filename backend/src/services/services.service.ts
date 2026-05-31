@@ -18,7 +18,7 @@ export class ServicesService {
           { categorie: { contains: search, mode: 'insensitive' } },
         ] } : {}),
       },
-      orderBy: [{ categorie: 'asc' }, { idPrestation: 'asc' }],
+      orderBy: [{ idPrestation: 'asc' }],
     });
   }
 
