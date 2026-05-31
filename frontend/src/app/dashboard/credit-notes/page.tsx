@@ -318,9 +318,9 @@ function CreditNotesContent() {
                   </div>
                   <div className="grid gap-2" style={{ gridTemplateColumns: '90px 90px 1fr' }}>
                     <div>
-                      <label className="block text-xs mb-0.5" style={{ color: T.muted }}>TVA ligne</label>
+                      <label className="block text-xs mb-0.5" style={{ color: T.muted }}>TVA %</label>
                       <select className={inputClass} value={l.lineVatRate} onChange={e => setLine(i, 'lineVatRate', e.target.value)}>
-                        <option value="">— Héritée —</option>
+                        <option value="">17% — Défaut</option>
                         {[3,8,14,17].map(r => <option key={r} value={r}>{r}%</option>)}
                         <option value="0">0%</option>
                       </select>
@@ -330,8 +330,8 @@ function CreditNotesContent() {
                       <input type="number" min="0" max="100" step="0.1" placeholder="0" className={inputClass} value={l.discountRate} onChange={e => setLine(i, 'discountRate', e.target.value)} />
                     </div>
                     <div>
-                      <label className="block text-xs mb-0.5" style={{ color: T.muted }}>Unité</label>
-                      <input placeholder="h, j, forfait…" className={inputClass} value={l.unite} onChange={e => setLine(i, 'unite', e.target.value)} />
+                      <label className="block text-xs mb-0.5" style={{ color: T.muted }}>Complément</label>
+                      <input placeholder="ex: mensuel, par dossier…" className={inputClass} value={l.unite} onChange={e => setLine(i, 'unite', e.target.value)} />
                     </div>
                   </div>
                 </div>
