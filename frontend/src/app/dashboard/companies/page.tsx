@@ -8,7 +8,7 @@ import { PageHeader, AddButton, DataTable, Td, FormActions, usePagination, useSo
 // ── Qualifications contacts ──────────────────────────────────────────────────
 const QUALS_DIRECTES = ['Actionnaire', 'Associé'];
 const QUALS_AUTRES   = ['Dirigeant', 'Comptable', 'Agent payeur', 'Autre'];
-export const ALL_QUALIFICATIONS = [...QUALS_DIRECTES, ...QUALS_AUTRES];
+const ALL_QUALIFICATIONS = [...QUALS_DIRECTES, ...QUALS_AUTRES];
 
 // ── Formes juridiques par pays ───────────────────────────────────────────────
 const FORMES_BY_COUNTRY: Record<string, string[]> = {
