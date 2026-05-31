@@ -216,9 +216,9 @@ export default function CommissionsPage() {
                   <button onClick={() => { setViewItem(null); openEdit(viewItem); }}
                     className="text-xs px-3 py-1.5 rounded-lg border font-semibold cursor-pointer" style={{ color: T.copper, borderColor: T.copper + '60', background: 'transparent' }}>✎ Modifier</button>
                 )}
-                {viewItem.status !== 'CANCELLED' && (
-                  <button onClick={() => { handleCancel(viewItem); setViewItem(null); }}
-                    className="text-xs px-3 py-1.5 rounded-lg border font-semibold cursor-pointer" style={{ color: '#DC2626', borderColor: '#FECACA', background: 'transparent' }}>✕ Annuler</button>
+                {viewItem.status === 'PENDING' && (
+                  <button onClick={() => { handleDelete(viewItem); setViewItem(null); }}
+                    className="text-xs px-3 py-1.5 rounded-lg border font-semibold cursor-pointer" style={{ color: '#DC2626', borderColor: '#FECACA', background: 'transparent' }}>🗑 Supprimer</button>
                 )}
               </div>
             </div>
