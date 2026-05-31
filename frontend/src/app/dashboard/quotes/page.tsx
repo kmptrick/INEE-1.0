@@ -324,7 +324,7 @@ export default function QuotesPage() {
       </Modal>
 
       {/* ── Nouveau devis ── */}
-      <Modal title="Nouveau devis" open={open} onClose={() => setOpen(false)}>
+      <Modal title="Nouveau devis" open={open} onClose={() => setOpen(false)} wide>
         <form onSubmit={handleSubmit} className="space-y-4">
           <FormField label="Client">
             <select className={selectClass} value={form.companyId} onChange={e => onClientChange(e.target.value)}>

@@ -283,7 +283,7 @@ function CreditNotesContent() {
       )}
 
       {/* ── Nouvelle note de crédit ── */}
-      <Modal title="Nouvelle note de crédit" open={open} onClose={() => setOpen(false)}>
+      <Modal title="Nouvelle note de crédit" open={open} onClose={() => setOpen(false)} wide>
         <form onSubmit={handleSubmit} className="space-y-4">
           <FormField label="Facture liée" required>
             <select className={selectClass} value={form.invoiceId} onChange={e => onInvoiceChange(e.target.value)} required>
