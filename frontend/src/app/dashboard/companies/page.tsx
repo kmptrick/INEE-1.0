@@ -160,15 +160,25 @@ function ContactBlock({
 }
 
 // ── Modale détail client ──────────────────────────────────────────────────────
-function CompanyDetailModal({ company, onClose }: { company: Company; onClose: () => void }) {
+function CompanyDetailModal({ company, onClose, onNoteSaved }: { company: Company; onClose: () => void; onNoteSaved: (id: string, notes: string) => void }) {
   const [ctList, setCtList]   = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
+  const [note, setNote]       = useState(company.notes ?? '');
+  const [savingNote, setSavingNote] = useState(false);
 
   const loadContacts = () => {
     setLoading(true);
     contacts.list(undefined, company.id).then(setCtList).finally(() => setLoading(false));
   };
   useEffect(() => { loadContacts(); }, [company.id]);
+
+  const saveNote = async () => {
+    setSavingNote(true);
+    try {
+      await companies.update(company.id, { notes: note } as any);
+      onNoteSaved(company.id, note);
+    } finally { setSavingNote(false); }
+  };
 
   const addr = [company.streetNumber, company.address, company.postalCode, company.city, company.country]
     .filter(Boolean).join(' · ');
@@ -214,6 +224,32 @@ function CompanyDetailModal({ company, onClose }: { company: Company; onClose: (
             />
           </>
         )}
+
+        {/* ── Bloc Notes ── */}
+        <div className="rounded-xl border overflow-hidden" style={{ borderColor: T.border }}>
+          <div className="px-4 py-3 flex items-center justify-between" style={{ background: T.head, borderBottom: `1px solid ${T.border}` }}>
+            <span className="text-xs font-bold uppercase tracking-wider" style={{ color: T.muted }}>Notes</span>
+            <button
+              onClick={saveNote}
+              disabled={savingNote}
+              className="text-xs px-3 py-1.5 rounded-lg font-semibold cursor-pointer transition-colors"
+              style={{ background: T.copper + '18', color: T.copper, border: `1px solid ${T.copper}40`, opacity: savingNote ? 0.6 : 1 }}
+            >
+              {savingNote ? 'Enregistrement…' : '💾 Enregistrer'}
+            </button>
+          </div>
+          <div className="p-3">
+            <textarea
+              value={note}
+              onChange={e => setNote(e.target.value)}
+              rows={4}
+              placeholder="Commentaires, informations complémentaires…"
+              className="w-full px-3 py-2.5 rounded-lg text-sm outline-none resize-none"
+              style={{ background: '#FAFAF9', border: `1px solid ${T.border}`, color: T.dark }}
+            />
+          </div>
+        </div>
+
       </div>
     </Modal>
   );
@@ -352,7 +388,16 @@ export default function ClientsPage() {
       />
 
       {/* ── Modale détail client ── */}
-      {detail && <CompanyDetailModal company={detail} onClose={() => setDetail(null)} />}
+      {detail && (
+        <CompanyDetailModal
+          company={detail}
+          onClose={() => setDetail(null)}
+          onNoteSaved={(id, notes) => {
+            setList(l => l.map(x => x.id === id ? { ...x, notes } : x));
+            setDetail(d => d ? { ...d, notes } : d);
+          }}
+        />
+      )}
 
       {/* ── Modale édition client ── */}
       <Modal title="Modifier le client" open={!!editCompany} onClose={() => setEditCompany(null)}>
