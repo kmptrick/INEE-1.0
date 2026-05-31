@@ -21,7 +21,7 @@ const FILTERS = [
 ];
 
 const fmt = (n: number) => new Intl.NumberFormat('fr-LU', { style: 'currency', currency: 'EUR' }).format(n);
-const empty = { brokerName: '', dealValue: '', commissionRate: '10', currency: 'EUR', companyId: '', notes: '' };
+const emptyForm = () => ({ brokerName: '', dealValue: '', commissionRate: '10', currency: 'EUR', companyId: '', notes: '' });
 
 const SEGMENT_DEFS: FilterRuleDef[] = [
   { key: 'broker',          label: 'Apporteur',         dataType: 'text',   getValue: (c) => c.brokerName },
@@ -32,42 +32,108 @@ const SEGMENT_DEFS: FilterRuleDef[] = [
 ];
 
 export default function CommissionsPage() {
-  const [list, setList] = useState<Commission[]>([]);
+  const [list, setList]         = useState<Commission[]>([]);
   const [compList, setCompList] = useState<Company[]>([]);
-  const [filter, setFilter] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [open, setOpen] = useState(false);
-  const [form, setForm] = useState(empty);
-  const [saving, setSaving] = useState(false);
+  const [filter, setFilter]     = useState('');
+  const [loading, setLoading]   = useState(true);
+  const [open, setOpen]         = useState(false);
+  const [editItem, setEditItem] = useState<Commission | null>(null);
+  const [form, setForm]         = useState(emptyForm());
+  const [saving, setSaving]     = useState(false);
+  const [cancelling, setCancelling] = useState<string | null>(null);
 
   const { sort, toggle: sortToggle, sorted } = useSort(list);
   const { search, setSearch, rules, addRule, removeRule, updateRule, clearRules, clearAll, filtered, activeCount } = useSegmentFilter(sorted, SEGMENT_DEFS);
   const pagination = usePagination(filtered);
+
   const load = (s?: string) => { setLoading(true); commissions.list(s || undefined).then(setList).finally(() => setLoading(false)); };
   useEffect(() => { load(); companies.list().then(setCompList); }, []);
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const openEdit = (c: Commission) => {
+    setForm({
+      brokerName: c.brokerName,
+      dealValue: String(c.dealValue),
+      commissionRate: String(c.commissionRate),
+      currency: c.currency,
+      companyId: c.company?.id ?? '',
+      notes: c.notes ?? '',
+    });
+    setEditItem(c);
+  };
+
+  const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault(); setSaving(true);
     try {
       const data: any = { brokerName: form.brokerName, dealValue: parseFloat(form.dealValue) || 0, commissionRate: parseFloat(form.commissionRate) || 0, currency: form.currency, notes: form.notes };
       if (form.companyId) data.companyId = form.companyId;
-      await commissions.create(data); setOpen(false); setForm(empty); load(filter || undefined);
+      await commissions.create(data); setOpen(false); setForm(emptyForm()); load(filter || undefined);
     } finally { setSaving(false); }
   };
 
+  const handleEdit = async (e: React.FormEvent) => {
+    e.preventDefault(); if (!editItem) return; setSaving(true);
+    try {
+      const data: any = { brokerName: form.brokerName, dealValue: parseFloat(form.dealValue) || 0, commissionRate: parseFloat(form.commissionRate) || 0, currency: form.currency, notes: form.notes };
+      if (form.companyId) data.companyId = form.companyId;
+      await commissions.update(editItem.id, data); setEditItem(null); setForm(emptyForm()); load(filter || undefined);
+    } finally { setSaving(false); }
+  };
+
+  const handleCancel = async (c: Commission) => {
+    if (!confirm(`Annuler la commission ${c.reference} ?`)) return;
+    setCancelling(c.id);
+    try {
+      await commissions.update(c.id, { status: 'CANCELLED' });
+      setList(l => l.map(x => x.id === c.id ? { ...x, status: 'CANCELLED' } : x));
+    } finally { setCancelling(null); }
+  };
+
+  const CommissionForm = ({ onSubmit, onCancel }: { onSubmit: (e: React.FormEvent) => void; onCancel: () => void }) => (
+    <form onSubmit={onSubmit} className="space-y-4">
+      <FormField label="Nom de l'apporteur" required>
+        <input className={inputClass} value={form.brokerName} onChange={e => set('brokerName', e.target.value)} required />
+      </FormField>
+      <FormField label="Client">
+        <select className={selectClass} value={form.companyId} onChange={e => set('companyId', e.target.value)}>
+          <option value="">— Aucune —</option>
+          {compList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+        </select>
+      </FormField>
+      <div className="grid grid-cols-2 gap-3">
+        <FormField label="Valeur de l'affaire (€)" required>
+          <input type="number" min="0" step="0.01" className={inputClass} value={form.dealValue} onChange={e => set('dealValue', e.target.value)} required />
+        </FormField>
+        <FormField label="Taux (%)">
+          <input type="number" min="0" max="100" step="0.1" className={inputClass} value={form.commissionRate} onChange={e => set('commissionRate', e.target.value)} />
+        </FormField>
+      </div>
+      <FormField label="Notes">
+        <textarea className={inputClass} rows={2} value={form.notes} onChange={e => set('notes', e.target.value)} />
+      </FormField>
+      <FormActions onCancel={onCancel} saving={saving} label="Enregistrer" />
+    </form>
+  );
+
   return (
     <div className="p-6">
-      <PageHeader title="Commissions" action={<AddButton onClick={() => setOpen(true)} />} />
+      <PageHeader title="Commissions" action={<AddButton onClick={() => { setForm(emptyForm()); setOpen(true); }} />} />
       <FilterBar filters={FILTERS} active={filter} onChange={v => { setFilter(v); load(v || undefined); }} />
       <SegmentFilterBar search={search} onSearch={setSearch} placeholder="Rechercher une commission..." defs={SEGMENT_DEFS} rules={rules} addRule={addRule} removeRule={removeRule} updateRule={updateRule} clearRules={clearRules} clearAll={clearAll} activeCount={activeCount} />
 
       <DataTable loading={loading} empty="Aucune commission — cliquez sur «+ Ajouter»" sort={sort} onSort={sortToggle}
-        headers={[{ label: 'Référence' }, { label: 'Apporteur', key: 'brokerName' }, { label: 'Client' }, { label: 'Affaire', key: 'dealValue', align: 'right' }, { label: 'Taux', align: 'center' }, { label: 'Commission', key: 'commissionAmount', align: 'right' }, { label: 'Création', key: 'createdAt' }, { label: 'Statut', key: 'status', align: 'center' }]}>
+        headers={[
+          { label: 'Référence' }, { label: 'Apporteur', key: 'brokerName' }, { label: 'Client' },
+          { label: 'Affaire', key: 'dealValue', align: 'right' as const }, { label: 'Taux', align: 'center' as const },
+          { label: 'Commission', key: 'commissionAmount', align: 'right' as const },
+          { label: 'Création', key: 'createdAt' }, { label: 'Statut', key: 'status', align: 'center' as const },
+          { label: '', align: 'center' as const },
+        ]}>
         {pagination.paged.map((c, i) => {
           const ss = STATUS_ST[c.status] ?? { bg: '#F5F5F5', color: '#888' };
+          const isCancelled = c.status === 'CANCELLED';
           return (
-            <tr key={c.id} style={{ borderTop: i > 0 ? `1px solid ${T.rowDiv}` : undefined }}>
+            <tr key={c.id} style={{ borderTop: i > 0 ? `1px solid ${T.rowDiv}` : undefined, opacity: isCancelled ? 0.6 : 1 }}>
               <td className="px-4 py-3 font-mono text-xs" style={{ color: T.muted }}>{c.reference}</td>
               <Td bold>{c.brokerName}</Td>
               <Td>{c.company?.name ?? '—'}</Td>
@@ -76,28 +142,39 @@ export default function CommissionsPage() {
               <td className="px-4 py-3 text-right text-sm font-bold" style={{ color: T.copper }}>{fmt(c.commissionAmount)}</td>
               <Td>{c.createdAt ? new Date(c.createdAt).toLocaleDateString('fr-LU') : '—'}</Td>
               <td className="px-4 py-3 text-center"><StatusBadge label={STATUS_FR[c.status] ?? c.status} bg={ss.bg} color={ss.color} /></td>
+              <td className="px-4 py-3 text-center">
+                <div className="flex items-center justify-center gap-1.5">
+                  {!isCancelled && (
+                    <button onClick={() => openEdit(c)}
+                      className="text-xs px-3 py-1.5 rounded-lg border font-medium cursor-pointer"
+                      style={{ color: T.copper, borderColor: T.copper + '60', background: 'transparent' }}>
+                      ✎ Modifier
+                    </button>
+                  )}
+                  {!isCancelled && (
+                    <button onClick={() => handleCancel(c)} disabled={cancelling === c.id}
+                      className="text-xs px-3 py-1.5 rounded-lg border font-medium cursor-pointer transition-colors"
+                      style={{ color: '#DC2626', borderColor: '#FECACA', background: 'transparent', opacity: cancelling === c.id ? 0.5 : 1 }}>
+                      ✕ Annuler
+                    </button>
+                  )}
+                </div>
+              </td>
             </tr>
           );
         })}
       </DataTable>
+
       <TableFooter pagination={pagination} export={{ getData: () => filtered.map(c => ({ Référence: c.reference, Apporteur: c.brokerName, Client: c.company?.name ?? '', 'Affaire (€)': c.dealValue, 'Taux (%)': c.commissionRate, 'Commission (€)': c.commissionAmount, Statut: STATUS_FR[c.status] ?? c.status })), filename: 'commissions', title: 'Commissions' }} />
 
+      {/* Nouvelle commission */}
       <Modal title="Nouvelle commission" open={open} onClose={() => setOpen(false)}>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <FormField label="Nom de l'apporteur" required><input className={inputClass} value={form.brokerName} onChange={e => set('brokerName', e.target.value)} required /></FormField>
-          <FormField label="Client">
-            <select className={selectClass} value={form.companyId} onChange={e => set('companyId', e.target.value)}>
-              <option value="">— Aucune —</option>
-              {compList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
-          </FormField>
-          <div className="grid grid-cols-2 gap-3">
-            <FormField label="Valeur de l'affaire (€)" required><input type="number" min="0" step="0.01" className={inputClass} value={form.dealValue} onChange={e => set('dealValue', e.target.value)} required /></FormField>
-            <FormField label="Taux (%)"><input type="number" min="0" max="100" step="0.1" className={inputClass} value={form.commissionRate} onChange={e => set('commissionRate', e.target.value)} /></FormField>
-          </div>
-          <FormField label="Notes"><textarea className={inputClass} rows={2} value={form.notes} onChange={e => set('notes', e.target.value)} /></FormField>
-          <FormActions onCancel={() => setOpen(false)} saving={saving} />
-        </form>
+        <CommissionForm onSubmit={handleCreate} onCancel={() => setOpen(false)} />
+      </Modal>
+
+      {/* Modifier commission */}
+      <Modal title="Modifier la commission" open={!!editItem} onClose={() => setEditItem(null)}>
+        <CommissionForm onSubmit={handleEdit} onCancel={() => setEditItem(null)} />
       </Modal>
     </div>
   );
