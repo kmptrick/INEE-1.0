@@ -9,8 +9,7 @@ Font.register({
   family: 'Helvetica',
   fonts: [
     { src: 'Helvetica' },
-    { src: 'Helvetica-Bold',    fontWeight: 'bold' },
-    { src: 'Helvetica-Oblique', fontStyle:  'italic' },
+    { src: 'Helvetica-Bold', fontWeight: 'bold' },
   ],
 });
 
