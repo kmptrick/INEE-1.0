@@ -351,16 +351,36 @@ export default function QuotesPage() {
             </div>
             <div className="space-y-2">
               {form.lines.map((l, i) => (
-                <div key={i}>
+                <div key={i} className="rounded-lg p-3 space-y-2" style={{ background: T.head, border: `1px solid ${T.border}` }}>
                   <div className="grid gap-2 items-center" style={{ gridTemplateColumns: '1fr 64px 88px 32px 24px' }}>
                     <input placeholder="Description" className={inputClass} value={l.description} onChange={e => setLine(i, 'description', e.target.value)} required />
                     <input type="number" min="0" step="0.01" placeholder="Qté" className={inputClass} value={l.quantity} onChange={e => setLine(i, 'quantity', e.target.value)} />
                     <input type="number" min="0" step="0.01" placeholder="Prix HT" className={inputClass} value={l.unitPrice} onChange={e => setLine(i, 'unitPrice', e.target.value)} required />
                     <ServicePicker onSelect={s => pickService(i, s)} />
-                    {form.lines.length > 1 && <button type="button" onClick={() => removeLine(i)} className="text-lg leading-none" style={{ color: '#CCC' }}>✕</button>}
+                    {form.lines.length > 1 && <button type="button" onClick={() => removeLine(i)} className="text-lg leading-none cursor-pointer" style={{ color: '#CCC' }}>✕</button>}
                   </div>
-                  {l.unite && <div className="text-xs mt-0.5 pl-1" style={{ color: T.muted }}>Unité : {l.unite}</div>}
-                  {l.serviceId && <div className="text-xs pl-1" style={{ color: T.copper }}>Prestation liée au catalogue</div>}
+                  <div className="grid gap-2" style={{ gridTemplateColumns: '90px 90px 1fr' }}>
+                    <div>
+                      <label className="block text-xs mb-0.5" style={{ color: T.muted }}>TVA %</label>
+                      <select className={inputClass} value={l.lineVatRate} onChange={e => setLine(i, 'lineVatRate', e.target.value)}>
+                        <option value="">17% — Défaut</option>
+                        {LU_VAT_RATES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs mb-0.5" style={{ color: T.muted }}>Remise %</label>
+                      <input type="number" min="0" max="100" step="0.1" placeholder="0" className={inputClass} value={l.discountRate} onChange={e => setLine(i, 'discountRate', e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="block text-xs mb-0.5" style={{ color: T.muted }}>Complément</label>
+                      <input placeholder="ex: mensuel, par dossier…" className={inputClass} value={l.unite} onChange={e => setLine(i, 'unite', e.target.value)} />
+                    </div>
+                  </div>
+                  {(parseFloat(l.quantity)||0) > 0 && (parseFloat(l.unitPrice)||0) > 0 && (
+                    <div className="flex justify-end text-xs">
+                      <span className="font-semibold" style={{ color: T.copper }}>HT ligne : {fmt(lineTotal(l))}</span>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

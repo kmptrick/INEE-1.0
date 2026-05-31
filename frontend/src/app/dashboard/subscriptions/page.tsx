@@ -70,16 +70,38 @@ function LineRow({ line, idx, onChange, onRemove, canRemove }: {
   canRemove: boolean;
 }) {
   return (
-    <div className="grid gap-2 p-3 rounded-lg" style={{ background: '#FAFAF9', border: `1px solid ${T.border}`, gridTemplateColumns: '1fr 60px 90px 70px 60px 30px' }}>
-      <input className={inputClass} placeholder="Description" value={line.description} onChange={e => onChange(idx, 'description', e.target.value)} required />
-      <input className={inputClass} placeholder="Qté" type="number" min="0" step="0.01" value={line.quantity} onChange={e => onChange(idx, 'quantity', e.target.value)} />
-      <input className={inputClass} placeholder="PU HT" type="number" min="0" step="0.01" value={line.unitPrice} onChange={e => onChange(idx, 'unitPrice', e.target.value)} />
-      <input className={inputClass} placeholder="Unité" value={line.unite} onChange={e => onChange(idx, 'unite', e.target.value)} />
-      <input className={inputClass} placeholder="Remise%" type="number" min="0" max="100" value={line.discountRate} onChange={e => onChange(idx, 'discountRate', e.target.value)} />
-      {canRemove ? (
-        <button type="button" onClick={() => onRemove(idx)}
-          className="text-red-400 hover:text-red-600 font-bold cursor-pointer">✕</button>
-      ) : <span />}
+    <div className="rounded-lg p-3 space-y-2" style={{ background: T.head, border: `1px solid ${T.border}` }}>
+      <div className="grid gap-2 items-center" style={{ gridTemplateColumns: '1fr 64px 88px 24px' }}>
+        <input className={inputClass} placeholder="Description" value={line.description} onChange={e => onChange(idx, 'description', e.target.value)} required />
+        <input className={inputClass} placeholder="Qté" type="number" min="0" step="0.01" value={line.quantity} onChange={e => onChange(idx, 'quantity', e.target.value)} />
+        <input className={inputClass} placeholder="Prix HT" type="number" min="0" step="0.01" value={line.unitPrice} onChange={e => onChange(idx, 'unitPrice', e.target.value)} />
+        {canRemove
+          ? <button type="button" onClick={() => onRemove(idx)} className="text-lg leading-none cursor-pointer" style={{ color: '#CCC' }}>✕</button>
+          : <span />}
+      </div>
+      <div className="grid gap-2" style={{ gridTemplateColumns: '90px 90px 1fr' }}>
+        <div>
+          <label className="block text-xs mb-0.5" style={{ color: T.muted }}>TVA %</label>
+          <select className={inputClass} value={line.lineVatRate} onChange={e => onChange(idx, 'lineVatRate', e.target.value)}>
+            <option value="">17% — Défaut</option>
+            {[3, 8, 14, 17].map(r => <option key={r} value={r}>{r}%</option>)}
+            <option value="0">0%</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs mb-0.5" style={{ color: T.muted }}>Remise %</label>
+          <input type="number" min="0" max="100" step="0.1" placeholder="0" className={inputClass} value={line.discountRate} onChange={e => onChange(idx, 'discountRate', e.target.value)} />
+        </div>
+        <div>
+          <label className="block text-xs mb-0.5" style={{ color: T.muted }}>Complément</label>
+          <input placeholder="ex: mensuel, par dossier…" className={inputClass} value={line.unite} onChange={e => onChange(idx, 'unite', e.target.value)} />
+        </div>
+      </div>
+      {(parseFloat(line.quantity)||0) > 0 && (parseFloat(line.unitPrice)||0) > 0 && (
+        <div className="flex justify-end text-xs">
+          <span className="font-semibold" style={{ color: T.copper }}>HT ligne : {fmt(lineTotal(line))}</span>
+        </div>
+      )}
     </div>
   );
 }
