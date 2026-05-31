@@ -172,9 +172,12 @@ export default function InvoicesPage() {
 
   const selectedClient = compList.find(c => c.id === form.companyId) ?? null;
   const vatResult = computeVat(selectedClient, parseFloat(form.vatRate) || 17);
-  // Totaux calculés seulement si la modale est ouverte
-  const _defaultTotals = { subtotal: 0, vatGroups: {} as Record<string, number>, vatTotal: 0, total: 0 };
-  const formTotals = _defaultTotals; // temporairement désactivé pour debug
+  // Totaux multi-TVA (calculés uniquement quand la modale est ouverte)
+  const formTotals = (() => {
+    if (!open) return { subtotal: 0, vatGroups: {} as Record<string, number>, vatTotal: 0, total: 0 };
+    try { return calcVatGroups(form.lines, parseFloat(form.vatRate) || 17); }
+    catch { return { subtotal: 0, vatGroups: {} as Record<string, number>, vatTotal: 0, total: 0 }; }
+  })();
 
   const buildPdfProps = (inv: Invoice): IneeDocumentProps & { filename: string } => ({
     type: 'FACTURE', number: inv.number, date: today(), dueDate: fmtDate(inv.dueDate), status: inv.status,
@@ -260,7 +263,6 @@ export default function InvoicesPage() {
             <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
               <div><span style={{ color: T.muted }}>Client : </span><span className="font-semibold" style={{ color: T.dark }}>{viewItem.company?.name ?? '—'}</span></div>
               <div><span style={{ color: T.muted }}>Échéance : </span><span className="font-semibold" style={{ color: T.dark }}>{fmtDate(viewItem.dueDate) ?? '—'}</span></div>
-              <div><span style={{ color: T.muted }}>TVA : </span><span className="font-semibold" style={{ color: T.dark }}>{viewItem.vatRate}%</span></div>
               <div><span style={{ color: T.muted }}>Montant payé : </span><span className="font-semibold" style={{ color: '#16A34A' }}>{fmt(viewItem.paidAmount)}</span></div>
             </div>
 
@@ -290,11 +292,28 @@ export default function InvoicesPage() {
               </div>
             )}
 
-            {/* Totals */}
+            {/* Totals — multi-TVA par ligne */}
             <div className="flex justify-end">
               <div className="w-52 space-y-1 text-sm">
                 <div className="flex justify-between"><span style={{ color: T.muted }}>HT</span><span style={{ color: T.dark }}>{fmt(viewItem.subtotal)}</span></div>
-                <div className="flex justify-between"><span style={{ color: T.muted }}>TVA {viewItem.vatRate}%</span><span style={{ color: T.muted }}>{fmt(viewItem.vatAmount)}</span></div>
+                {/* Grouper par taux TVA depuis les lignes */}
+                {(() => {
+                  const lines = viewItem.lines ?? [];
+                  if (lines.length === 0) {
+                    return <div className="flex justify-between"><span style={{ color: T.muted }}>TVA {viewItem.vatRate}%</span><span style={{ color: T.muted }}>{fmt(viewItem.vatAmount)}</span></div>;
+                  }
+                  const groups: Record<string, number> = {};
+                  lines.forEach(l => {
+                    const rate = String(l.lineVatRate ?? viewItem.vatRate);
+                    groups[rate] = (groups[rate] || 0) + l.total;
+                  });
+                  return Object.entries(groups).sort((a, b) => Number(a[0]) - Number(b[0])).map(([rate, base]) => (
+                    <div key={rate} className="flex justify-between">
+                      <span style={{ color: T.muted }}>TVA {rate}%</span>
+                      <span style={{ color: T.muted }}>{fmt(Math.round(base * Number(rate) / 100 * 100) / 100)}</span>
+                    </div>
+                  ));
+                })()}
                 <div className="flex justify-between font-bold pt-1" style={{ borderTop: `1px solid ${T.border}`, color: T.dark }}>
                   <span>Total TTC</span><span>{fmt(viewItem.total)}</span>
                 </div>
