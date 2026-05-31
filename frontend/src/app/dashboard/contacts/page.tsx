@@ -19,6 +19,46 @@ const SEGMENT_DEFS: FilterRuleDef[] = [
   { key: 'createdAt', label: 'Date de création', dataType: 'date',   getValue: (c) => c.createdAt?.slice(0, 10) ?? '' },
 ];
 
+// ── Formulaire contact (composant externe au composant page) ──────────────────
+interface ContactFormProps {
+  form: ReturnType<typeof emptyForm>;
+  set: (k: string, v: string) => void;
+  compList: Company[];
+  saving: boolean;
+  onSubmit: (e: React.FormEvent) => void;
+  onCancel: () => void;
+}
+
+function ContactFormFields({ form, set, compList, saving, onSubmit, onCancel }: ContactFormProps) {
+  return (
+    <form onSubmit={onSubmit} className="space-y-4">
+      <div className="grid grid-cols-2 gap-3">
+        <FormField label="Prénom" required><input className={inputClass} value={form.firstName} onChange={e => set('firstName', e.target.value)} required /></FormField>
+        <FormField label="Nom" required><input className={inputClass} value={form.lastName} onChange={e => set('lastName', e.target.value)} required /></FormField>
+      </div>
+      <FormField label="Email"><input type="email" className={inputClass} value={form.email} onChange={e => set('email', e.target.value)} /></FormField>
+      <div className="grid grid-cols-2 gap-3">
+        <FormField label="Téléphone 1"><input className={inputClass} value={form.phone} onChange={e => set('phone', e.target.value)} /></FormField>
+        <FormField label="Téléphone 2"><input className={inputClass} value={form.mobile} onChange={e => set('mobile', e.target.value)} /></FormField>
+      </div>
+      <FormField label="Poste / Qualification">
+        <select className={selectClass} value={form.jobTitle} onChange={e => set('jobTitle', e.target.value)}>
+          <option value="">— Choisir —</option>
+          {QUALIFICATIONS.map(q => <option key={q} value={q}>{q}</option>)}
+        </select>
+      </FormField>
+      <FormField label="Client">
+        <select className={selectClass} value={form.companyId} onChange={e => set('companyId', e.target.value)}>
+          <option value="">— Aucune —</option>
+          {compList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+        </select>
+      </FormField>
+      <FormActions onCancel={onCancel} saving={saving} />
+    </form>
+  );
+}
+
+// ── Page ─────────────────────────────────────────────────────────────────────
 export default function ContactsPage() {
   const [list, setList]           = useState<Contact[]>([]);
   const [compList, setCompList]   = useState<Company[]>([]);
@@ -83,34 +123,6 @@ export default function ContactsPage() {
     } finally { setTogglingActive(null); }
   };
 
-  // Formulaire contact (réutilisé création + édition)
-  const ContactForm = ({ onSubmit, onCancel }: { onSubmit: (e: React.FormEvent) => void; onCancel: () => void }) => (
-    <form onSubmit={onSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-3">
-        <FormField label="Prénom" required><input className={inputClass} value={form.firstName} onChange={e => set('firstName', e.target.value)} required /></FormField>
-        <FormField label="Nom" required><input className={inputClass} value={form.lastName} onChange={e => set('lastName', e.target.value)} required /></FormField>
-      </div>
-      <FormField label="Email"><input type="email" className={inputClass} value={form.email} onChange={e => set('email', e.target.value)} /></FormField>
-      <div className="grid grid-cols-2 gap-3">
-        <FormField label="Téléphone 1"><input className={inputClass} value={form.phone} onChange={e => set('phone', e.target.value)} /></FormField>
-        <FormField label="Téléphone 2"><input className={inputClass} value={form.mobile} onChange={e => set('mobile', e.target.value)} /></FormField>
-      </div>
-      <FormField label="Poste / Qualification">
-        <select className={selectClass} value={form.jobTitle} onChange={e => set('jobTitle', e.target.value)}>
-          <option value="">— Choisir —</option>
-          {QUALIFICATIONS.map(q => <option key={q} value={q}>{q}</option>)}
-        </select>
-      </FormField>
-      <FormField label="Client">
-        <select className={selectClass} value={form.companyId} onChange={e => set('companyId', e.target.value)}>
-          <option value="">— Aucune —</option>
-          {compList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-        </select>
-      </FormField>
-      <FormActions onCancel={onCancel} saving={saving} />
-    </form>
-  );
-
   return (
     <div className="p-6">
       <PageHeader title="Contacts" action={<AddButton onClick={() => { setForm(emptyForm()); setOpen(true); }} />} />
@@ -138,11 +150,8 @@ export default function ContactsPage() {
               <Td>{c.jobTitle ?? '—'}</Td>
               <Td>{c.company?.name ?? '—'}</Td>
               <Td>{c.createdAt ? new Date(c.createdAt).toLocaleDateString('fr-LU') : '—'}</Td>
-              {/* Toggle Reçoit factures */}
               <td className="px-4 py-3 text-center">
-                <button
-                  onClick={() => toggleInvoice(c)}
-                  disabled={toggling === c.id || inactive}
+                <button onClick={() => toggleInvoice(c)} disabled={toggling === c.id || inactive}
                   title={inactive ? 'Contact inactif' : c.canReceiveInvoices ? 'Autorisé' : 'Non autorisé'}
                   className="w-9 h-5 rounded-full transition-all relative flex-shrink-0 inline-flex cursor-pointer"
                   style={{ background: (c.canReceiveInvoices && !inactive) ? T.copper : T.border, opacity: (toggling === c.id || inactive) ? 0.4 : 1 }}>
@@ -150,7 +159,6 @@ export default function ContactsPage() {
                     style={{ left: (c.canReceiveInvoices && !inactive) ? '18px' : '2px' }} />
                 </button>
               </td>
-              {/* Actions */}
               <td className="px-4 py-3 text-center">
                 <div className="flex items-center justify-center gap-1.5">
                   <button onClick={() => openEdit(c)}
@@ -176,18 +184,15 @@ export default function ContactsPage() {
         Référence: (c as any).reference ?? '', Prénom: c.firstName, Nom: c.lastName,
         Email: c.email ?? '', 'Téléphone 1': c.phone ?? '', 'Téléphone 2': (c as any).mobile ?? '',
         Poste: c.jobTitle ?? '', Client: c.company?.name ?? '',
-        'Reçoit factures': c.canReceiveInvoices ? 'Oui' : 'Non',
-        Statut: c.isActive === false ? 'Inactif' : 'Actif',
+        'Reçoit factures': c.canReceiveInvoices ? 'Oui' : 'Non', Statut: c.isActive === false ? 'Inactif' : 'Actif',
       })), filename: 'contacts', title: 'Contacts' }} />
 
-      {/* Modale création */}
       <Modal title="Nouveau contact" open={open} onClose={() => setOpen(false)}>
-        <ContactForm onSubmit={handleCreate} onCancel={() => setOpen(false)} />
+        <ContactFormFields form={form} set={set} compList={compList} saving={saving} onSubmit={handleCreate} onCancel={() => setOpen(false)} />
       </Modal>
 
-      {/* Modale édition */}
       <Modal title="Modifier le contact" open={!!editContact} onClose={() => setEditContact(null)}>
-        <ContactForm onSubmit={handleEdit} onCancel={() => setEditContact(null)} />
+        <ContactFormFields form={form} set={set} compList={compList} saving={saving} onSubmit={handleEdit} onCancel={() => setEditContact(null)} />
       </Modal>
     </div>
   );

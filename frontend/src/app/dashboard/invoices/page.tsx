@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { invoicing, companies, creditNotes, Invoice, Company, Service } from '@/lib/api';
@@ -172,7 +172,7 @@ export default function InvoicesPage() {
 
   const selectedClient = compList.find(c => c.id === form.companyId) ?? null;
   const vatResult = computeVat(selectedClient, parseFloat(form.vatRate) || 17);
-  const formTotals = calcVatGroups(form.lines, parseFloat(form.vatRate) || 17);
+  const formTotals = useMemo(() => calcVatGroups(form.lines, parseFloat(form.vatRate) || 17), [form.lines, form.vatRate]);
 
   const buildPdfProps = (inv: Invoice): IneeDocumentProps & { filename: string } => ({
     type: 'FACTURE', number: inv.number, date: today(), dueDate: fmtDate(inv.dueDate), status: inv.status,

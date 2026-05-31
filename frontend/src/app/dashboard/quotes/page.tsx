@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { invoicing, companies, Quote, Company, Service } from '@/lib/api';
 import { Modal } from '@/components/Modal';
@@ -177,7 +177,7 @@ export default function QuotesPage() {
 
   const selectedClient = compList.find(c => c.id === form.companyId) ?? null;
   const vatResult = computeVat(selectedClient, parseFloat(form.vatRate) || 17);
-  const formTotals = calcVatGroups(form.lines, parseFloat(form.vatRate) || 17);
+  const formTotals = useMemo(() => calcVatGroups(form.lines, parseFloat(form.vatRate) || 17), [form.lines, form.vatRate]);
 
   const buildPdfProps = (q: Quote): IneeDocumentProps & { filename: string } => ({
     type: 'DEVIS', number: q.number, date: today(), status: q.status,
