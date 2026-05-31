@@ -85,7 +85,6 @@ export class SubscriptionsService {
       data: {
         ...rest,
         number,
-        vatRate,
         ...totals,
         startDate:       startDt,
         nextBillingDate: startDt,
@@ -105,7 +104,7 @@ export class SubscriptionsService {
 
     if (lines) {
       const totals = this.calcTotals(lines, vatRate);
-      Object.assign(updates, { vatRate, ...totals });
+      Object.assign(updates, { ...totals });
       await (this.prisma as any).subscriptionLine.deleteMany({ where: { subscriptionId: id } });
       updates.lines = { create: lines.map(l => ({ ...l, total: this.lineTotal(l) })) };
     }
