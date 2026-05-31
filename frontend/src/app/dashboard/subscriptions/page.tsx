@@ -175,7 +175,7 @@ export default function SubscriptionsPage() {
         }
       />
 
-      <FilterBar filters={FILTERS} value={filter} onChange={v => { setFilter(v); load(v || undefined); }} />
+      <FilterBar filters={FILTERS} active={filter} onChange={v => { setFilter(v); load(v || undefined); }} />
       <SegmentFilterBar search={search} onSearch={setSearch} placeholder="Rechercher une souscription..." defs={SEGMENT_DEFS} rules={rules} addRule={addRule} removeRule={removeRule} updateRule={updateRule} clearRules={clearRules} clearAll={clearAll} activeCount={activeCount} />
 
       <DataTable loading={loading} empty="Aucune souscription — cliquez sur «+ Ajouter»" sort={sort} onSort={sortToggle}
