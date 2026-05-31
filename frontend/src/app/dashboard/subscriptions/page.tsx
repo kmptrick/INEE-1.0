@@ -135,8 +135,12 @@ export default function SubscriptionsPage() {
   const addLine  = () => setForm(f => ({ ...f, lines: [...f.lines, emptyLine()] }));
   const removeLine = (idx: number) => setForm(f => ({ ...f, lines: f.lines.filter((_, i) => i !== idx) }));
 
-  // ── Totaux calculés (multi-TVA) ──────────────────────────────────────────
-  const { subtotal, vatGroups, total } = calcVatGroups(form.lines, parseFloat(form.vatRate) || 17);
+  // ── Totaux calculés (multi-TVA) — uniquement si modale ouverte ──────────
+  const { subtotal, vatGroups, total } = (() => {
+    if (!open) return { subtotal: 0, vatGroups: {} as Record<string, number>, vatTotal: 0, total: 0 };
+    try { return calcVatGroups(form.lines, parseFloat(form.vatRate) || 17); }
+    catch { return { subtotal: 0, vatGroups: {} as Record<string, number>, vatTotal: 0, total: 0 }; }
+  })();
 
   // ── Soumission ───────────────────────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {

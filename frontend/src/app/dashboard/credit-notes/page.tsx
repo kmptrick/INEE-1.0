@@ -154,7 +154,12 @@ function CreditNotesContent() {
     setLine(i, 'unite', s.unite ?? '');
   };
 
-  const { subtotal, vatGroups, vatTotal, total } = calcVatGroups(form.lines, parseFloat(form.vatRate) || 17);
+  const _cnTotals = (() => {
+    if (!open) return { subtotal: 0, vatGroups: {} as Record<string, number>, vatTotal: 0, total: 0 };
+    try { return calcVatGroups(form.lines, parseFloat(form.vatRate) || 17); }
+    catch { return { subtotal: 0, vatGroups: {} as Record<string, number>, vatTotal: 0, total: 0 }; }
+  })();
+  const { subtotal, vatGroups, vatTotal, total } = _cnTotals;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); setSaving(true);
