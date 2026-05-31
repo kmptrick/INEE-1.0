@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import Logo from './Logo'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -219,22 +220,8 @@ export default function Hero() {
               gap: 20,
             }}
           >
-            {/* Double diamond logo */}
-            <DoubleDiamond />
-
-            {/* INEE wordmark */}
-            <span
-              style={{
-                fontFamily: "'Cormorant Garamond', serif",
-                fontSize: 32,
-                fontWeight: 400,
-                letterSpacing: 8,
-                color: 'var(--copper)',
-                textAlign: 'center',
-              }}
-            >
-              INEE
-            </span>
+            {/* Logo INEE */}
+            <Logo size={80} textSize={28} />
 
             {/* Separator */}
             <div
