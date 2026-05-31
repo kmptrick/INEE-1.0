@@ -181,9 +181,20 @@ export default function QuotesPage() {
   const formTotals = open ? calcVatGroups(form.lines, parseFloat(form.vatRate) || 17) : { subtotal: 0, vatGroups: {} as Record<string, number>, vatTotal: 0, total: 0 };
 
   const buildPdfProps = (q: Quote): IneeDocumentProps & { filename: string } => ({
-    type: 'DEVIS', number: q.number, date: today(), status: q.status,
+    type: 'DEVIS',
+    number: q.number,
+    date: q.createdAt ? new Date(q.createdAt).toLocaleDateString('fr-LU') : today(),
+    status: q.status,
     company: q.company ? { name: q.company.name } : undefined,
-    lines: (q.lines ?? []).map(l => ({ description: l.description, quantity: l.quantity, unitPrice: l.unitPrice, total: l.total })),
+    lines: (q.lines ?? []).map(l => ({
+      description: l.description,
+      quantity: l.quantity,
+      unitPrice: l.unitPrice,
+      total: l.total,
+      vatRate: l.lineVatRate ?? q.vatRate,
+      discountRate: l.discountRate,
+      period: l.periodStart ? `${new Date(l.periodStart).toLocaleDateString('fr-LU')} - ${l.periodEnd ? new Date(l.periodEnd).toLocaleDateString('fr-LU') : ''}` : undefined,
+    })),
     subtotal: q.subtotal, vatRate: q.vatRate, vatAmount: q.vatAmount, total: q.total,
     vatMention: q.vatMention, filename: `${q.number}.pdf`,
   });

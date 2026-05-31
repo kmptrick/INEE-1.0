@@ -183,11 +183,27 @@ export default function InvoicesPage() {
   })();
 
   const buildPdfProps = (inv: Invoice): IneeDocumentProps & { filename: string } => ({
-    type: 'FACTURE', number: inv.number ?? '', date: today(), dueDate: fmtDate(inv.dueDate), status: inv.status,
+    type: 'FACTURE',
+    number: inv.number ?? '',
+    date: inv.createdAt ? new Date(inv.createdAt).toLocaleDateString('fr-LU') : today(),
+    dueDate: fmtDate(inv.dueDate),
+    status: inv.status,
     company: inv.company ? { name: inv.company.name } : undefined,
-    lines: (inv.lines ?? []).map(l => ({ description: l.description, quantity: l.quantity, unitPrice: l.unitPrice, total: l.total })),
-    subtotal: inv.subtotal, vatRate: inv.vatRate, vatAmount: inv.vatAmount, total: inv.total,
-    vatMention: inv.vatMention, filename: `${inv.number ?? 'brouillon'}.pdf`,
+    lines: (inv.lines ?? []).map(l => ({
+      description: l.description,
+      quantity: l.quantity,
+      unitPrice: l.unitPrice,
+      total: l.total,
+      vatRate: l.lineVatRate ?? inv.vatRate,
+      discountRate: l.discountRate,
+      period: l.periodStart ? `${new Date(l.periodStart).toLocaleDateString('fr-LU')} - ${l.periodEnd ? new Date(l.periodEnd).toLocaleDateString('fr-LU') : ''}` : undefined,
+    })),
+    subtotal: inv.subtotal,
+    vatRate: inv.vatRate,
+    vatAmount: inv.vatAmount,
+    total: inv.total,
+    vatMention: inv.vatMention,
+    filename: `${inv.number ?? 'brouillon'}.pdf`,
   });
 
   return (
