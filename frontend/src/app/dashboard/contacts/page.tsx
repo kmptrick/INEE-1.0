@@ -5,6 +5,7 @@ import { Modal } from '@/components/Modal';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
 import { PageHeader, AddButton, DataTable, Td, FormActions, usePagination, useSort, TableFooter, useSegmentFilter, SegmentFilterBar, FilterRuleDef } from '@/components/PageShell';
 
+const QUALIFICATIONS = ['Actionnaire', 'Associé', 'Dirigeant', 'Comptable', 'Agent payeur', 'Autre'];
 const empty = { firstName: '', lastName: '', email: '', phone: '', mobile: '', jobTitle: '', companyId: '', notes: '' };
 
 const SEGMENT_DEFS: FilterRuleDef[] = [
@@ -128,7 +129,12 @@ export default function ContactsPage() {
             <FormField label="Téléphone"><input className={inputClass} value={form.phone} onChange={e => set('phone', e.target.value)} /></FormField>
             <FormField label="Mobile"><input className={inputClass} value={form.mobile} onChange={e => set('mobile', e.target.value)} /></FormField>
           </div>
-          <FormField label="Poste"><input className={inputClass} value={form.jobTitle} onChange={e => set('jobTitle', e.target.value)} /></FormField>
+          <FormField label="Poste / Qualification">
+            <select className={selectClass} value={form.jobTitle} onChange={e => set('jobTitle', e.target.value)}>
+              <option value="">— Choisir —</option>
+              {QUALIFICATIONS.map(q => <option key={q} value={q}>{q}</option>)}
+            </select>
+          </FormField>
           <FormField label="Client">
             <select className={selectClass} value={form.companyId} onChange={e => set('companyId', e.target.value)}>
               <option value="">— Aucune —</option>
