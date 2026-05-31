@@ -27,7 +27,10 @@
       "Bash(grep -r \"useSort\\(list, null\\)\" \"C:\\\\PERSO\\\\INEE 1.0\\\\frontend\\\\src\\\\app\\\\dashboard\" --include=\"*.tsx\" -l 2>/dev/null || grep -rl \"useSort\\(list, null\\)\" /mnt/c/PERSO 2>/dev/null)",
       "Bash(git commit *)",
       "Bash(ssh root@178.105.159.65 \"cd /opt/inee && git pull && cd frontend && NEXT_PUBLIC_API_URL=https://app.inee.lu/api npx next build --webpack 2>&1 | tail -15 && pm2 restart inee-frontend && echo 'DEPLOY OK'\")",
-      "Bash(ssh root@178.105.159.65 \"cd /opt/inee && git pull && cd frontend && NEXT_PUBLIC_API_URL=https://app.inee.lu/api npx next build --webpack 2>&1 | tail -20 && pm2 restart inee-frontend && echo 'DEPLOY OK'\")"
+      "Bash(ssh root@178.105.159.65 \"cd /opt/inee && git pull && cd frontend && NEXT_PUBLIC_API_URL=https://app.inee.lu/api npx next build --webpack 2>&1 | tail -20 && pm2 restart inee-frontend && echo 'DEPLOY OK'\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3002)",
+      "Bash(curl -s http://localhost:3002)",
+      "PowerShell(ls \"$env:APPDATA\\\\Microsoft\\\\Outlook\\\\\" -ErrorAction SilentlyContinue; ls \"$env:LOCALAPPDATA\\\\Microsoft\\\\Outlook\\\\\" -ErrorAction SilentlyContinue)"
     ]
   }
 }

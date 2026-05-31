@@ -4,6 +4,9 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 
+// Largeur sidebar en px (utilisé aussi par TableFooter)
+export const SIDEBAR_W = 240;
+
 const nav = [
   {
     items: [
@@ -38,9 +41,7 @@ const nav = [
 
 const agendaNav = {
   label: 'Agenda',
-  items: [
-    { href: '/dashboard/agenda', label: 'Calendrier', icon: '📅' },
-  ],
+  items: [{ href: '/dashboard/agenda', label: 'Calendrier', icon: '📅' }],
 };
 
 const adminNav = {
@@ -55,6 +56,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { user, loading, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Ferme la sidebar mobile au changement de page
+  useEffect(() => { setSidebarOpen(false); }, [pathname]);
 
   useEffect(() => {
     if (!loading && !user) router.replace('/login');
@@ -65,9 +70,36 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const allNav = user.role === 'ADMIN' ? [...nav, agendaNav, adminNav] : [...nav, agendaNav];
 
   return (
-    <div className="flex h-screen" style={{ background: '#F8F5F2' }}>
-      {/* Sidebar */}
-      <aside className="w-60 flex flex-col flex-shrink-0" style={{ background: '#1A1008', borderRight: '1px solid #2E1E10' }}>
+    <div className="flex h-screen overflow-hidden" style={{ background: '#F8F5F2' }}>
+
+      {/* ── Overlay backdrop (mobile uniquement) ── */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-30 md:hidden"
+          style={{ background: 'rgba(0,0,0,0.55)' }}
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* ── Sidebar ── */}
+      {/*
+        Mobile  : position fixed, translate-x-(-100%) par défaut, 0 si ouvert
+        Desktop : position relative dans le flex, toujours visible
+      */}
+      <aside
+        className={[
+          'flex flex-col flex-shrink-0 h-full z-40',
+          'transition-transform duration-200',
+          // Mobile : fixed + slide
+          'fixed md:relative',
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
+        ].join(' ')}
+        style={{
+          width: SIDEBAR_W,
+          background: '#1A1008',
+          borderRight: '1px solid #2E1E10',
+        }}
+      >
         {/* Logo */}
         <div className="px-5 py-5" style={{ borderBottom: '1px solid #2E1E10' }}>
           <div className="flex items-center gap-3">
@@ -143,8 +175,37 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
       </aside>
 
-      {/* Main */}
-      <main className="flex-1 overflow-auto pb-14">
+      {/* ── Main ── */}
+      <main className="flex-1 overflow-auto pb-14 min-w-0">
+
+        {/* Barre mobile avec hamburger — cachée sur desktop (md+) */}
+        <div
+          className="flex items-center gap-3 px-4 py-3 md:hidden sticky top-0 z-20"
+          style={{ background: '#1A1008', borderBottom: '1px solid #2E1E10' }}
+        >
+          <button
+            onClick={() => setSidebarOpen(o => !o)}
+            className="w-9 h-9 flex flex-col items-center justify-center gap-[5px] rounded-lg flex-shrink-0 cursor-pointer"
+            style={{ background: 'rgba(200,128,58,0.15)', border: '1px solid #3A2010' }}
+            aria-label="Ouvrir le menu"
+          >
+            <span className="block w-5 h-0.5 rounded" style={{ background: '#C8803A' }} />
+            <span className="block w-5 h-0.5 rounded" style={{ background: '#C8803A' }} />
+            <span className="block w-5 h-0.5 rounded" style={{ background: '#C8803A' }} />
+          </button>
+          <div className="flex items-center gap-2">
+            <svg width="22" height="22" viewBox="0 0 100 100" fill="none">
+              <path d="M50 4 L96 50 L50 96 L4 50 Z" stroke="#C8803A" strokeWidth="5" fill="none" />
+              <path d="M50 16 L84 50 L50 84 L16 50 Z" stroke="#C8803A" strokeWidth="2.5" fill="none" />
+              <line x1="50" y1="30" x2="50" y2="70" stroke="#F5EDE4" strokeWidth="5" strokeLinecap="round" />
+              <line x1="36" y1="30" x2="64" y2="30" stroke="#F5EDE4" strokeWidth="5" strokeLinecap="round" />
+              <line x1="36" y1="70" x2="64" y2="70" stroke="#F5EDE4" strokeWidth="5" strokeLinecap="round" />
+              <circle cx="50" cy="50" r="5" fill="#C8803A" />
+            </svg>
+            <span className="font-bold tracking-widest text-lg" style={{ color: '#F5EDE4' }}>INEE</span>
+          </div>
+        </div>
+
         {children}
       </main>
 

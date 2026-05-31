@@ -29,7 +29,7 @@ const SEGMENT_DEFS: FilterRuleDef[] = [
 const emptyForm = () => ({
   clientType: 'SOCIETE' as 'SOCIETE' | 'PARTICULIER',
   denomination: '', formeJuridique: '', prenom: '', nom: '',
-  email: '', phone: '', streetNumber: '', address: '', city: '', country: 'LU', vatNumber: '', notes: '',
+  email: '', phone: '', streetNumber: '', address: '', postalCode: '', city: '', country: 'LU', vatNumber: '', notes: '',
 });
 
 export default function ClientsPage() {
@@ -120,7 +120,7 @@ export default function ClientsPage() {
           );
         })}
       </DataTable>
-      <TableFooter pagination={pagination} export={{ getData: () => filtered.map(c => ({ Référence: (c as any).reference ?? '', Type: c.clientType === 'SOCIETE' ? 'Société' : 'Particulier', Nom: c.name, 'Forme juridique': c.formeJuridique ?? '', Email: c.email ?? '', Téléphone: c.phone ?? '', 'N°': c.streetNumber ?? '', Rue: c.address ?? '', Ville: c.city ?? '', Pays: c.country ?? '', 'N° TVA': c.vatNumber ?? '', Statut: c.isActive === false ? 'Inactif' : 'Actif' })), filename: 'clients', title: 'Clients' }} columnSelector={{ allCols: [
+      <TableFooter pagination={pagination} export={{ getData: () => filtered.map(c => ({ Référence: (c as any).reference ?? '', Type: c.clientType === 'SOCIETE' ? 'Société' : 'Particulier', Nom: c.name, 'Forme juridique': c.formeJuridique ?? '', Email: c.email ?? '', Téléphone: c.phone ?? '', 'N°': c.streetNumber ?? '', Rue: c.address ?? '', 'Code postal': c.postalCode ?? '', Ville: c.city ?? '', Pays: c.country ?? '', 'N° TVA': c.vatNumber ?? '', Statut: c.isActive === false ? 'Inactif' : 'Actif' })), filename: 'clients', title: 'Clients' }} columnSelector={{ allCols: [
         { key: 'reference', label: 'Réf.' }, { key: 'name', label: 'Nom' }, { key: 'email', label: 'Email' },
         { key: 'city', label: 'Ville' }, { key: 'country', label: 'Pays' }, { key: 'status', label: 'Statut' }, { key: 'createdAt', label: 'Création' },
       ], visible, toggle: colToggle }} />
@@ -177,7 +177,8 @@ export default function ClientsPage() {
               <input className={inputClass} placeholder="Route d'Arlon" value={form.address} onChange={e => set('address', e.target.value)} />
             </FormField>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid gap-3" style={{ gridTemplateColumns: '100px 1fr 1fr' }}>
+            <FormField label="Code postal"><input className={inputClass} placeholder="1234" value={form.postalCode} onChange={e => set('postalCode', e.target.value)} /></FormField>
             <FormField label="Ville"><input className={inputClass} value={form.city} onChange={e => set('city', e.target.value)} /></FormField>
             <FormField label="Pays">
               <select className={selectClass} value={form.country} onChange={e => { set('country', e.target.value); set('formeJuridique', ''); }}>

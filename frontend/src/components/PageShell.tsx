@@ -628,9 +628,8 @@ export function TableFooter({ pagination, columnSelector, export: exportProps }:
   ) : null;
 
   return (
-    <div className="flex items-center justify-between flex-wrap gap-3 px-6 py-3"
+    <div className="flex items-center justify-between flex-wrap gap-3 px-6 py-3 fixed bottom-0 right-0 left-0 md:left-60"
       style={{
-        position: 'fixed', bottom: 0, left: '15rem', right: 0,
         background: '#F8F5F2',
         borderTop: `1px solid ${T.border}`,
         zIndex: 20,

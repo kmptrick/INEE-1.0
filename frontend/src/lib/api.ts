@@ -182,6 +182,7 @@ export interface Company {
   phone?: string;
   streetNumber?: string;
   address?: string;
+  postalCode?: string;
   city?: string;
   country?: string;
   vatNumber?: string;
