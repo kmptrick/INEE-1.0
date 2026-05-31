@@ -40,6 +40,22 @@ model User {
   calendarEvents      CalendarEvent[]
   passwordResetTokens PasswordResetToken[]
   leaveRequests       LeaveRequest[]
+  auditLogs           AuditLog[]
+}
+
+// ─── AUDIT LOG ────────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  entityType  String
+  entityId    String
+  action      String
+  details     String?
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@index([entityType, entityId])
 }
 
 model PasswordResetToken {
