@@ -32,4 +32,15 @@ export class CreateContactDto {
   canReceiveInvoices?: boolean;
 }
 
-export class UpdateContactDto extends CreateContactDto {}
+export class UpdateContactDto {
+  @IsOptional() @IsString() firstName?: string;
+  @IsOptional() @IsString() lastName?: string;
+  @IsOptional() @IsEmail()  email?: string;
+  @IsOptional() @IsString() phone?: string;
+  @IsOptional() @IsString() mobile?: string;
+  @IsOptional() @IsString() jobTitle?: string;
+  @IsOptional() @IsString() notes?: string;
+  @IsOptional() @IsArray()  tags?: string[];
+  @IsOptional() @IsString() companyId?: string;
+  @IsOptional() @IsBoolean() canReceiveInvoices?: boolean;
+}

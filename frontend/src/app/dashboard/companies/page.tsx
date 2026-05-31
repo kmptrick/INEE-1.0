@@ -141,7 +141,11 @@ function ContactBlock({
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold" style={{ color: T.dark }}>{ct.firstName} {ct.lastName}</p>
-                <p className="text-xs" style={{ color: T.muted }}>{ct.jobTitle ?? '—'}{ct.email ? ` · ${ct.email}` : ''}{ct.phone ? ` · ${ct.phone}` : ''}</p>
+                <p className="text-xs" style={{ color: T.muted }}>
+                  {ct.email ?? ''}
+                  {ct.phone ? (ct.email ? ` · ${ct.phone}` : ct.phone) : ''}
+                  {(ct as any).mobile ? ` · ${(ct as any).mobile}` : ''}
+                </p>
               </div>
               <span className="text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0"
                 style={{ background: color + '15', color }}>
@@ -220,6 +224,7 @@ export default function ClientsPage() {
   const [list, setList]             = useState<Company[]>([]);
   const [loading, setLoading]       = useState(true);
   const [open, setOpen]             = useState(false);
+  const [editCompany, setEditCompany] = useState<Company | null>(null);
   const [form, setForm]             = useState(emptyForm());
   const [saving, setSaving]         = useState(false);
   const [toggling, setToggling]     = useState<string | null>(null);
@@ -239,9 +244,26 @@ export default function ClientsPage() {
   useEffect(() => { load(); }, []);
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
 
+  const openEdit = (e: React.MouseEvent, c: Company) => {
+    e.stopPropagation();
+    setForm({
+      clientType: c.clientType, denomination: c.denomination ?? '', formeJuridique: c.formeJuridique ?? '',
+      prenom: c.prenom ?? '', nom: c.nom ?? '', email: c.email ?? '', phone: c.phone ?? '',
+      streetNumber: c.streetNumber ?? '', address: c.address ?? '', postalCode: c.postalCode ?? '',
+      city: c.city ?? '', country: c.country ?? 'LU', vatNumber: c.vatNumber ?? '', notes: c.notes ?? '',
+    });
+    setEditCompany(c);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); setSaving(true);
     try { await companies.create(form); setOpen(false); setForm(emptyForm()); load(); }
+    finally { setSaving(false); }
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault(); if (!editCompany) return; setSaving(true);
+    try { await companies.update(editCompany.id, form as any); setEditCompany(null); setForm(emptyForm()); load(); }
     finally { setSaving(false); }
   };
 
@@ -302,12 +324,19 @@ export default function ClientsPage() {
               {visible.includes('status')     && <td className="px-4 py-3 text-xs font-semibold" style={{ color: inactive ? '#999' : '#16A34A' }}>{inactive ? 'Inactif' : 'Actif'}</td>}
               {visible.includes('createdAt')  && <Td>{c.createdAt ? new Date(c.createdAt).toLocaleDateString('fr-LU') : '—'}</Td>}
               <td className="px-4 py-3 text-center" onClick={e => e.stopPropagation()}>
-                <button onClick={e => toggleActive(e, c)} disabled={toggling === c.id}
-                  className="text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors cursor-pointer"
-                  style={inactive ? { color: '#16A34A', borderColor: '#BBF7D0', background: 'transparent', opacity: toggling === c.id ? 0.5 : 1 }
-                                  : { color: '#DC2626', borderColor: '#FECACA', background: 'transparent', opacity: toggling === c.id ? 0.5 : 1 }}>
-                  {inactive ? 'Réactiver' : 'Désactiver'}
-                </button>
+                <div className="flex items-center justify-center gap-1.5">
+                  <button onClick={e => openEdit(e, c)}
+                    className="text-xs px-3 py-1.5 rounded-lg border font-medium cursor-pointer"
+                    style={{ color: T.copper, borderColor: T.copper + '60', background: 'transparent' }}>
+                    ✎ Modifier
+                  </button>
+                  <button onClick={e => toggleActive(e, c)} disabled={toggling === c.id}
+                    className="text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors cursor-pointer"
+                    style={inactive ? { color: '#16A34A', borderColor: '#BBF7D0', background: 'transparent', opacity: toggling === c.id ? 0.5 : 1 }
+                                    : { color: '#DC2626', borderColor: '#FECACA', background: 'transparent', opacity: toggling === c.id ? 0.5 : 1 }}>
+                    {inactive ? 'Réactiver' : 'Désactiver'}
+                  </button>
+                </div>
               </td>
             </tr>
           );
@@ -324,6 +353,54 @@ export default function ClientsPage() {
 
       {/* ── Modale détail client ── */}
       {detail && <CompanyDetailModal company={detail} onClose={() => setDetail(null)} />}
+
+      {/* ── Modale édition client ── */}
+      <Modal title="Modifier le client" open={!!editCompany} onClose={() => setEditCompany(null)}>
+        <form onSubmit={handleEditSubmit} className="space-y-4">
+          {form.clientType === 'SOCIETE' ? (
+            <div className="grid grid-cols-2 gap-3">
+              <FormField label="Dénomination" required>
+                <input className={inputClass} value={form.denomination} onChange={e => set('denomination', e.target.value)} required />
+              </FormField>
+              <FormField label="Forme juridique">
+                <select className={selectClass} value={form.formeJuridique} onChange={e => set('formeJuridique', e.target.value)}>
+                  <option value="">— Choisir —</option>
+                  {getFormes(form.country).map(f => <option key={f} value={f}>{f}</option>)}
+                </select>
+              </FormField>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              <FormField label="Prénom" required><input className={inputClass} value={form.prenom} onChange={e => set('prenom', e.target.value)} required /></FormField>
+              <FormField label="Nom" required><input className={inputClass} value={form.nom} onChange={e => set('nom', e.target.value)} required /></FormField>
+            </div>
+          )}
+          <div className="grid grid-cols-2 gap-3">
+            <FormField label="Email"><input type="email" className={inputClass} value={form.email} onChange={e => set('email', e.target.value)} /></FormField>
+            <FormField label="Téléphone"><input className={inputClass} value={form.phone} onChange={e => set('phone', e.target.value)} /></FormField>
+          </div>
+          <div className="grid gap-3" style={{ gridTemplateColumns: '90px 1fr' }}>
+            <FormField label="N°"><input className={inputClass} value={form.streetNumber} onChange={e => set('streetNumber', e.target.value)} /></FormField>
+            <FormField label="Rue"><input className={inputClass} value={form.address} onChange={e => set('address', e.target.value)} /></FormField>
+          </div>
+          <div className="grid gap-3" style={{ gridTemplateColumns: '100px 1fr 1fr' }}>
+            <FormField label="Code postal"><input className={inputClass} value={form.postalCode} onChange={e => set('postalCode', e.target.value)} /></FormField>
+            <FormField label="Ville"><input className={inputClass} value={form.city} onChange={e => set('city', e.target.value)} /></FormField>
+            <FormField label="Pays">
+              <select className={selectClass} value={form.country} onChange={e => { set('country', e.target.value); set('formeJuridique', ''); }}>
+                <option value="LU">Luxembourg (LU)</option>
+                <option value="BE">Belgique (BE)</option>
+                <option value="DE">Allemagne (DE)</option>
+                <option value="FR">France (FR)</option>
+                <option value="">Autre pays</option>
+              </select>
+            </FormField>
+          </div>
+          <FormField label="N° TVA"><input className={inputClass} value={form.vatNumber} onChange={e => set('vatNumber', e.target.value)} /></FormField>
+          <FormField label="Notes"><textarea className={inputClass} rows={2} value={form.notes} onChange={e => set('notes', e.target.value)} /></FormField>
+          <FormActions onCancel={() => setEditCompany(null)} saving={saving} label="Enregistrer" />
+        </form>
+      </Modal>
 
       {/* ── Modale nouveau client ── */}
       <Modal title="Nouveau client" open={open} onClose={() => setOpen(false)}>
