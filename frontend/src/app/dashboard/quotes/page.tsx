@@ -341,13 +341,6 @@ export default function QuotesPage() {
             )}
           </div>
 
-          {vatResult.regime === 'LU' && (
-            <FormField label="Taux de TVA">
-              <select className={selectClass} value={form.vatRate} onChange={e => setField('vatRate', e.target.value)}>
-                {LU_VAT_RATES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
-              </select>
-            </FormField>
-          )}
 
           <div>
             <div className="flex items-center justify-between mb-2">

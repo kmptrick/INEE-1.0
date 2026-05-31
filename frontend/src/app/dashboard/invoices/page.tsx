@@ -353,14 +353,6 @@ export default function InvoicesPage() {
             )}
           </div>
 
-          {vatResult.regime === 'LU' && (
-            <FormField label="Taux de TVA">
-              <select className={selectClass} value={form.vatRate} onChange={e => setField('vatRate', e.target.value)}>
-                {LU_VAT_RATES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
-              </select>
-            </FormField>
-          )}
-
           <FormField label="Echéance"><input type="date" className={inputClass} value={form.dueDate} onChange={e => setField('dueDate', e.target.value)} /></FormField>
 
           <div>
