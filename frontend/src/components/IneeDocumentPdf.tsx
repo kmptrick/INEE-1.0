@@ -1,7 +1,6 @@
 'use client';
 import {
-  Document, Page, Text, View, StyleSheet, Font, Svg,
-  Path, Line, Circle,
+  Document, Page, Text, View, StyleSheet, Font, Svg, Path, Line, Circle,
 } from '@react-pdf/renderer';
 import { INEE } from '@/lib/inee-brand';
 
@@ -13,81 +12,62 @@ Font.register({
   ],
 });
 
-// ── Couleurs ──────────────────────────────────────────────────────────────────
-const BLUE      = '#1565C0';
+const BLUE       = '#1565C0';
 const BLUE_LIGHT = '#EBF5FB';
-const BLUE_MID  = '#D6EAF8';
-const WHITE     = '#FFFFFF';
-const DARK      = '#1A1A1A';
-const GRAY      = '#555555';
-const BORDER    = '#CCCCCC';
+const BLUE_MID   = '#D6EAF8';
+const WHITE      = '#FFFFFF';
+const DARK       = '#1A1A1A';
+const GRAY       = '#555555';
+const BORDER_C   = '#CCCCCC';
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('fr-LU', { style: 'currency', currency: 'EUR' }).format(n ?? 0);
 
-// ── Styles ────────────────────────────────────────────────────────────────────
 const s = StyleSheet.create({
-  page:        { fontFamily: 'Helvetica', fontSize: 8.5, color: DARK, backgroundColor: WHITE, padding: '20 30 30 30' },
-
-  // Header
-  headerRow:   { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 },
-  logoBox:     { width: 80, alignItems: 'center', border: '1 solid #DDDDDD', padding: 6, borderRadius: 4 },
-  logoName:    { fontSize: 10, fontWeight: 'bold', letterSpacing: 2, marginTop: 4, color: DARK },
-  companyBlock:{ textAlign: 'right', lineHeight: 1.6 },
-  companyName: { fontSize: 13, fontWeight: 'bold', marginBottom: 2, color: DARK },
-  companyLine: { color: GRAY, fontSize: 8 },
-
-  // Title
-  titleBanner: { backgroundColor: BLUE, borderRadius: 2, padding: '8 16', marginBottom: 4, alignItems: 'center' },
-  titleText:   { color: WHITE, fontSize: 14, fontWeight: 'bold', letterSpacing: 1 },
-  dateRow:     { flexDirection: 'row', gap: 20, marginBottom: 14, fontSize: 8.5, color: GRAY },
-
-  // Client
-  clientLabelRow: { backgroundColor: BLUE_MID, padding: '4 8', marginBottom: 4, borderRadius: 2 },
-  clientLabelText:{ fontWeight: 'bold', color: BLUE, fontSize: 8.5 },
-  clientInfo:  { fontSize: 8.5, lineHeight: 1.5, color: DARK, marginBottom: 14, paddingLeft: 2 },
-
-  // Table
-  table:       { marginBottom: 12 },
-  tableHeader: { flexDirection: 'row', backgroundColor: BLUE, padding: '5 4' },
-  tableRow:    { flexDirection: 'row', padding: '4 4', borderBottom: `0.5 solid ${BORDER}` },
-  tableRowAlt: { backgroundColor: BLUE_LIGHT },
-  thCell:      { color: WHITE, fontWeight: 'bold', fontSize: 7.5 },
-  tdCell:      { fontSize: 7.5, color: DARK },
-
-  // Column widths
+  page:         { fontFamily: 'Helvetica', fontSize: 8.5, color: DARK, backgroundColor: WHITE, paddingTop: 20, paddingBottom: 40, paddingLeft: 30, paddingRight: 30 },
+  headerRow:    { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 },
+  logoBox:      { width: 80, alignItems: 'center', borderWidth: 1, borderColor: '#DDDDDD', borderStyle: 'solid', paddingTop: 6, paddingBottom: 6, paddingLeft: 6, paddingRight: 6, borderRadius: 4 },
+  logoName:     { fontSize: 10, fontWeight: 'bold', letterSpacing: 2, marginTop: 4, color: DARK },
+  companyBlock: { textAlign: 'right' },
+  companyName:  { fontSize: 13, fontWeight: 'bold', marginBottom: 2, color: DARK },
+  companyLine:  { color: GRAY, fontSize: 8, lineHeight: 1.5 },
+  titleBanner:  { backgroundColor: BLUE, borderRadius: 2, paddingTop: 8, paddingBottom: 8, paddingLeft: 16, paddingRight: 16, marginBottom: 6, alignItems: 'center' },
+  titleText:    { color: WHITE, fontSize: 14, fontWeight: 'bold', letterSpacing: 1 },
+  dateRow:      { flexDirection: 'row', marginBottom: 12, fontSize: 8.5, color: GRAY },
+  dateItem:     { marginRight: 20 },
+  clientLabel:  { backgroundColor: BLUE_MID, paddingTop: 4, paddingBottom: 4, paddingLeft: 8, paddingRight: 8, marginBottom: 4, borderRadius: 2 },
+  clientLabelT: { fontWeight: 'bold', color: BLUE, fontSize: 8.5 },
+  clientInfo:   { fontSize: 8.5, lineHeight: 1.5, color: DARK, marginBottom: 12, paddingLeft: 2 },
+  tableHeader:  { flexDirection: 'row', backgroundColor: BLUE, paddingTop: 5, paddingBottom: 5, paddingLeft: 4, paddingRight: 4 },
+  tableRow:     { flexDirection: 'row', paddingTop: 4, paddingBottom: 4, paddingLeft: 4, paddingRight: 4, borderBottomWidth: 0.5, borderBottomColor: BORDER_C, borderBottomStyle: 'solid' },
+  tableRowAlt:  { backgroundColor: BLUE_LIGHT },
+  thCell:       { color: WHITE, fontWeight: 'bold', fontSize: 7.5 },
+  tdCell:       { fontSize: 7.5, color: DARK },
   colNum:  { width: '4%' },
-  colDesc: { width: '28%' },
-  colPer:  { width: '10%' },
+  colDesc: { width: '30%' },
+  colPer:  { width: '8%' },
   colQty:  { width: '5%', textAlign: 'center' },
   colRem:  { width: '7%', textAlign: 'center' },
   colPU:   { width: '10%', textAlign: 'right' },
   colHT:   { width: '10%', textAlign: 'right' },
-  colTVAp: { width: '7%', textAlign: 'center' },
+  colTVAp: { width: '6%', textAlign: 'center' },
   colTVAe: { width: '9%', textAlign: 'right' },
-  colTTC:  { width: '10%', textAlign: 'right' },
-
-  // Totals
-  totalsBox:   { alignSelf: 'flex-end', width: 200, marginBottom: 16 },
-  totalRow:    { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 3, borderBottom: `0.5 solid ${BORDER}` },
-  totalLabel:  { color: GRAY, fontSize: 8.5 },
-  totalValue:  { fontWeight: 'bold', fontSize: 8.5 },
-  grandRow:    { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: BLUE, padding: '5 6', borderRadius: 2, marginTop: 3 },
-  grandLabel:  { color: WHITE, fontWeight: 'bold', fontSize: 9 },
-  grandValue:  { color: WHITE, fontWeight: 'bold', fontSize: 9 },
-
-  // VAT mention
-  vatMentionBox: { backgroundColor: '#FFFDE7', borderRadius: 2, padding: '4 8', marginBottom: 10, border: `0.5 solid #F9A825` },
-  vatMentionText:{ fontSize: 7.5, color: '#5D4037' },
-
-  // Footer
-  footer:      { position: 'absolute', bottom: 20, left: 30, right: 30, borderTop: `0.5 solid ${BORDER}`, paddingTop: 5 },
-  footerRow:   { flexDirection: 'row', justifyContent: 'space-between' },
-  footerText:  { fontSize: 7, color: GRAY },
-  footerItalic:{ fontSize: 7, color: GRAY },
+  colTTC:  { width: '11%', textAlign: 'right' },
+  totalsBox:  { alignSelf: 'flex-end', width: 200, marginBottom: 14, marginTop: 6 },
+  totalRow:   { flexDirection: 'row', justifyContent: 'space-between', paddingTop: 3, paddingBottom: 3, borderBottomWidth: 0.5, borderBottomColor: BORDER_C, borderBottomStyle: 'solid' },
+  totalLabel: { color: GRAY, fontSize: 8.5 },
+  totalValue: { fontWeight: 'bold', fontSize: 8.5 },
+  grandRow:   { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: BLUE, paddingTop: 5, paddingBottom: 5, paddingLeft: 6, paddingRight: 6, borderRadius: 2, marginTop: 3 },
+  grandLabel: { color: WHITE, fontWeight: 'bold', fontSize: 9 },
+  grandValue: { color: WHITE, fontWeight: 'bold', fontSize: 9 },
+  vatBox:     { backgroundColor: '#FFFDE7', borderRadius: 2, paddingTop: 4, paddingBottom: 4, paddingLeft: 8, paddingRight: 8, marginBottom: 8, borderWidth: 0.5, borderColor: '#F9A825', borderStyle: 'solid' },
+  vatText:    { fontSize: 7.5, color: '#5D4037' },
+  notesText:  { fontSize: 8, color: GRAY, marginBottom: 8 },
+  footer:     { position: 'absolute', bottom: 18, left: 30, right: 30, borderTopWidth: 0.5, borderTopColor: BORDER_C, borderTopStyle: 'solid', paddingTop: 5 },
+  footerRow:  { flexDirection: 'row', justifyContent: 'space-between' },
+  footerText: { fontSize: 7, color: GRAY },
 });
 
-// ── Logo SVG ──────────────────────────────────────────────────────────────────
 function LogoSvg() {
   return (
     <Svg width={44} height={44} viewBox="0 0 100 100">
@@ -101,7 +81,6 @@ function LogoSvg() {
   );
 }
 
-// ── Types ─────────────────────────────────────────────────────────────────────
 export interface DocLine {
   description: string;
   quantity: number;
@@ -129,13 +108,11 @@ export interface IneeDocumentProps {
   paymentTerms?: string;
 }
 
-// ── Composant principal ────────────────────────────────────────────────────────
 export function IneeDocumentPdf({
   type, number, date, dueDate, company, lines,
   subtotal, vatRate, vatAmount, total, vatMention, notes, paymentTerms,
 }: IneeDocumentProps) {
 
-  // Calcul TVA groupée par taux
   const vatGroups: Record<string, number> = {};
   lines.forEach(l => {
     const rate = String(l.vatRate ?? vatRate ?? 17);
@@ -143,18 +120,15 @@ export function IneeDocumentPdf({
     vatGroups[rate] = (vatGroups[rate] || 0) + lineHT;
   });
 
-  const typeLabel = type === 'FACTURE' ? 'FACTURE' : type === 'DEVIS' ? 'DEVIS' : type === 'NOTE DE CRÉDIT' ? 'NOTE DE CRÉDIT' : 'SOUSCRIPTION';
   const footerNote = type === 'DEVIS'
-    ? 'Ce devis est valable 14 jours à compter de sa date d\'émission.'
-    : type === 'FACTURE'
-    ? `Paiement à réception. Tout retard de paiement entraîne des pénalités légales.`
+    ? "Ce devis est valable 14 jours à compter de sa date d'émission."
     : '';
 
   return (
     <Document>
       <Page size="A4" style={s.page}>
 
-        {/* ── En-tête ── */}
+        {/* En-tête */}
         <View style={s.headerRow}>
           <View style={s.logoBox}>
             <LogoSvg />
@@ -168,20 +142,20 @@ export function IneeDocumentPdf({
           </View>
         </View>
 
-        {/* ── Titre ── */}
+        {/* Titre */}
         <View style={s.titleBanner}>
-          <Text style={s.titleText}>{typeLabel} N° {number}</Text>
+          <Text style={s.titleText}>{type} N° {number}</Text>
         </View>
         <View style={s.dateRow}>
-          <Text>Date : {date}</Text>
-          {dueDate && <Text>Échéance : {dueDate}</Text>}
-          {paymentTerms && <Text>Conditions de paiement : {paymentTerms}</Text>}
+          <Text style={s.dateItem}>Date : {date}</Text>
+          {dueDate && <Text style={s.dateItem}>Échéance : {dueDate}</Text>}
+          {paymentTerms && <Text style={s.dateItem}>Conditions : {paymentTerms}</Text>}
         </View>
 
-        {/* ── Client ── */}
+        {/* Client */}
         {company && (
           <>
-            <View style={s.clientLabelRow}><Text style={s.clientLabelText}>Client :</Text></View>
+            <View style={s.clientLabel}><Text style={s.clientLabelT}>Client :</Text></View>
             <View style={s.clientInfo}>
               <Text style={{ fontWeight: 'bold' }}>{company.name}</Text>
               {company.address && <Text>{company.address}</Text>}
@@ -192,9 +166,8 @@ export function IneeDocumentPdf({
           </>
         )}
 
-        {/* ── Tableau des lignes ── */}
-        <View style={s.table}>
-          {/* En-tête du tableau */}
+        {/* Tableau */}
+        <View>
           <View style={s.tableHeader}>
             <Text style={[s.thCell, s.colNum]}>N°</Text>
             <Text style={[s.thCell, s.colDesc]}>Description</Text>
@@ -203,12 +176,10 @@ export function IneeDocumentPdf({
             <Text style={[s.thCell, s.colRem]}>Remise</Text>
             <Text style={[s.thCell, s.colPU]}>PU HT</Text>
             <Text style={[s.thCell, s.colHT]}>Total HT</Text>
-            <Text style={[s.thCell, s.colTVAp]}>TVA %</Text>
+            <Text style={[s.thCell, s.colTVAp]}>TVA%</Text>
             <Text style={[s.thCell, s.colTVAe]}>TVA €</Text>
             <Text style={[s.thCell, s.colTTC]}>TTC</Text>
           </View>
-
-          {/* Lignes */}
           {lines.map((l, i) => {
             const lineRate = l.vatRate ?? vatRate ?? 17;
             const disc = l.discountRate ?? 0;
@@ -232,7 +203,7 @@ export function IneeDocumentPdf({
           })}
         </View>
 
-        {/* ── Totaux ── */}
+        {/* Totaux */}
         <View style={s.totalsBox}>
           <View style={s.totalRow}>
             <Text style={s.totalLabel}>Total HT</Text>
@@ -253,24 +224,19 @@ export function IneeDocumentPdf({
           </View>
         </View>
 
-        {/* ── Mention TVA ── */}
         {vatMention && (
-          <View style={s.vatMentionBox}>
-            <Text style={s.vatMentionText}>Mention TVA : {vatMention}</Text>
-          </View>
+          <View style={s.vatBox}><Text style={s.vatText}>Mention TVA : {vatMention}</Text></View>
         )}
+        {notes && <Text style={s.notesText}>{notes}</Text>}
 
-        {/* ── Notes ── */}
-        {notes && <Text style={{ fontSize: 8, color: GRAY, marginBottom: 8, fontStyle: 'italic' }}>{notes}</Text>}
-
-        {/* ── Footer ── */}
+        {/* Footer */}
         <View style={s.footer}>
           <View style={s.footerRow}>
             <Text style={s.footerText}>inee.lu</Text>
-            {paymentTerms && <Text style={s.footerText}>Conditions de paiement : {paymentTerms}</Text>}
+            {paymentTerms && <Text style={s.footerText}>Conditions : {paymentTerms}</Text>}
             <Text style={s.footerText}>Banque : {INEE.bank} | IBAN : {INEE.iban} | BIC : {INEE.bic}</Text>
           </View>
-          {footerNote ? <Text style={[s.footerItalic, { marginTop: 3 }]}>{footerNote}</Text> : null}
+          {footerNote ? <Text style={[s.footerText, { marginTop: 3 }]}>{footerNote}</Text> : null}
         </View>
 
       </Page>
