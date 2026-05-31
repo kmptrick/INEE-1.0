@@ -78,18 +78,12 @@ export class InvoicingService {
     const totals = this.calcTotals(lines, vatRate);
     const number = await this.nextQuoteNumber();
 
-    return this.prisma.quote.create({
-      data: {
-        ...rest,
-        number,
-        createdById: userId,
-        ...totals,
-        lines: {
-          create: lines.map(l => ({ ...l, total: this.lineTotal(l) })),
-        },
-      },
+    const quote = await this.prisma.quote.create({
+      data: { ...rest, number, createdById: userId, ...totals, lines: { create: lines.map(l => ({ ...l, total: this.lineTotal(l) })) } },
       include: { company: true, lines: true },
     });
+    await this.audit.log({ entityType: 'Quote', entityId: quote.id, userId, action: `Devis créé (${number})`, details: `Total : ${totals.total} €` });
+    return quote;
   }
 
   async updateQuote(id: string, data: UpdateQuoteDto) {
@@ -328,17 +322,13 @@ export class InvoicingService {
     if (paidAmount !== undefined) updateData.paidAmount = paidAmount;
     if (status) updateData.status = status;
 
-    return this.prisma.invoice.update({
+    const inv = await this.prisma.invoice.update({
       where: { id },
-      data: {
-        ...updateData,
-        lines: {
-          deleteMany: {},
-          create: lines.map(l => ({ ...l, total: Math.round(l.quantity * l.unitPrice * 100) / 100 })),
-        },
-      },
+      data: { ...updateData, lines: { deleteMany: {}, create: lines.map(l => ({ ...l, total: Math.round(l.quantity * l.unitPrice * 100) / 100 })) } },
       include: { company: true, lines: true },
     });
+    if (status) await this.audit.log({ entityType: 'Invoice', entityId: id, action: `Statut → ${status}` });
+    return inv;
   }
 
   async removeInvoice(id: string) {

@@ -1,10 +1,11 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateContactDto, UpdateContactDto } from './dto/contact.dto';
+import { AuditService } from '../audit/audit.service';
 
 @Injectable()
 export class ContactsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private audit: AuditService) {}
 
   private async nextReference(): Promise<string> {
     const count = await this.prisma.contact.count();
@@ -37,14 +38,22 @@ export class ContactsService {
     return contact;
   }
 
-  async create(data: CreateContactDto) {
+  async create(data: CreateContactDto, userId?: string) {
     const reference = await this.nextReference();
-    return this.prisma.contact.create({ data: { ...data, reference } as any });
+    const contact = await this.prisma.contact.create({ data: { ...data, reference } as any });
+    await this.audit.log({ entityType: 'Contact', entityId: contact.id, userId, action: 'Contact créé', details: `${data.firstName} ${data.lastName}${data.jobTitle ? ' · ' + data.jobTitle : ''}` });
+    return contact;
   }
 
-  async update(id: string, data: UpdateContactDto) {
+  async update(id: string, data: UpdateContactDto, userId?: string) {
     await this.findOne(id);
-    return this.prisma.contact.update({ where: { id }, data });
+    const contact = await this.prisma.contact.update({ where: { id }, data });
+    if (data.canReceiveInvoices !== undefined) {
+      await this.audit.log({ entityType: 'Contact', entityId: id, userId, action: data.canReceiveInvoices ? 'Autorisé à recevoir les factures' : 'Retiré des destinataires factures' });
+    } else {
+      await this.audit.log({ entityType: 'Contact', entityId: id, userId, action: 'Contact modifié' });
+    }
+    return contact;
   }
 
   async setActive(id: string, isActive: boolean) {
