@@ -124,7 +124,7 @@ export default function SubscriptionsPage() {
         companyId:  form.companyId,
         frequency:  form.frequency,
         startDate:  form.startDate,
-        vatRate:    vatRate,
+        vatRate:    parseFloat(form.vatRate) || 17,
         vatMention: form.vatMention || undefined,
         notes:      form.notes || undefined,
         lines: form.lines.map(l => ({
