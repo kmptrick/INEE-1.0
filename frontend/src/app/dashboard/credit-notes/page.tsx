@@ -30,11 +30,25 @@ const SEGMENT_DEFS: FilterRuleDef[] = [
   { key: 'createdAt', label: 'Date de création', dataType: 'date',  getValue: (cn) => cn.createdAt?.slice(0, 10) ?? '' },
 ];
 
-type LineForm = { serviceId: string; description: string; quantity: string; unitPrice: string; unite: string };
-const emptyLine = (): LineForm => ({ serviceId: '', description: '', quantity: '1', unitPrice: '', unite: '' });
+type LineForm = { serviceId: string; description: string; quantity: string; unitPrice: string; unite: string; discountRate: string; lineVatRate: string; };
+const emptyLine = (): LineForm => ({ serviceId: '', description: '', quantity: '1', unitPrice: '', unite: '', discountRate: '', lineVatRate: '' });
 const emptyForm = (invoiceId = '', invoiceNumber = '', companyId = '') => ({
-  invoiceId, invoiceNumber, companyId, vatRate: '17', vatMention: '', notes: '', lines: [emptyLine()],
+  invoiceId, invoiceNumber, companyId, vatRate: '17', vatMention: '', notes: '', remarque: '', lines: [emptyLine()],
 });
+const lineTotal = (l: LineForm) => { const q=parseFloat(l.quantity)||0; const p=parseFloat(l.unitPrice)||0; const d=parseFloat(l.discountRate)||0; return q*p*(1-d/100); };
+function calcVatGroups(lines: LineForm[], defaultVatRate: number) {
+  const groups: Record<string, number> = {};
+  let subtotal = 0;
+  for (const l of lines) {
+    const lt = lineTotal(l);
+    subtotal += lt;
+    const rate = String(parseFloat(l.lineVatRate) || defaultVatRate);
+    groups[rate] = (groups[rate] || 0) + lt;
+  }
+  subtotal = Math.round(subtotal * 100) / 100;
+  const vatTotal = Math.round(Object.entries(groups).reduce((s,[r,b])=>s+b*Number(r)/100,0)*100)/100;
+  return { subtotal, vatGroups: groups, vatTotal, total: Math.round((subtotal+vatTotal)*100)/100 };
+}
 
 function ActionBtn({ label, color, bg, border, onClick, disabled }: { label: string; color: string; bg: string; border: string; onClick: () => void; disabled?: boolean }) {
   return (
@@ -101,8 +115,26 @@ function CreditNotesContent() {
   const addLine = () => setForm(f => ({ ...f, lines: [...f.lines, emptyLine()] }));
   const removeLine = (i: number) => setForm(f => ({ ...f, lines: f.lines.filter((_, idx) => idx !== i) }));
 
-  const onInvoiceChange = (invoiceId: string) => {
+  const onInvoiceChange = async (invoiceId: string) => {
     const inv = invoiceList.find(i => i.id === invoiceId);
+    // Charger les lignes complètes de la facture
+    let invoiceLines: LineForm[] = [emptyLine()];
+    if (invoiceId) {
+      try {
+        const full = await invoicing.invoices.get(invoiceId);
+        if (full.lines && full.lines.length > 0) {
+          invoiceLines = full.lines.map(l => ({
+            serviceId: l.serviceId ?? '',
+            description: l.description,
+            quantity: String(l.quantity),
+            unitPrice: String(l.unitPrice),
+            unite: l.unite ?? '',
+            discountRate: l.discountRate ? String(l.discountRate) : '',
+            lineVatRate: l.lineVatRate ? String(l.lineVatRate) : '',
+          }));
+        }
+      } catch {}
+    }
     setForm(f => ({
       ...f,
       invoiceId,
@@ -110,6 +142,7 @@ function CreditNotesContent() {
       companyId: inv?.company?.id ?? f.companyId,
       vatRate: String(inv?.vatRate ?? 17),
       vatMention: inv?.vatMention ?? '',
+      lines: invoiceLines,
     }));
   };
 
@@ -120,10 +153,7 @@ function CreditNotesContent() {
     setLine(i, 'unite', s.unite ?? '');
   };
 
-  const subtotal = form.lines.reduce((sum, l) => sum + (parseFloat(l.quantity) || 0) * (parseFloat(l.unitPrice) || 0), 0);
-  const vatRate = parseFloat(form.vatRate) || 0;
-  const vatAmount = Math.round(subtotal * vatRate) / 100;
-  const total = subtotal + vatAmount;
+  const { subtotal, vatGroups, vatTotal, total } = calcVatGroups(form.lines, parseFloat(form.vatRate) || 17);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); setSaving(true);
@@ -136,7 +166,10 @@ function CreditNotesContent() {
         lines: form.lines.map(l => ({
           ...(l.serviceId ? { serviceId: l.serviceId } : {}),
           description: l.description, quantity: parseFloat(l.quantity) || 1,
-          unitPrice: parseFloat(l.unitPrice) || 0, ...(l.unite ? { unite: l.unite } : {}),
+          unitPrice: parseFloat(l.unitPrice) || 0,
+          ...(l.unite ? { unite: l.unite } : {}),
+          ...(l.discountRate ? { discountRate: parseFloat(l.discountRate) } : {}),
+          ...(l.lineVatRate ? { lineVatRate: parseFloat(l.lineVatRate) } : {}),
         })),
       };
       if (form.companyId) data.companyId = form.companyId;
@@ -275,25 +308,50 @@ function CreditNotesContent() {
             </div>
             <div className="space-y-2">
               {form.lines.map((l, i) => (
-                <div key={i}>
+                <div key={i} className="rounded-lg p-3 space-y-2" style={{ background: T.head, border: `1px solid ${T.border}` }}>
                   <div className="grid gap-2 items-center" style={{ gridTemplateColumns: '1fr 64px 88px 32px 24px' }}>
                     <input placeholder="Description" className={inputClass} value={l.description} onChange={e => setLine(i, 'description', e.target.value)} required />
                     <input type="number" min="0" step="0.01" placeholder="Qté" className={inputClass} value={l.quantity} onChange={e => setLine(i, 'quantity', e.target.value)} />
                     <input type="number" min="0" step="0.01" placeholder="Prix HT" className={inputClass} value={l.unitPrice} onChange={e => setLine(i, 'unitPrice', e.target.value)} required />
                     <ServicePicker onSelect={s => pickService(i, s)} />
-                    {form.lines.length > 1 && <button type="button" onClick={() => removeLine(i)} className="text-lg leading-none" style={{ color: '#CCC' }}>✕</button>}
+                    {form.lines.length > 1 && <button type="button" onClick={() => removeLine(i)} className="text-lg leading-none cursor-pointer" style={{ color: '#CCC' }}>✕</button>}
+                  </div>
+                  <div className="grid gap-2" style={{ gridTemplateColumns: '90px 90px 1fr' }}>
+                    <div>
+                      <label className="block text-xs mb-0.5" style={{ color: T.muted }}>TVA ligne</label>
+                      <select className={inputClass} value={l.lineVatRate} onChange={e => setLine(i, 'lineVatRate', e.target.value)}>
+                        <option value="">— Héritée —</option>
+                        {[3,8,14,17].map(r => <option key={r} value={r}>{r}%</option>)}
+                        <option value="0">0%</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs mb-0.5" style={{ color: T.muted }}>Remise %</label>
+                      <input type="number" min="0" max="100" step="0.1" placeholder="0" className={inputClass} value={l.discountRate} onChange={e => setLine(i, 'discountRate', e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="block text-xs mb-0.5" style={{ color: T.muted }}>Unité</label>
+                      <input placeholder="h, j, forfait…" className={inputClass} value={l.unite} onChange={e => setLine(i, 'unite', e.target.value)} />
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Live total preview */}
-          <div className="flex justify-end text-xs" style={{ color: T.muted }}>
-            <span>HT {fmt(subtotal)} · TVA {fmt(vatAmount)} · <strong style={{ color: '#7C3AED' }}>Total − {fmt(total)}</strong></span>
+          {/* Totaux multi-TVA */}
+          <div className="rounded-xl p-4 space-y-1.5 text-sm" style={{ background: T.head, border: `1px solid ${T.border}` }}>
+            <div className="flex justify-between"><span style={{ color: T.muted }}>Sous-total HT</span><span style={{ color: T.dark }}>{fmt(subtotal)}</span></div>
+            {Object.entries(vatGroups).sort(([a],[b])=>Number(a)-Number(b)).map(([rate,base])=>(
+              <div key={rate} className="flex justify-between"><span style={{ color: T.muted }}>TVA {rate}%</span><span style={{ color: T.dark }}>{fmt(Math.round(base*Number(rate)/100*100)/100)}</span></div>
+            ))}
+            <div className="flex justify-between font-bold text-base pt-1" style={{ borderTop:`1px solid ${T.border}`, color:'#7C3AED' }}>
+              <span>Total NC (à déduire)</span><span>− {fmt(total)}</span>
+            </div>
           </div>
 
           <FormField label="Notes"><textarea className={inputClass} rows={2} value={form.notes} onChange={e => setField('notes', e.target.value)} /></FormField>
+          <FormField label="Remarque (interne)"><textarea className={inputClass} rows={2} value={form.remarque} onChange={e => setField('remarque', e.target.value)} /></FormField>
           <FormActions onCancel={() => setOpen(false)} saving={saving} label="Créer la note de crédit" />
         </form>
       </Modal>

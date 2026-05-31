@@ -37,8 +37,16 @@ const fmtDate = (d?: string) => d ? new Date(d).toLocaleDateString('fr-LU') : 'â
 
 type LineForm = { serviceId: string; description: string; quantity: string; unitPrice: string; unite: string; discountRate: string; lineVatRate: string; periodStart: string; periodEnd: string; };
 const emptyLine = (): LineForm => ({ serviceId: '', description: '', quantity: '1', unitPrice: '', unite: '', discountRate: '', lineVatRate: '', periodStart: '', periodEnd: '' });
-const emptyForm = () => ({ companyId: '', vatRate: '17', vatMention: '', notes: '', lines: [emptyLine()] });
+const emptyForm = () => ({ companyId: '', vatRate: '17', vatMention: '', notes: '', remarque: '', lines: [emptyLine()] });
 const lineTotal = (l: LineForm) => { const q = parseFloat(l.quantity)||0; const p = parseFloat(l.unitPrice)||0; const d = parseFloat(l.discountRate)||0; return q * p * (1 - d/100); };
+function calcVatGroups(lines: LineForm[], defaultVatRate: number) {
+  const groups: Record<string, number> = {};
+  let subtotal = 0;
+  for (const l of lines) { const lt = lineTotal(l); subtotal += lt; const rate = String(parseFloat(l.lineVatRate)||defaultVatRate); groups[rate]=(groups[rate]||0)+lt; }
+  subtotal = Math.round(subtotal*100)/100;
+  const vatTotal = Math.round(Object.entries(groups).reduce((s,[r,b])=>s+b*Number(r)/100,0)*100)/100;
+  return { subtotal, vatGroups: groups, vatTotal, total: Math.round((subtotal+vatTotal)*100)/100 };
+}
 const SEGMENT_DEFS_Q: FilterRuleDef[] = [
   { key: 'number',    label: 'NumÃ©ro',          dataType: 'text',   getValue: (q) => q.number },
   { key: 'company',   label: 'Client',           dataType: 'text',   getValue: (q) => q.company?.name ?? '' },
@@ -362,7 +370,21 @@ export default function QuotesPage() {
             </div>
           </div>
 
+          {/* Totaux multi-TVA */}
+          {(() => { const { subtotal, vatGroups, total } = calcVatGroups(form.lines, parseFloat(form.vatRate)||17); return (
+            <div className="rounded-xl p-4 space-y-1.5 text-sm" style={{ background: T.head, border: `1px solid ${T.border}` }}>
+              <div className="flex justify-between"><span style={{ color: T.muted }}>Sous-total HT</span><span style={{ color: T.dark }}>{fmt(subtotal)}</span></div>
+              {Object.entries(vatGroups).sort(([a],[b])=>Number(a)-Number(b)).map(([rate,base])=>(
+                <div key={rate} className="flex justify-between"><span style={{ color: T.muted }}>TVA {rate}%</span><span style={{ color: T.dark }}>{fmt(Math.round(base*Number(rate)/100*100)/100)}</span></div>
+              ))}
+              <div className="flex justify-between font-bold text-base pt-1" style={{ borderTop:`1px solid ${T.border}` }}>
+                <span style={{ color: T.dark }}>Total TTC</span><span style={{ color: T.copper }}>{fmt(total)}</span>
+              </div>
+            </div>
+          ); })()}
+
           <FormField label="Notes"><textarea className={inputClass} rows={2} value={form.notes} onChange={e => setField('notes', e.target.value)} /></FormField>
+          <FormField label="Remarque (interne)"><textarea className={inputClass} rows={2} value={form.remarque} onChange={e => setField('remarque', e.target.value)} /></FormField>
           <FormActions onCancel={() => setOpen(false)} saving={saving} />
         </form>
       </Modal>

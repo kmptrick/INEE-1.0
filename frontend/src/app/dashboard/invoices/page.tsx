@@ -36,10 +36,23 @@ const fmt = (n: number) => new Intl.NumberFormat('fr-LU', { style: 'currency', c
 const today = () => new Date().toLocaleDateString('fr-LU');
 const fmtDate = (d?: string) => d ? new Date(d).toLocaleDateString('fr-LU') : undefined;
 
-type LineForm = { serviceId: string; description: string; quantity: string; unitPrice: string; unite: string; discountRate: string; lineVatRate: string; periodStart: string; periodEnd: string; };
-const emptyLine = (): LineForm => ({ serviceId: '', description: '', quantity: '1', unitPrice: '', unite: '', discountRate: '', lineVatRate: '', periodStart: '', periodEnd: '' });
-const emptyForm = () => ({ companyId: '', vatRate: '17', vatMention: '', dueDate: '', notes: '', lines: [emptyLine()] });
+type LineForm = { serviceId: string; description: string; quantity: string; unitPrice: string; unite: string; discountRate: string; lineVatRate: string; };
+const emptyLine = (): LineForm => ({ serviceId: '', description: '', quantity: '1', unitPrice: '', unite: '', discountRate: '', lineVatRate: '' });
+const emptyForm = () => ({ companyId: '', vatRate: '17', vatMention: '', dueDate: '', notes: '', remarque: '', lines: [emptyLine()] });
 const lineTotal = (l: LineForm) => { const q = parseFloat(l.quantity)||0; const p = parseFloat(l.unitPrice)||0; const d = parseFloat(l.discountRate)||0; return q * p * (1 - d/100); };
+function calcVatGroups(lines: LineForm[], defaultVatRate: number) {
+  const groups: Record<string, number> = {};
+  let subtotal = 0;
+  for (const l of lines) {
+    const lt = lineTotal(l);
+    subtotal += lt;
+    const rate = String(parseFloat(l.lineVatRate) || defaultVatRate);
+    groups[rate] = (groups[rate] || 0) + lt;
+  }
+  subtotal = Math.round(subtotal * 100) / 100;
+  const vatTotal = Math.round(Object.entries(groups).reduce((s, [r, b]) => s + b * Number(r) / 100, 0) * 100) / 100;
+  return { subtotal, vatGroups: groups, vatTotal, total: Math.round((subtotal + vatTotal) * 100) / 100 };
+}
 const SEGMENT_DEFS_INV: FilterRuleDef[] = [
   { key: 'number',    label: 'Numéro',          dataType: 'text',   getValue: (inv) => inv.number },
   { key: 'company',   label: 'Client',           dataType: 'text',   getValue: (inv) => inv.company?.name ?? '' },
@@ -149,8 +162,6 @@ export default function InvoicesPage() {
           unitPrice: parseFloat(l.unitPrice) || 0, ...(l.unite ? { unite: l.unite } : {}),
           ...(l.discountRate ? { discountRate: parseFloat(l.discountRate) } : {}),
           ...(l.lineVatRate ? { lineVatRate: parseFloat(l.lineVatRate) } : {}),
-          ...(l.periodStart ? { periodStart: l.periodStart } : {}),
-          ...(l.periodEnd ? { periodEnd: l.periodEnd } : {}),
         })),
       };
       if (form.companyId) data.companyId = form.companyId;
@@ -346,7 +357,7 @@ export default function InvoicesPage() {
                     {form.lines.length > 1 && <button type="button" onClick={() => removeLine(i)} className="text-lg leading-none cursor-pointer" style={{ color: '#CCC' }}>✕</button>}
                   </div>
                   {/* Line extras */}
-                  <div className="grid gap-2" style={{ gridTemplateColumns: '90px 90px 1fr 1fr' }}>
+                  <div className="grid gap-2" style={{ gridTemplateColumns: '90px 90px 1fr' }}>
                     <div>
                       <label className="block text-xs mb-0.5" style={{ color: T.muted }}>TVA ligne</label>
                       <select className={inputClass} value={l.lineVatRate} onChange={e => setLine(i, 'lineVatRate', e.target.value)}>
@@ -359,12 +370,8 @@ export default function InvoicesPage() {
                       <input type="number" min="0" max="100" step="0.1" placeholder="0" className={inputClass} value={l.discountRate} onChange={e => setLine(i, 'discountRate', e.target.value)} />
                     </div>
                     <div>
-                      <label className="block text-xs mb-0.5" style={{ color: T.muted }}>Période — du</label>
-                      <input type="date" className={inputClass} value={l.periodStart} onChange={e => setLine(i, 'periodStart', e.target.value)} />
-                    </div>
-                    <div>
-                      <label className="block text-xs mb-0.5" style={{ color: T.muted }}>au</label>
-                      <input type="date" className={inputClass} value={l.periodEnd} onChange={e => setLine(i, 'periodEnd', e.target.value)} />
+                      <label className="block text-xs mb-0.5" style={{ color: T.muted }}>Unité</label>
+                      <input placeholder="h, j, forfait…" className={inputClass} value={l.unite} onChange={e => setLine(i, 'unite', e.target.value)} />
                     </div>
                   </div>
                   {/* Line total preview */}
@@ -382,7 +389,21 @@ export default function InvoicesPage() {
             </div>
           </div>
 
+          {/* Totaux multi-TVA */}
+          {(() => { const { subtotal, vatGroups, total } = calcVatGroups(form.lines, parseFloat(form.vatRate)||17); return (
+            <div className="rounded-xl p-4 space-y-1.5 text-sm" style={{ background: T.head, border: `1px solid ${T.border}` }}>
+              <div className="flex justify-between"><span style={{ color: T.muted }}>Sous-total HT</span><span style={{ color: T.dark }}>{fmt(subtotal)}</span></div>
+              {Object.entries(vatGroups).sort(([a],[b])=>Number(a)-Number(b)).map(([rate,base])=>(
+                <div key={rate} className="flex justify-between"><span style={{ color: T.muted }}>TVA {rate}%</span><span style={{ color: T.dark }}>{fmt(Math.round(base*Number(rate)/100*100)/100)}</span></div>
+              ))}
+              <div className="flex justify-between font-bold text-base pt-1" style={{ borderTop:`1px solid ${T.border}` }}>
+                <span style={{ color: T.dark }}>Total TTC</span><span style={{ color: T.copper }}>{fmt(total)}</span>
+              </div>
+            </div>
+          ); })()}
+
           <FormField label="Notes"><textarea className={inputClass} rows={2} value={form.notes} onChange={e => setField('notes', e.target.value)} /></FormField>
+          <FormField label="Remarque (interne)"><textarea className={inputClass} rows={2} value={form.remarque} onChange={e => setField('remarque', e.target.value)} /></FormField>
           <FormActions onCancel={() => setOpen(false)} saving={saving} />
         </form>
       </Modal>
