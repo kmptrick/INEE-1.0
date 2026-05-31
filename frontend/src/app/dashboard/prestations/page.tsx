@@ -27,6 +27,7 @@ export default function PrestationsPage() {
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<Service | null>(null);
+  const [viewPrestation, setViewPrestation] = useState<Service | null>(null);
   const { sort, toggle: sortToggle, sorted } = useSort(list);
   const { search, setSearch, rules, addRule, removeRule, updateRule, clearRules, clearAll, filtered, activeCount } = useSegmentFilter(sorted, SEGMENT_DEFS);
   const pagination = usePagination(filtered);
@@ -88,7 +89,10 @@ export default function PrestationsPage() {
           { label: '', align: 'right' },
         ]}>
         {pagination.paged.map((s, i) => (
-          <tr key={s.id} style={{ borderTop: i > 0 ? `1px solid ${T.rowDiv}` : undefined }}>
+          <tr key={s.id} onClick={() => setViewPrestation(s)}
+            style={{ borderTop: i > 0 ? `1px solid ${T.rowDiv}` : undefined, cursor: 'pointer' }}
+            onMouseEnter={e => (e.currentTarget.style.background = T.copperBg)}
+            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
             <td className="px-4 py-3 font-mono text-xs font-bold" style={{ color: T.copper }}>{s.idPrestation}</td>
             <td className="px-4 py-3 text-xs font-semibold" style={{ color: T.muted }}>{s.categorie}</td>
             <Td bold>{s.description}</Td>
@@ -96,7 +100,7 @@ export default function PrestationsPage() {
             <td className="px-4 py-3 text-center text-xs font-semibold" style={{ color: T.copper }}>{(s.vatRate ?? 17)}%</td>
             <td className="px-4 py-3 text-xs" style={{ color: T.muted }}>{s.unite ?? '—'}</td>
             <td className="px-4 py-3 text-xs max-w-[180px] truncate" style={{ color: T.muted }} title={s.remarques ?? ''}>{s.remarques ?? '—'}</td>
-            <td className="px-4 py-3 text-right">
+            <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
               <div className="flex gap-2 justify-end">
                 <button onClick={() => openEdit(s)}
                   className="text-xs px-3 py-1.5 rounded-lg border transition-colors font-medium"
@@ -122,6 +126,37 @@ export default function PrestationsPage() {
         { key: 'description', label: 'Description' }, { key: 'prix', label: 'Prix HT' },
         { key: 'tva', label: 'TVA' }, { key: 'unite', label: 'Unité' }, { key: 'remarques', label: 'Remarques' },
       ], visible, toggle: colToggle }} />
+
+      {/* ── Modale détail prestation ── */}
+      {viewPrestation && (
+        <Modal title={viewPrestation.description} open onClose={() => setViewPrestation(null)}>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between pb-3" style={{ borderBottom: `1px solid ${T.border}` }}>
+              <span className="font-mono text-sm font-bold" style={{ color: T.copper }}>{viewPrestation.idPrestation}</span>
+              <div className="flex gap-2">
+                <button onClick={() => { setViewPrestation(null); openEdit(viewPrestation); }}
+                  className="text-xs px-3 py-1.5 rounded-lg border font-semibold cursor-pointer" style={{ color: T.copper, borderColor: T.copper + '60', background: 'transparent' }}>✎ Modifier</button>
+                <button onClick={() => { setViewPrestation(null); setDeleteConfirm(viewPrestation); }}
+                  className="text-xs px-3 py-1.5 rounded-lg border font-semibold cursor-pointer" style={{ color: '#DC2626', borderColor: '#FECACA', background: 'transparent' }}>Désactiver</button>
+              </div>
+            </div>
+            <div className="rounded-xl border p-4 space-y-3" style={{ borderColor: T.border, background: '#FAFAF9' }}>
+              <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                <div><span style={{ color: T.muted }}>Catégorie : </span><span className="font-semibold" style={{ color: T.dark }}>{viewPrestation.categorie}</span></div>
+                <div><span style={{ color: T.muted }}>TVA : </span><span className="font-semibold" style={{ color: T.copper }}>{viewPrestation.vatRate ?? 17}%</span></div>
+                <div><span style={{ color: T.muted }}>Prix HT : </span><span className="font-bold text-base" style={{ color: T.dark }}>{fmt(viewPrestation.prixHT)}</span></div>
+                {viewPrestation.unite && <div><span style={{ color: T.muted }}>Unité : </span><span style={{ color: T.dark }}>{viewPrestation.unite}</span></div>}
+              </div>
+              {viewPrestation.remarques && (
+                <div className="pt-2" style={{ borderTop: `1px solid ${T.border}` }}>
+                  <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: T.muted }}>Remarques</p>
+                  <p className="text-sm" style={{ color: T.dark }}>{viewPrestation.remarques}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </Modal>
+      )}
 
       {/* Modal création/édition */}
       <Modal title={editTarget ? 'Modifier la prestation' : 'Nouvelle prestation'} open={open} onClose={() => setOpen(false)}>

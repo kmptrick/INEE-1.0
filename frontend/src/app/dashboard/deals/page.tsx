@@ -37,8 +37,10 @@ export default function DealsPage() {
   const [filter, setFilter] = useState('');
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+  const [viewItem, setViewItem] = useState<Deal | null>(null);
   const [form, setForm] = useState(empty);
   const [saving, setSaving] = useState(false);
+  const [actioning, setActioning] = useState(false);
 
   const { sort, toggle: sortToggle, sorted } = useSort(list);
   const { search, setSearch, rules, addRule, removeRule, updateRule, clearRules, clearAll, filtered, activeCount } = useSegmentFilter(sorted, SEGMENT_DEFS);
@@ -68,7 +70,10 @@ export default function DealsPage() {
         {pagination.paged.map((d, i) => {
           const ss = STATUS_ST[d.status] ?? { bg: '#F5F5F5', color: '#888' };
           return (
-            <tr key={d.id} style={{ borderTop: i > 0 ? `1px solid ${T.rowDiv}` : undefined, cursor: 'default' }}>
+            <tr key={d.id} onClick={() => setViewItem(d)}
+              style={{ borderTop: i > 0 ? `1px solid ${T.rowDiv}` : undefined, cursor: 'pointer' }}
+              onMouseEnter={e => (e.currentTarget.style.background = T.copperBg)}
+              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
               <Td bold>{d.title}</Td>
               <Td>{d.company?.name ?? '—'}</Td>
               <td className="px-4 py-3 text-right text-sm font-bold" style={{ color: T.dark }}>{fmt(d.value)}</td>
@@ -80,6 +85,39 @@ export default function DealsPage() {
         })}
       </DataTable>
       <TableFooter pagination={pagination} export={{ getData: () => filtered.map(d => ({ Titre: d.title, Client: d.company?.name ?? '', 'Valeur (€)': d.value, 'Probabilité (%)': d.probability, Statut: STATUS_FR[d.status] ?? d.status })), filename: 'affaires', title: 'Affaires' }} />
+
+      {/* ── Modale détail affaire ── */}
+      {viewItem && (
+        <Modal title={viewItem.title} open onClose={() => setViewItem(null)}>
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 pb-3" style={{ borderBottom: `1px solid ${T.border}` }}>
+              {(() => { const ss = STATUS_ST[viewItem.status] ?? { bg: '#F5F5F5', color: '#888' }; return <StatusBadge label={STATUS_FR[viewItem.status] ?? viewItem.status} bg={ss.bg} color={ss.color} />; })()}
+              <div className="flex gap-2 ml-auto">
+                {viewItem.status === 'OPEN' && <>
+                  <button onClick={async () => { setActioning(true); try { const u = await deals.update(viewItem.id, { status: 'WON' } as any); setViewItem(u); load(filter || undefined); } finally { setActioning(false); } }} disabled={actioning}
+                    className="text-xs px-3 py-1.5 rounded-lg border font-semibold cursor-pointer" style={{ color: '#16A34A', borderColor: '#BBF7D0', background: 'transparent' }}>✓ Gagné</button>
+                  <button onClick={async () => { setActioning(true); try { const u = await deals.update(viewItem.id, { status: 'LOST' } as any); setViewItem(u); load(filter || undefined); } finally { setActioning(false); } }} disabled={actioning}
+                    className="text-xs px-3 py-1.5 rounded-lg border font-semibold cursor-pointer" style={{ color: '#DC2626', borderColor: '#FECACA', background: 'transparent' }}>✕ Perdu</button>
+                </>}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+              <div><span style={{ color: T.muted }}>Client : </span><span className="font-semibold" style={{ color: T.dark }}>{viewItem.company?.name ?? '—'}</span></div>
+              <div><span style={{ color: T.muted }}>Contact : </span><span className="font-semibold" style={{ color: T.dark }}>{viewItem.contact ? `${viewItem.contact.firstName} ${viewItem.contact.lastName}` : '—'}</span></div>
+              <div><span style={{ color: T.muted }}>Valeur : </span><span className="font-bold text-base" style={{ color: T.copper }}>{fmt(viewItem.value)}</span></div>
+              <div><span style={{ color: T.muted }}>Probabilité : </span><span className="font-semibold" style={{ color: T.dark }}>{viewItem.probability}%</span></div>
+              {(viewItem as any).stage && <div><span style={{ color: T.muted }}>Étape : </span><span className="font-semibold" style={{ color: T.dark }}>{(viewItem as any).stage.name}</span></div>}
+              <div><span style={{ color: T.muted }}>Création : </span><span style={{ color: T.dark }}>{viewItem.createdAt ? new Date(viewItem.createdAt).toLocaleDateString('fr-LU') : '—'}</span></div>
+            </div>
+            {(viewItem as any).notes && (
+              <div className="rounded-lg p-3 text-sm" style={{ background: T.head, border: `1px solid ${T.border}` }}>
+                <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: T.muted }}>Notes</p>
+                <p style={{ color: T.dark }}>{(viewItem as any).notes}</p>
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
 
       <Modal title="Nouvelle affaire" open={open} onClose={() => setOpen(false)}>
         <form onSubmit={handleSubmit} className="space-y-4">

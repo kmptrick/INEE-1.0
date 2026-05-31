@@ -37,6 +37,7 @@ export default function CommissionsPage() {
   const [filter, setFilter]     = useState('');
   const [loading, setLoading]   = useState(true);
   const [open, setOpen]         = useState(false);
+  const [viewItem, setViewItem] = useState<Commission | null>(null);
   const [editItem, setEditItem] = useState<Commission | null>(null);
   const [form, setForm]         = useState(emptyForm());
   const [saving, setSaving]     = useState(false);
@@ -133,7 +134,10 @@ export default function CommissionsPage() {
           const ss = STATUS_ST[c.status] ?? { bg: '#F5F5F5', color: '#888' };
           const isCancelled = c.status === 'CANCELLED';
           return (
-            <tr key={c.id} style={{ borderTop: i > 0 ? `1px solid ${T.rowDiv}` : undefined, opacity: isCancelled ? 0.6 : 1 }}>
+            <tr key={c.id} onClick={() => setViewItem(c)}
+              style={{ borderTop: i > 0 ? `1px solid ${T.rowDiv}` : undefined, opacity: isCancelled ? 0.6 : 1, cursor: 'pointer' }}
+              onMouseEnter={e => (e.currentTarget.style.background = T.copperBg)}
+              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
               <td className="px-4 py-3 font-mono text-xs" style={{ color: T.muted }}>{c.reference}</td>
               <Td bold>{c.brokerName}</Td>
               <Td>{c.company?.name ?? '—'}</Td>
@@ -142,7 +146,7 @@ export default function CommissionsPage() {
               <td className="px-4 py-3 text-right text-sm font-bold" style={{ color: T.copper }}>{fmt(c.commissionAmount)}</td>
               <Td>{c.createdAt ? new Date(c.createdAt).toLocaleDateString('fr-LU') : '—'}</Td>
               <td className="px-4 py-3 text-center"><StatusBadge label={STATUS_FR[c.status] ?? c.status} bg={ss.bg} color={ss.color} /></td>
-              <td className="px-4 py-3 text-center">
+              <td className="px-4 py-3 text-center" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-center gap-1.5">
                   {!isCancelled && (
                     <button onClick={() => openEdit(c)}
@@ -166,6 +170,44 @@ export default function CommissionsPage() {
       </DataTable>
 
       <TableFooter pagination={pagination} export={{ getData: () => filtered.map(c => ({ Référence: c.reference, Apporteur: c.brokerName, Client: c.company?.name ?? '', 'Affaire (€)': c.dealValue, 'Taux (%)': c.commissionRate, 'Commission (€)': c.commissionAmount, Statut: STATUS_FR[c.status] ?? c.status })), filename: 'commissions', title: 'Commissions' }} />
+
+      {/* ── Modale détail commission ── */}
+      {viewItem && (
+        <Modal title={`Commission ${viewItem.reference}`} open onClose={() => setViewItem(null)}>
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 pb-3" style={{ borderBottom: `1px solid ${T.border}` }}>
+              {(() => { const ss = STATUS_ST[viewItem.status] ?? { bg: '#F5F5F5', color: '#888' }; return <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: ss.bg, color: ss.color }}>{STATUS_FR[viewItem.status] ?? viewItem.status}</span>; })()}
+              <div className="flex gap-2 ml-auto">
+                {viewItem.status !== 'CANCELLED' && (
+                  <button onClick={() => { setViewItem(null); openEdit(viewItem); }}
+                    className="text-xs px-3 py-1.5 rounded-lg border font-semibold cursor-pointer" style={{ color: T.copper, borderColor: T.copper + '60', background: 'transparent' }}>✎ Modifier</button>
+                )}
+                {viewItem.status !== 'CANCELLED' && (
+                  <button onClick={() => { handleCancel(viewItem); setViewItem(null); }}
+                    className="text-xs px-3 py-1.5 rounded-lg border font-semibold cursor-pointer" style={{ color: '#DC2626', borderColor: '#FECACA', background: 'transparent' }}>✕ Annuler</button>
+                )}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+              <div><span style={{ color: T.muted }}>Apporteur : </span><span className="font-semibold" style={{ color: T.dark }}>{viewItem.brokerName}</span></div>
+              <div><span style={{ color: T.muted }}>Client : </span><span className="font-semibold" style={{ color: T.dark }}>{viewItem.company?.name ?? '—'}</span></div>
+              <div><span style={{ color: T.muted }}>Valeur affaire : </span><span className="font-bold" style={{ color: T.dark }}>{fmt(viewItem.dealValue)}</span></div>
+              <div><span style={{ color: T.muted }}>Taux : </span><span className="font-semibold" style={{ color: T.dark }}>{viewItem.commissionRate}%</span></div>
+              <div className="col-span-2">
+                <span style={{ color: T.muted }}>Commission : </span>
+                <span className="font-bold text-lg" style={{ color: T.copper }}>{fmt(viewItem.commissionAmount)}</span>
+              </div>
+              <div><span style={{ color: T.muted }}>Création : </span><span style={{ color: T.dark }}>{viewItem.createdAt ? new Date(viewItem.createdAt).toLocaleDateString('fr-LU') : '—'}</span></div>
+            </div>
+            {viewItem.notes && (
+              <div className="rounded-lg p-3 text-sm" style={{ background: T.head, border: `1px solid ${T.border}` }}>
+                <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: T.muted }}>Notes</p>
+                <p style={{ color: T.dark }}>{viewItem.notes}</p>
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
 
       {/* Nouvelle commission */}
       <Modal title="Nouvelle commission" open={open} onClose={() => setOpen(false)}>
