@@ -144,19 +144,14 @@ export class SubscriptionsService {
 
     for (const sub of dueSubs) {
       // Numéro de facture
-      const year = new Date().getFullYear();
-      const count = await this.prisma.invoice.count();
-      const invoiceNumber = `Fact / ${year} - ${String(count + 1).padStart(3, '0')}`;
-
-      // Créer la facture brouillon
+      // Créer la facture brouillon SANS numéro (sera comptabilisée par l'utilisateur)
       const invoice = await this.prisma.invoice.create({
         data: {
-          number:     invoiceNumber,
           status:     'DRAFT',
           companyId:  sub.companyId,
           vatRate:    sub.vatRate,
           vatMention: sub.vatMention,
-          notes:      `[Sosc. ${sub.number}]${sub.notes ? ' ' + sub.notes : ''}`,
+          notes:      `[Souscription ${sub.number}]${sub.notes ? ' ' + sub.notes : ''}`,
           subtotal:   sub.subtotal,
           vatAmount:  sub.vatAmount,
           total:      sub.total,
@@ -187,7 +182,6 @@ export class SubscriptionsService {
         subscriptionId: sub.id,
         subscriptionNumber: sub.number,
         invoiceId: invoice.id,
-        invoiceNumber: invoiceNumber,
       });
     }
 

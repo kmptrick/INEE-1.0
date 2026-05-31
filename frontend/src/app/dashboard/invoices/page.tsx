@@ -213,7 +213,11 @@ export default function InvoicesPage() {
             <tr key={inv.id} onClick={() => openView(inv)} style={{ borderTop: i > 0 ? `1px solid ${T.rowDiv}` : undefined, cursor: 'pointer' }}
               onMouseEnter={e => (e.currentTarget.style.background = T.copperBg)}
               onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-              {visible.includes('number')     && <td className="px-4 py-3 font-mono text-xs font-bold" style={{ color: T.dark }}>{inv.number}</td>}
+              {visible.includes('number')     && (
+                <td className="px-4 py-3 font-mono text-xs font-bold" style={{ color: inv.number ? T.dark : T.muted }}>
+                  {inv.number ?? <span className="italic">Brouillon</span>}
+                </td>
+              )}
               {visible.includes('company')    && <Td>{inv.company?.name ?? '—'}</Td>}
               {visible.includes('subtotal')   && <td className="px-4 py-3 text-right text-sm" style={{ color: T.dark }}>{fmt(inv.subtotal)}</td>}
               {visible.includes('vatAmount')  && <td className="px-4 py-3 text-right text-sm" style={{ color: T.muted }}>{fmt(inv.vatAmount)}</td>}
@@ -229,22 +233,38 @@ export default function InvoicesPage() {
           );
         })}
       </DataTable>
-      <TableFooter pagination={pagination} export={{ getData: () => filtered.map(inv => ({ Numéro: inv.number, Client: inv.company?.name ?? '', 'HT (€)': inv.subtotal, 'TVA (€)': inv.vatAmount, 'TTC (€)': inv.total, Statut: STATUS_FR[inv.status] ?? inv.status, Échéance: inv.dueDate ? new Date(inv.dueDate).toLocaleDateString('fr-LU') : '' })), filename: 'factures', title: 'Factures' }} columnSelector={{ allCols: ALL_COLS_INV, visible, toggle: colToggle }} />
+      <TableFooter pagination={pagination} export={{ getData: () => filtered.map(inv => ({ Numéro: inv.number ?? 'Brouillon', Client: inv.company?.name ?? '', 'HT (€)': inv.subtotal, 'TVA (€)': inv.vatAmount, 'TTC (€)': inv.total, Statut: STATUS_FR[inv.status] ?? inv.status, Échéance: inv.dueDate ? new Date(inv.dueDate).toLocaleDateString('fr-LU') : '' })), filename: 'factures', title: 'Factures' }} columnSelector={{ allCols: ALL_COLS_INV, visible, toggle: colToggle }} />
 
       {/* ── Detail / Actions modal ── */}
       {viewItem && (
-        <Modal title={`Facture ${viewItem.number}`} open={!!viewItem} onClose={() => setViewItem(null)}>
+        <Modal title={viewItem.number ? `Facture ${viewItem.number}` : 'Facture — Brouillon'} open={!!viewItem} onClose={() => setViewItem(null)}>
           <div className="space-y-4">
             {/* Status + actions */}
             <div className="flex flex-wrap items-center gap-2 pb-3" style={{ borderBottom: `1px solid ${T.border}` }}>
               <NotesWidget value={viewItem.notes ?? ''} onChange={v => setViewItem(d => d ? { ...d, notes: v } : d)} />
               {(() => { const ss = STATUS_ST[viewItem.status] ?? { bg: '#F5F5F5', color: '#888' }; return <StatusBadge label={STATUS_FR[viewItem.status] ?? viewItem.status} bg={ss.bg} color={ss.color} />; })()}
               <div className="flex flex-wrap gap-2 ml-auto">
-                <PdfDownloadButton {...buildPdfProps(viewItem)} />
-                <ActionBtn label="Note de crédit" color="#7C3AED" bg="#F5F3FF" border="#DDD6FE"
-                  onClick={() => router.push(`/dashboard/credit-notes?invoiceId=${viewItem.id}&invoiceNumber=${encodeURIComponent(viewItem.number)}`)}
-                  disabled={actioning} />
-                {viewItem.status === 'DRAFT' && (
+                {viewItem.number && <PdfDownloadButton {...buildPdfProps(viewItem)} />}
+                {/* Comptabiliser : uniquement si pas encore de numéro */}
+                {!viewItem.number && (
+                  <ActionBtn label="✓ Comptabiliser" color="#FFF" bg={T.copper} border={T.copper}
+                    onClick={async () => {
+                      setActioning(true);
+                      try {
+                        const updated = await invoicing.invoices.post(viewItem.id);
+                        setFullInvoices(p => ({ ...p, [viewItem.id]: updated }));
+                        setViewItem(updated);
+                        load(filter || undefined);
+                      } finally { setActioning(false); }
+                    }}
+                    disabled={actioning} />
+                )}
+                {viewItem.number && (
+                  <ActionBtn label="Note de crédit" color="#7C3AED" bg="#F5F3FF" border="#DDD6FE"
+                    onClick={() => router.push(`/dashboard/credit-notes?invoiceId=${viewItem.id}&invoiceNumber=${encodeURIComponent(viewItem.number ?? '')}`)}
+                    disabled={actioning} />
+                )}
+                {viewItem.status === 'DRAFT' && viewItem.number && (
                   <ActionBtn label="Marquer envoyée" color="#1D6FD8" bg="#EFF6FF" border="#BFDBFE" onClick={() => updateStatus(viewItem, 'SENT')} disabled={actioning} />
                 )}
                 {(viewItem.status === 'SENT' || viewItem.status === 'OVERDUE') && (
@@ -418,7 +438,7 @@ export default function InvoicesPage() {
 
           <FormField label="Notes"><textarea className={inputClass} rows={2} value={form.notes} onChange={e => setField('notes', e.target.value)} /></FormField>
           
-          <FormActions onCancel={() => setOpen(false)} saving={saving} />
+          <FormActions onCancel={() => setOpen(false)} saving={saving} label="Enregistrer en brouillon" />
         </form>
       </Modal>
     </div>

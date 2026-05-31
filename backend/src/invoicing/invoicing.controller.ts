@@ -53,6 +53,9 @@ export class InvoicingController {
   @Post('invoices/from-quote')
   createFromQuote(@Body() dto: CreateInvoiceFromQuoteDto, @CurrentUser() user: { sub: string }) { return this.service.createInvoiceFromQuote(dto, user.sub); }
 
+  @Post('invoices/:id/post')
+  postInvoice(@Param('id') id: string) { return this.service.postInvoice(id); }
+
   @Post('invoices/:id/send')
   sendInvoice(@Param('id') id: string, @Body() dto: SendDto) { return this.service.sendInvoice(id, dto.recipients); }
 

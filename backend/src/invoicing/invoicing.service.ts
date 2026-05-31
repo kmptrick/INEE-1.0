@@ -21,7 +21,8 @@ export class InvoicingService {
 
   private async nextInvoiceNumber(): Promise<string> {
     const year = new Date().getFullYear();
-    const count = await this.prisma.invoice.count();
+    // Compter uniquement les factures qui ont déjà un numéro (comptabilisées)
+    const count = await this.prisma.invoice.count({ where: { number: { not: null } } });
     return `Fact / ${year} - ${String(count + 1).padStart(3, '0')}`;
   }
 
@@ -176,18 +177,28 @@ export class InvoicingService {
   async createInvoice(data: CreateInvoiceDto, userId: string) {
     const { lines, vatRate = VAT_LU, ...rest } = data;
     const totals = this.calcTotals(lines, vatRate);
-    const number = await this.nextInvoiceNumber();
+    // Brouillon : pas de numéro assigné immédiatement
 
     return this.prisma.invoice.create({
       data: {
         ...rest,
-        number,
         createdById: userId,
         ...totals,
         lines: {
           create: lines.map(l => ({ ...l, total: this.lineTotal(l) })),
         },
-      },
+      } as any,
+      include: { company: true, lines: true },
+    });
+  }
+
+  async postInvoice(id: string) {
+    const inv = await this.findOneInvoice(id);
+    if ((inv as any).number) throw new BadRequestException('Cette facture est déjà comptabilisée.');
+    const number = await this.nextInvoiceNumber();
+    return this.prisma.invoice.update({
+      where: { id },
+      data: { number } as any,
       include: { company: true, lines: true },
     });
   }
@@ -196,10 +207,9 @@ export class InvoicingService {
     const quote = await this.findOneQuote(data.quoteId);
     if (quote.status !== 'ACCEPTED') throw new BadRequestException('Quote must be accepted before converting to invoice');
 
-    const number = await this.nextInvoiceNumber();
+    // Brouillon : pas de numéro, l'utilisateur comptabilise ensuite
     return this.prisma.invoice.create({
       data: {
-        number,
         companyId: quote.companyId,
         createdById: userId,
         dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
