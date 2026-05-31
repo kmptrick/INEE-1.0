@@ -22,7 +22,7 @@ export class InvoicingService {
   private async nextInvoiceNumber(): Promise<string> {
     const year = new Date().getFullYear();
     // Compter uniquement les factures qui ont déjà un numéro (comptabilisées)
-    const count = await this.prisma.invoice.count({ where: { number: { not: null } } });
+    const count = await (this.prisma as any).invoice.count({ where: { number: { not: null } } });
     return `Fact / ${year} - ${String(count + 1).padStart(3, '0')}`;
   }
 
@@ -179,15 +179,16 @@ export class InvoicingService {
     const totals = this.calcTotals(lines, vatRate);
     // Brouillon : pas de numéro assigné immédiatement
 
-    return this.prisma.invoice.create({
+    return (this.prisma as any).invoice.create({
       data: {
         ...rest,
         createdById: userId,
         ...totals,
+        number: null,
         lines: {
           create: lines.map(l => ({ ...l, total: this.lineTotal(l) })),
         },
-      } as any,
+      },
       include: { company: true, lines: true },
     });
   }
@@ -208,8 +209,9 @@ export class InvoicingService {
     if (quote.status !== 'ACCEPTED') throw new BadRequestException('Quote must be accepted before converting to invoice');
 
     // Brouillon : pas de numéro, l'utilisateur comptabilise ensuite
-    return this.prisma.invoice.create({
+    return (this.prisma as any).invoice.create({
       data: {
+        number: null,
         companyId: quote.companyId,
         createdById: userId,
         dueDate: data.dueDate ? new Date(data.dueDate) : undefined,

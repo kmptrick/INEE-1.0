@@ -145,8 +145,9 @@ export class SubscriptionsService {
     for (const sub of dueSubs) {
       // Numéro de facture
       // Créer la facture brouillon SANS numéro (sera comptabilisée par l'utilisateur)
-      const invoice = await this.prisma.invoice.create({
+      const invoice = await (this.prisma as any).invoice.create({
         data: {
+          number: null,
           status:     'DRAFT',
           companyId:  sub.companyId,
           vatRate:    sub.vatRate,

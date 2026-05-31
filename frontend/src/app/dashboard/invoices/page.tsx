@@ -180,11 +180,11 @@ export default function InvoicesPage() {
   })();
 
   const buildPdfProps = (inv: Invoice): IneeDocumentProps & { filename: string } => ({
-    type: 'FACTURE', number: inv.number, date: today(), dueDate: fmtDate(inv.dueDate), status: inv.status,
+    type: 'FACTURE', number: inv.number ?? '', date: today(), dueDate: fmtDate(inv.dueDate), status: inv.status,
     company: inv.company ? { name: inv.company.name } : undefined,
     lines: (inv.lines ?? []).map(l => ({ description: l.description, quantity: l.quantity, unitPrice: l.unitPrice, total: l.total })),
     subtotal: inv.subtotal, vatRate: inv.vatRate, vatAmount: inv.vatAmount, total: inv.total,
-    vatMention: inv.vatMention, filename: `${inv.number}.pdf`,
+    vatMention: inv.vatMention, filename: `${inv.number ?? 'brouillon'}.pdf`,
   });
 
   return (
