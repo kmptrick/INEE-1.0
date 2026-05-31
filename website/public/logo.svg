@@ -1,14 +1,14 @@
 <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Outer diamond -->
-  <polygon points="60,3 117,60 60,117 3,60" stroke="#C8803A" stroke-width="1.8" fill="none"/>
-  <!-- Inner diamond -->
-  <polygon points="60,17 103,60 60,103 17,60" stroke="#C8803A" stroke-width="1.2" fill="none"/>
-  <!-- I - top serif bar -->
-  <line x1="43" y1="35" x2="77" y2="35" stroke="#2A1508" stroke-width="2.8" stroke-linecap="round"/>
-  <!-- I - bottom serif bar -->
-  <line x1="43" y1="85" x2="77" y2="85" stroke="#2A1508" stroke-width="2.8" stroke-linecap="round"/>
-  <!-- I - vertical stroke -->
-  <line x1="60" y1="35" x2="60" y2="85" stroke="#2A1508" stroke-width="2"/>
-  <!-- Copper dot -->
+  <!-- Outer diamond centered at 60,60 -->
+  <polygon points="60,4 116,60 60,116 4,60" stroke="#C8803A" stroke-width="1.8" fill="none"/>
+  <!-- Inner diamond centered at 60,60 -->
+  <polygon points="60,18 102,60 60,102 18,60" stroke="#C8803A" stroke-width="1.2" fill="none"/>
+  <!-- I - top serif bar (centered at x=60) -->
+  <line x1="44" y1="36" x2="76" y2="36" stroke="#2A1508" stroke-width="2.5" stroke-linecap="butt"/>
+  <!-- I - bottom serif bar (centered at x=60) -->
+  <line x1="44" y1="84" x2="76" y2="84" stroke="#2A1508" stroke-width="2.5" stroke-linecap="butt"/>
+  <!-- I - vertical stroke (centered at x=60) -->
+  <line x1="60" y1="36" x2="60" y2="84" stroke="#2A1508" stroke-width="2"/>
+  <!-- Copper dot (centered at 60,60) -->
   <circle cx="60" cy="60" r="3.5" fill="#C8803A"/>
 </svg>
