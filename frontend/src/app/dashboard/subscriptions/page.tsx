@@ -310,7 +310,7 @@ export default function SubscriptionsPage() {
           <FormField label="Notes">
             <textarea className={inputClass} rows={2} value={form.notes} onChange={e => set('notes', e.target.value)} />
           </FormField>
-          <FormField label="Remarque (interne)">
+          <FormField label="Remarque">
             <textarea className={inputClass} rows={2} value={form.remarque} onChange={e => set('remarque', e.target.value)} />
           </FormField>
 
