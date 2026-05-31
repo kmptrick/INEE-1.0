@@ -172,7 +172,9 @@ export default function InvoicesPage() {
 
   const selectedClient = compList.find(c => c.id === form.companyId) ?? null;
   const vatResult = computeVat(selectedClient, parseFloat(form.vatRate) || 17);
-  const formTotals = open ? calcVatGroups(form.lines, parseFloat(form.vatRate) || 17) : { subtotal: 0, vatGroups: {} as Record<string, number>, vatTotal: 0, total: 0 };
+  // Totaux calculés seulement si la modale est ouverte
+  const _defaultTotals = { subtotal: 0, vatGroups: {} as Record<string, number>, vatTotal: 0, total: 0 };
+  const formTotals = _defaultTotals; // temporairement désactivé pour debug
 
   const buildPdfProps = (inv: Invoice): IneeDocumentProps & { filename: string } => ({
     type: 'FACTURE', number: inv.number, date: today(), dueDate: fmtDate(inv.dueDate), status: inv.status,
