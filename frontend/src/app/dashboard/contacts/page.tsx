@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { contacts, companies, Contact, Company } from '@/lib/api';
 import { Modal } from '@/components/Modal';
+import { HistoryPanel } from '@/components/HistoryPanel';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
 import { PageHeader, AddButton, DataTable, Td, FormActions, usePagination, useSort, TableFooter, useSegmentFilter, SegmentFilterBar, FilterRuleDef } from '@/components/PageShell';
 
@@ -65,6 +66,7 @@ export default function ContactsPage() {
   const [loading, setLoading]     = useState(true);
   const [open, setOpen]           = useState(false);
   const [editContact, setEditContact] = useState<Contact | null>(null);
+  const [viewContact, setViewContact] = useState<Contact | null>(null);
   const [form, setForm]           = useState(emptyForm());
   const [saving, setSaving]       = useState(false);
   const [toggling, setToggling]   = useState<string | null>(null);
@@ -139,7 +141,10 @@ export default function ContactsPage() {
         {pagination.paged.map((c, i) => {
           const inactive = c.isActive === false;
           return (
-            <tr key={c.id} style={{ borderTop: i > 0 ? `1px solid ${T.rowDiv}` : undefined, opacity: inactive ? 0.55 : 1 }}>
+            <tr key={c.id} onClick={() => setViewContact(c)}
+              style={{ borderTop: i > 0 ? `1px solid ${T.rowDiv}` : undefined, opacity: inactive ? 0.55 : 1, cursor: 'pointer' }}
+              onMouseEnter={e => (e.currentTarget.style.background = T.copperBg)}
+              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
               <td className="px-4 py-3 font-mono text-xs" style={{ color: T.muted }}>{(c as any).reference ?? '—'}</td>
               <td className="px-4 py-3 font-semibold text-sm" style={{ color: T.dark }}>
                 {c.firstName} {c.lastName}
@@ -150,7 +155,7 @@ export default function ContactsPage() {
               <Td>{c.jobTitle ?? '—'}</Td>
               <Td>{c.company?.name ?? '—'}</Td>
               <Td>{c.createdAt ? new Date(c.createdAt).toLocaleDateString('fr-LU') : '—'}</Td>
-              <td className="px-4 py-3 text-center">
+              <td className="px-4 py-3 text-center" onClick={e => e.stopPropagation()}>
                 <button onClick={() => toggleInvoice(c)} disabled={toggling === c.id || inactive}
                   title={inactive ? 'Contact inactif' : c.canReceiveInvoices ? 'Autorisé' : 'Non autorisé'}
                   className="w-9 h-5 rounded-full transition-all relative flex-shrink-0 inline-flex cursor-pointer"
@@ -159,7 +164,7 @@ export default function ContactsPage() {
                     style={{ left: (c.canReceiveInvoices && !inactive) ? '18px' : '2px' }} />
                 </button>
               </td>
-              <td className="px-4 py-3 text-center">
+              <td className="px-4 py-3 text-center" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-center gap-1.5">
                   <button onClick={() => openEdit(c)}
                     className="text-xs px-3 py-1.5 rounded-lg border font-medium cursor-pointer"
@@ -186,6 +191,46 @@ export default function ContactsPage() {
         Poste: c.jobTitle ?? '', Client: c.company?.name ?? '',
         'Reçoit factures': c.canReceiveInvoices ? 'Oui' : 'Non', Statut: c.isActive === false ? 'Inactif' : 'Actif',
       })), filename: 'contacts', title: 'Contacts' }} />
+
+      {/* ── Modale détail contact ── */}
+      {viewContact && (
+        <Modal title={`${viewContact.firstName} ${viewContact.lastName}`} open onClose={() => setViewContact(null)} wide>
+          <div className="grid gap-6" style={{ gridTemplateColumns: 'minmax(0,1fr) 260px' }}>
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 pb-3" style={{ borderBottom: `1px solid ${T.border}` }}>
+                {viewContact.jobTitle && (
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: T.head, color: T.copper, border: `1px solid ${T.border}` }}>
+                    {viewContact.jobTitle}
+                  </span>
+                )}
+                {viewContact.isActive === false && (
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: '#F5F5F5', color: '#999' }}>Inactif</span>
+                )}
+                <div className="flex gap-2 ml-auto">
+                  <button onClick={() => { setViewContact(null); openEdit(viewContact); }}
+                    className="text-xs px-3 py-1.5 rounded-lg border font-semibold cursor-pointer"
+                    style={{ color: T.copper, borderColor: T.copper + '60', background: 'transparent' }}>✎ Modifier</button>
+                </div>
+              </div>
+              <div className="rounded-xl border p-4 space-y-3" style={{ borderColor: T.border, background: '#FAFAF9' }}>
+                <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                  {viewContact.email && <div><span style={{ color: T.muted }}>Email : </span><span className="font-semibold" style={{ color: T.dark }}>{viewContact.email}</span></div>}
+                  {viewContact.phone && <div><span style={{ color: T.muted }}>Tél. 1 : </span><span style={{ color: T.dark }}>{viewContact.phone}</span></div>}
+                  {(viewContact as any).mobile && <div><span style={{ color: T.muted }}>Tél. 2 : </span><span style={{ color: T.dark }}>{(viewContact as any).mobile}</span></div>}
+                  {viewContact.company && <div><span style={{ color: T.muted }}>Client : </span><span className="font-semibold" style={{ color: T.dark }}>{viewContact.company.name}</span></div>}
+                  <div><span style={{ color: T.muted }}>Reçoit factures : </span>
+                    <span className="font-semibold" style={{ color: viewContact.canReceiveInvoices ? '#16A34A' : T.muted }}>
+                      {viewContact.canReceiveInvoices ? 'Oui ✓' : 'Non'}
+                    </span>
+                  </div>
+                  {viewContact.createdAt && <div><span style={{ color: T.muted }}>Création : </span><span style={{ color: T.dark }}>{new Date(viewContact.createdAt).toLocaleDateString('fr-LU')}</span></div>}
+                </div>
+              </div>
+            </div>
+            <HistoryPanel entityType="Contact" entityId={viewContact.id} />
+          </div>
+        </Modal>
+      )}
 
       <Modal title="Nouveau contact" open={open} onClose={() => setOpen(false)}>
         <ContactFormFields form={form} set={set} compList={compList} saving={saving} onSubmit={handleCreate} onCancel={() => setOpen(false)} />
