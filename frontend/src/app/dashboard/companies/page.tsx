@@ -122,7 +122,7 @@ function ContactBlock({
             <button type="submit" disabled={saving}
               className="text-sm px-4 py-2 rounded-lg font-semibold cursor-pointer"
               style={{ background: T.copper, color: '#FFF', opacity: saving ? 0.7 : 1 }}>
-              {saving ? 'Enregistrement…' : 'Créer le contact'}
+              {saving ? 'Enregistrement…' : 'Enregistrer'}
             </button>
           </div>
         </form>

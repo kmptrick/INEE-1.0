@@ -336,7 +336,7 @@ export default function SubscriptionsPage() {
             <textarea className={inputClass} rows={2} value={form.remarque} onChange={e => set('remarque', e.target.value)} />
           </FormField>
 
-          <FormActions onCancel={() => setOpen(false)} saving={saving} label="Créer la souscription" />
+          <FormActions onCancel={() => setOpen(false)} saving={saving} label="Enregistrer" />
         </form>
       </Modal>
     </div>

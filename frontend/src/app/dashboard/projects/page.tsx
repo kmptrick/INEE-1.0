@@ -245,7 +245,7 @@ export default function ProjectsPage() {
           <FormField label="Budget (€)">
             <input type="number" min="0" step="100" className={inputClass} value={projectForm.budget} onChange={e => setPF('budget', e.target.value)} placeholder="5000" />
           </FormField>
-          <FormActions onCancel={() => setCreateOpen(false)} saving={savingProject} label="Créer le projet" />
+          <FormActions onCancel={() => setCreateOpen(false)} saving={savingProject} label="Enregistrer" />
         </form>
       </Modal>
 

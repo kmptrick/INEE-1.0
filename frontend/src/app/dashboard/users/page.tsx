@@ -237,7 +237,7 @@ export default function UsersPage() {
                 </select>
               </FormField>
               {newError && <p className="text-xs font-semibold" style={{ color: '#DC2626' }}>{newError}</p>}
-              <FormActions onCancel={() => setNewOpen(false)} saving={newSaving} label="Créer" />
+              <FormActions onCancel={() => setNewOpen(false)} saving={newSaving} label="Enregistrer" />
             </form>
           )}
         </Modal>

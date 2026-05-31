@@ -364,7 +364,7 @@ function CreditNotesContent() {
 
           <FormField label="Notes"><textarea className={inputClass} rows={2} value={form.notes} onChange={e => setField('notes', e.target.value)} /></FormField>
           
-          <FormActions onCancel={() => setOpen(false)} saving={saving} label="Créer la note de crédit" />
+          <FormActions onCancel={() => setOpen(false)} saving={saving} label="Enregistrer" />
         </form>
       </Modal>
     </div>
