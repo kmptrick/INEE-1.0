@@ -1,4 +1,5 @@
 'use client'
+import { LogoInline } from './Logo'
 
 function FooterLink({ href = '#', children }: { href?: string; children: React.ReactNode }) {
   return (
@@ -35,11 +36,8 @@ export default function Footer() {
           {/* Col 1 — Logo + about */}
           <div>
             {/* Logo */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                <rect x="1" y="9" width="11.31" height="11.31" transform="rotate(-45 1 9)" stroke="var(--copper)" strokeWidth="1.2" />
-              </svg>
-              <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '22px', fontWeight: 600, color: 'var(--copper)', letterSpacing: '6px' }}>INEE</span>
+            <div style={{ marginBottom: '20px' }}>
+              <LogoInline size={28} textSize={18} dark />
             </div>
             <p style={{ fontSize: '13px', color: 'rgba(250,246,241,0.45)', lineHeight: 1.75, marginBottom: '20px' }}>
               Services aux entreprises au Luxembourg et dans la Grande Région. Comptabilité, fiscalité, RH, conseil et communication digitale.

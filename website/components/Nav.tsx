@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { LogoInline } from './Logo'
 
 const NAV_LINKS = [
   { label: 'Services', href: '#services' },
@@ -70,22 +71,8 @@ export default function Nav() {
           }}
         >
           {/* Logo */}
-          <a
-            href="#"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 10,
-              fontFamily: "'Cormorant Garamond', serif",
-              fontSize: 28,
-              fontWeight: 600,
-              color: 'var(--copper)',
-              letterSpacing: 6,
-              textDecoration: 'none',
-            }}
-          >
-            <DiamondIcon />
-            INEE
+          <a href="#" style={{ textDecoration: 'none' }}>
+            <LogoInline size={28} textSize={20} />
           </a>
 
           {/* Center nav — desktop */}
