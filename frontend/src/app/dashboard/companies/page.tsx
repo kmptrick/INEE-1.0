@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { companies, contacts, Company, Contact } from '@/lib/api';
 import { Modal } from '@/components/Modal';
+import { HistoryPanel } from '@/components/HistoryPanel';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
 import { PageHeader, AddButton, DataTable, Td, FormActions, usePagination, useSort, useColumns, TableFooter, useSegmentFilter, SegmentFilterBar, FilterRuleDef } from '@/components/PageShell';
 
@@ -185,6 +186,7 @@ function CompanyDetailModal({ company, onClose, onNoteSaved }: { company: Compan
 
   return (
     <Modal title={company.name} open onClose={onClose} wide>
+      <div className="grid gap-6" style={{ gridTemplateColumns: 'minmax(0,1fr) 260px' }}>
       <div className="space-y-5">
 
         {/* ── Bloc infos client ── */}
@@ -250,6 +252,8 @@ function CompanyDetailModal({ company, onClose, onNoteSaved }: { company: Compan
           </div>
         </div>
 
+      </div>
+      <HistoryPanel entityType="Company" entityId={company.id} />
       </div>
     </Modal>
   );

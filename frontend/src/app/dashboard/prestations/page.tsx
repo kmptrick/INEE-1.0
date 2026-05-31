@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { services, Service } from '@/lib/api';
 import { Modal } from '@/components/Modal';
+import { HistoryPanel } from '@/components/HistoryPanel';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
 import { LU_VAT_RATES } from '@/lib/vat-rules';
 import { PageHeader, AddButton, DataTable, Td, FormActions, usePagination, useSort, useColumns, TableFooter, useSegmentFilter, SegmentFilterBar, FilterRuleDef } from '@/components/PageShell';
@@ -129,7 +130,8 @@ export default function PrestationsPage() {
 
       {/* ── Modale détail prestation ── */}
       {viewPrestation && (
-        <Modal title={viewPrestation.description} open onClose={() => setViewPrestation(null)}>
+        <Modal title={viewPrestation.description} open onClose={() => setViewPrestation(null)} wide>
+          <div className="grid gap-6" style={{ gridTemplateColumns: 'minmax(0,1fr) 260px' }}>
           <div className="space-y-4">
             <div className="flex items-center justify-between pb-3" style={{ borderBottom: `1px solid ${T.border}` }}>
               <span className="font-mono text-sm font-bold" style={{ color: T.copper }}>{viewPrestation.idPrestation}</span>
@@ -154,6 +156,8 @@ export default function PrestationsPage() {
                 </div>
               )}
             </div>
+          </div>
+          <HistoryPanel entityType="Service" entityId={viewPrestation.id} />
           </div>
         </Modal>
       )}

@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException, MethodNotAllowedException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
+import { AuditService } from '../audit/audit.service';
 import { CreateQuoteDto, UpdateQuoteDto } from './dto/quote.dto';
 import { CreateInvoiceDto, UpdateInvoiceDto, CreateInvoiceFromQuoteDto } from './dto/invoice.dto';
 
@@ -9,7 +10,7 @@ const fmt = (n: number) => new Intl.NumberFormat('fr-LU', { style: 'currency', c
 
 @Injectable()
 export class InvoicingService {
-  constructor(private prisma: PrismaService, private mail: MailService) {}
+  constructor(private prisma: PrismaService, private mail: MailService, private audit: AuditService) {}
 
   // ─── Numérotation ──────────────────────────────────────────────────────────
 
@@ -179,18 +180,18 @@ export class InvoicingService {
     const totals = this.calcTotals(lines, vatRate);
     // Brouillon : pas de numéro assigné immédiatement
 
-    return (this.prisma as any).invoice.create({
+    const inv = await (this.prisma as any).invoice.create({
       data: {
         ...rest,
         createdById: userId,
         ...totals,
         number: null,
-        lines: {
-          create: lines.map(l => ({ ...l, total: this.lineTotal(l) })),
-        },
+        lines: { create: lines.map(l => ({ ...l, total: this.lineTotal(l) })) },
       },
       include: { company: true, lines: true },
     });
+    await this.audit.log({ entityType: 'Invoice', entityId: inv.id, userId, action: 'Brouillon créé', details: `Client : ${inv.company?.name ?? '—'} · Total : ${inv.total} €` });
+    return inv;
   }
 
   async postInvoice(id: string) {
@@ -198,11 +199,13 @@ export class InvoicingService {
     if ((inv as any).number) throw new BadRequestException('Cette facture est déjà comptabilisée.');
     const number = await this.nextInvoiceNumber();
     const now = new Date();
-    return (this.prisma as any).invoice.update({
+    const posted = await (this.prisma as any).invoice.update({
       where: { id },
       data: { number, issueDate: now },
       include: { company: true, lines: true },
     });
+    await this.audit.log({ entityType: 'Invoice', entityId: id, action: `Comptabilisée → ${number}`, details: `Date : ${now.toLocaleDateString('fr-LU')}` });
+    return posted;
   }
 
   // ─── Récupération des destinataires autorisés ──────────────────────────────
@@ -250,6 +253,7 @@ export class InvoicingService {
       </div>
     </div>`;
     await this.mail.sendBilling({ to: recipients, subject: `Facture ${(invoice as any).number} — INEE`, html });
+    await this.audit.log({ entityType: 'Invoice', entityId: id, action: 'Envoyée par email', details: `Destinataires : ${recipients.join(', ')}` });
     return this.prisma.invoice.update({ where: { id }, data: { status: 'SENT' }, include: { company: true, lines: true } });
   }
 

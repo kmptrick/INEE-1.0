@@ -7,6 +7,7 @@ import { Modal } from '@/components/Modal';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
 import { PageHeader, AddButton, FilterBar, DataTable, Td, StatusBadge, FormActions, usePagination, useSort, useColumns, TableFooter, useSegmentFilter, SegmentFilterBar, FilterRuleDef } from '@/components/PageShell';
 import { NotesWidget } from '@/components/NotesWidget';
+import { HistoryPanel } from '@/components/HistoryPanel';
 import { ServicePicker } from '@/components/ServicePicker';
 import { computeVat, LU_VAT_RATES } from '@/lib/vat-rules';
 import type { IneeDocumentProps } from '@/components/IneeDocumentPdf';
@@ -239,7 +240,8 @@ export default function InvoicesPage() {
 
       {/* ── Detail / Actions modal ── */}
       {viewItem && (
-        <Modal title={viewItem.number ? `Facture ${viewItem.number}` : 'Facture — Brouillon'} open={!!viewItem} onClose={() => setViewItem(null)}>
+        <Modal title={viewItem.number ? `Facture ${viewItem.number}` : 'Facture — Brouillon'} open={!!viewItem} onClose={() => setViewItem(null)} wide>
+          <div className="grid gap-6" style={{ gridTemplateColumns: 'minmax(0,1fr) 260px' }}>
           <div className="space-y-4">
             {/* Status + actions */}
             <div className="flex flex-wrap items-center gap-2 pb-3" style={{ borderBottom: `1px solid ${T.border}` }}>
@@ -367,6 +369,8 @@ export default function InvoicesPage() {
                 <span style={{ color: '#78350F' }}>{viewItem.vatMention}</span>
               </div>
             )}
+          </div>
+          <HistoryPanel entityType="Invoice" entityId={viewItem.id} />
           </div>
         </Modal>
       )}

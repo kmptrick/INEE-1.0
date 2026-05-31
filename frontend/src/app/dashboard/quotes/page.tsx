@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { invoicing, companies, Quote, Company, Service } from '@/lib/api';
 import { Modal } from '@/components/Modal';
+import { HistoryPanel } from '@/components/HistoryPanel';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
 import { PageHeader, AddButton, FilterBar, DataTable, Td, StatusBadge, FormActions, usePagination, useSort, useColumns, TableFooter, useSegmentFilter, SegmentFilterBar, FilterRuleDef } from '@/components/PageShell';
 import { NotesWidget } from '@/components/NotesWidget';
@@ -229,7 +230,8 @@ export default function QuotesPage() {
 
       {/* ── Detail / Actions modal ── */}
       {viewItem && (
-        <Modal title={`Devis ${viewItem.number}`} open={!!viewItem} onClose={() => setViewItem(null)}>
+        <Modal title={`Devis ${viewItem.number}`} open={!!viewItem} onClose={() => setViewItem(null)} wide>
+          <div className="grid gap-6" style={{ gridTemplateColumns: 'minmax(0,1fr) 260px' }}>
           <div className="space-y-4">
             {/* Status + actions */}
             <div className="flex flex-wrap items-center gap-2 pb-3" style={{ borderBottom: `1px solid ${T.border}` }}>
@@ -317,6 +319,8 @@ export default function QuotesPage() {
                 <span style={{ color: '#78350F' }}>{viewItem.vatMention}</span>
               </div>
             )}
+          </div>
+          <HistoryPanel entityType="Quote" entityId={viewItem.id} />
           </div>
         </Modal>
       )}

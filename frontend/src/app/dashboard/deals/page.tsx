@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { deals, companies, contacts, Deal, Company, Contact } from '@/lib/api';
 import { Modal } from '@/components/Modal';
+import { HistoryPanel } from '@/components/HistoryPanel';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
 import { PageHeader, AddButton, FilterBar, DataTable, Td, StatusBadge, FormActions, usePagination, useSort, TableFooter, useSegmentFilter, SegmentFilterBar, FilterRuleDef } from '@/components/PageShell';
 
@@ -88,7 +89,8 @@ export default function DealsPage() {
 
       {/* ── Modale détail affaire ── */}
       {viewItem && (
-        <Modal title={viewItem.title} open onClose={() => setViewItem(null)}>
+        <Modal title={viewItem.title} open onClose={() => setViewItem(null)} wide>
+          <div className="grid gap-6" style={{ gridTemplateColumns: 'minmax(0,1fr) 260px' }}>
           <div className="space-y-4">
             <div className="flex items-center gap-2 pb-3" style={{ borderBottom: `1px solid ${T.border}` }}>
               {(() => { const ss = STATUS_ST[viewItem.status] ?? { bg: '#F5F5F5', color: '#888' }; return <StatusBadge label={STATUS_FR[viewItem.status] ?? viewItem.status} bg={ss.bg} color={ss.color} />; })()}
@@ -115,6 +117,8 @@ export default function DealsPage() {
                 <p style={{ color: T.dark }}>{(viewItem as any).notes}</p>
               </div>
             )}
+          </div>
+          <HistoryPanel entityType="Deal" entityId={viewItem.id} />
           </div>
         </Modal>
       )}

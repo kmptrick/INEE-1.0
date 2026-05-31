@@ -3,6 +3,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { creditNotes, invoicing, companies, CreditNote, Invoice, Company, Service } from '@/lib/api';
 import { Modal } from '@/components/Modal';
+import { HistoryPanel } from '@/components/HistoryPanel';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
 import { PageHeader, AddButton, FilterBar, DataTable, Td, StatusBadge, FormActions, usePagination, useSort, TableFooter, useSegmentFilter, SegmentFilterBar, FilterRuleDef } from '@/components/PageShell';
 import { ServicePicker } from '@/components/ServicePicker';
@@ -216,7 +217,8 @@ function CreditNotesContent() {
 
       {/* ── Detail modal ── */}
       {viewItem && (
-        <Modal title={`Note de crédit ${viewItem.number}`} open={!!viewItem} onClose={() => setViewItem(null)}>
+        <Modal title={`Note de crédit ${viewItem.number}`} open={!!viewItem} onClose={() => setViewItem(null)} wide>
+          <div className="grid gap-6" style={{ gridTemplateColumns: 'minmax(0,1fr) 260px' }}>
           <div className="space-y-4">
             <div className="flex flex-wrap items-center gap-2 pb-3" style={{ borderBottom: `1px solid ${T.border}` }}>
               {(() => { const ss = STATUS_ST[viewItem.status] ?? { bg: '#F5F5F5', color: '#888' }; return <StatusBadge label={STATUS_FR[viewItem.status] ?? viewItem.status} bg={ss.bg} color={ss.color} />; })()}
@@ -290,6 +292,8 @@ function CreditNotesContent() {
               </div>
             )}
             {viewItem.notes && <p className="text-xs italic" style={{ color: T.muted }}>{viewItem.notes}</p>}
+          </div>
+          <HistoryPanel entityType="CreditNote" entityId={viewItem.id} />
           </div>
         </Modal>
       )}

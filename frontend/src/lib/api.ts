@@ -282,6 +282,21 @@ export interface SubscriptionLine {
   total: number;
 }
 
+export interface AuditLog {
+  id: string;
+  entityType: string;
+  entityId: string;
+  action: string;
+  details?: string;
+  createdAt: string;
+  user?: { id: string; firstName: string; lastName: string };
+}
+
+export const auditLogs = {
+  list: (entityType: string, entityId: string) =>
+    api.get<AuditLog[]>(`/audit-logs?entityType=${entityType}&entityId=${entityId}`),
+};
+
 export const leaveTypes = {
   list: () => api.get<LeaveType[]>('/leave-types'),
   create: (data: Partial<LeaveType>) => api.post<LeaveType>('/leave-types', data),

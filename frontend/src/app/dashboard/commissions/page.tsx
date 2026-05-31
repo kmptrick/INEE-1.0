@@ -4,6 +4,7 @@ import { commissions, companies, Commission, Company } from '@/lib/api';
 import { Modal } from '@/components/Modal';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
 import { PageHeader, AddButton, FilterBar, DataTable, Td, StatusBadge, FormActions, usePagination, useSort, TableFooter, useSegmentFilter, SegmentFilterBar, FilterRuleDef } from '@/components/PageShell';
+import { HistoryPanel } from '@/components/HistoryPanel';
 
 const STATUS_ST: Record<string, { bg: string; color: string }> = {
   PENDING:   { bg: '#FDF3E8', color: '#C8803A' },
@@ -205,7 +206,8 @@ export default function CommissionsPage() {
 
       {/* ── Modale détail commission ── */}
       {viewItem && (
-        <Modal title={`Commission ${viewItem.reference}`} open onClose={() => setViewItem(null)}>
+        <Modal title={`Commission ${viewItem.reference}`} open onClose={() => setViewItem(null)} wide>
+          <div className="grid gap-6" style={{ gridTemplateColumns: 'minmax(0,1fr) 260px' }}>
           <div className="space-y-4">
             <div className="flex items-center gap-2 pb-3" style={{ borderBottom: `1px solid ${T.border}` }}>
               {(() => { const ss = STATUS_ST[viewItem.status] ?? { bg: '#F5F5F5', color: '#888' }; return <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: ss.bg, color: ss.color }}>{STATUS_FR[viewItem.status] ?? viewItem.status}</span>; })()}
@@ -237,6 +239,8 @@ export default function CommissionsPage() {
                 <p style={{ color: T.dark }}>{viewItem.notes}</p>
               </div>
             )}
+          </div>
+          <HistoryPanel entityType="Commission" entityId={viewItem.id} />
           </div>
         </Modal>
       )}
