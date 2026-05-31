@@ -143,7 +143,7 @@ export default function InvoicesPage() {
   const pickService = (i: number, s: Service) => {
     setForm(f => {
       const lines = [...f.lines];
-      lines[i] = { serviceId: s.id, description: s.description, quantity: '1', unitPrice: String(s.prixHT), unite: s.unite ?? '', discountRate: '', lineVatRate: '', periodStart: '', periodEnd: '' };
+      lines[i] = { serviceId: s.id, description: s.description, quantity: '1', unitPrice: String(s.prixHT), unite: s.unite ?? '', discountRate: '', lineVatRate: '' };
       const client = compList.find(c => c.id === f.companyId) ?? null;
       const vat = computeVat(client, s.vatRate ?? 17);
       return { ...f, lines, vatRate: String(vat.rate), vatMention: vat.mention ?? '' };
