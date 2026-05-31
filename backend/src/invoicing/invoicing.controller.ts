@@ -56,6 +56,12 @@ export class InvoicingController {
   @Post('invoices/:id/post')
   postInvoice(@Param('id') id: string) { return this.service.postInvoice(id); }
 
+  @Post('invoices/:id/send-auto')
+  sendInvoiceAuto(@Param('id') id: string) { return this.service.sendInvoiceAuto(id); }
+
+  @Post('quotes/:id/send-auto')
+  sendQuoteAuto(@Param('id') id: string) { return this.service.sendQuoteAuto(id); }
+
   @Post('invoices/:id/send')
   sendInvoice(@Param('id') id: string, @Body() dto: SendDto) { return this.service.sendInvoice(id, dto.recipients); }
 

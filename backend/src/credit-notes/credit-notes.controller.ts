@@ -25,6 +25,9 @@ export class CreditNotesController {
     return this.service.update(id, dto);
   }
 
+  @Post(':id/send')
+  send(@Param('id') id: string) { return this.service.send(id); }
+
   @Delete(':id')
   remove(@Param('id') id: string) { return this.service.remove(id); }
 }

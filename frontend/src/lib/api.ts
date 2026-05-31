@@ -94,6 +94,7 @@ export const creditNotes = {
   get: (id: string) => api.get<CreditNote>(`/credit-notes/${id}`),
   create: (data: Partial<CreditNote> & { invoiceId: string; lines: any[] }) => api.post<CreditNote>('/credit-notes', data),
   update: (id: string, data: any) => api.put<CreditNote>(`/credit-notes/${id}`, data),
+  send: (id: string) => api.post<CreditNote>(`/credit-notes/${id}/send`, {}),
   delete: (id: string) => api.delete(`/credit-notes/${id}`),
 };
 
@@ -151,6 +152,7 @@ export const invoicing = {
     create: (data: Partial<Quote>) => api.post<Quote>('/invoicing/quotes', data),
     update: (id: string, data: Partial<Quote>) => api.put<Quote>(`/invoicing/quotes/${id}`, data),
     delete: (id: string) => api.delete(`/invoicing/quotes/${id}`),
+    sendAuto: (id: string) => api.post<Quote>(`/invoicing/quotes/${id}/send-auto`, {}),
   },
   invoices: {
     list: (status?: string) => api.get<Invoice[]>(`/invoicing/invoices${status ? `?status=${status}` : ''}`),
@@ -159,6 +161,7 @@ export const invoicing = {
     fromQuote: (quoteId: string, dueDate?: string) =>
       api.post<Invoice>('/invoicing/invoices/from-quote', { quoteId, dueDate }),
     post: (id: string) => api.post<Invoice>(`/invoicing/invoices/${id}/post`, {}),
+    sendAuto: (id: string) => api.post<Invoice>(`/invoicing/invoices/${id}/send-auto`, {}),
     update: (id: string, data: Partial<Invoice>) => api.put<Invoice>(`/invoicing/invoices/${id}`, data),
     delete: (id: string) => api.delete(`/invoicing/invoices/${id}`),
   },

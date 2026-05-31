@@ -237,6 +237,20 @@ export default function QuotesPage() {
               {(() => { const ss = STATUS_ST[viewItem.status] ?? { bg: '#F5F5F5', color: '#888' }; return <StatusBadge label={STATUS_FR[viewItem.status] ?? viewItem.status} bg={ss.bg} color={ss.color} />; })()}
               <div className="flex flex-wrap gap-2 ml-auto">
                 <PdfDownloadButton {...buildPdfProps(viewItem)} />
+                {viewItem.status === 'ACCEPTED' && (
+                  <ActionBtn label="📧 Envoyer" color="#16A34A" bg="#F0FDF4" border="#BBF7D0"
+                    onClick={async () => {
+                      setActioning(true);
+                      try {
+                        const updated = await invoicing.quotes.sendAuto(viewItem.id);
+                        setFullQuotes(p => ({ ...p, [viewItem.id]: updated }));
+                        setViewItem(updated);
+                        load(filter || undefined);
+                      } catch (e: any) { alert(e.message || 'Erreur lors de l\'envoi'); }
+                      finally { setActioning(false); }
+                    }}
+                    disabled={actioning} />
+                )}
                 {viewItem.status === 'DRAFT' && (
                   <ActionBtn label="Marquer envoyé" color="#1D6FD8" bg="#EFF6FF" border="#BFDBFE" onClick={() => updateStatus(viewItem, 'SENT')} disabled={actioning} />
                 )}

@@ -224,6 +224,18 @@ function CreditNotesContent() {
                 {viewItem.status === 'DRAFT' && (
                   <ActionBtn label="Émettre" color="#1D6FD8" bg="#EFF6FF" border="#BFDBFE" onClick={() => updateStatus(viewItem, 'ISSUED')} disabled={actioning} />
                 )}
+                {viewItem.status === 'ISSUED' && (
+                  <ActionBtn label="📧 Envoyer" color="#16A34A" bg="#F0FDF4" border="#BBF7D0"
+                    onClick={async () => {
+                      setActioning(true);
+                      try {
+                        await creditNotes.send(viewItem.id);
+                        alert('Note de crédit envoyée avec succès !');
+                      } catch (e: any) { alert(e.message || 'Erreur lors de l\'envoi'); }
+                      finally { setActioning(false); }
+                    }}
+                    disabled={actioning} />
+                )}
                 {viewItem.status !== 'CANCELLED' && (
                   <ActionBtn label="Annuler" color={T.muted} bg="#F5F5F5" border={T.border} onClick={() => updateStatus(viewItem, 'CANCELLED')} disabled={actioning} />
                 )}

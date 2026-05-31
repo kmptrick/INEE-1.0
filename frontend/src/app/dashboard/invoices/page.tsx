@@ -38,7 +38,7 @@ const fmtDate = (d?: string) => d ? new Date(d).toLocaleDateString('fr-LU') : un
 
 type LineForm = { serviceId: string; description: string; quantity: string; unitPrice: string; unite: string; discountRate: string; lineVatRate: string; };
 const emptyLine = (): LineForm => ({ serviceId: '', description: '', quantity: '1', unitPrice: '', unite: '', discountRate: '', lineVatRate: '' });
-const emptyForm = () => ({ companyId: '', vatRate: '17', vatMention: '', dueDate: '', notes: '', remarque: '', lines: [emptyLine()] });
+const emptyForm = () => ({ companyId: '', vatRate: '17', vatMention: '', paymentTerms: '14', notes: '', lines: [emptyLine()] });
 const lineTotal = (l: LineForm) => { const q = parseFloat(l.quantity)||0; const p = parseFloat(l.unitPrice)||0; const d = parseFloat(l.discountRate)||0; return q * p * (1 - d/100); };
 function calcVatGroups(lines: LineForm[], defaultVatRate: number) {
   const groups: Record<string, number> = {};
@@ -165,7 +165,9 @@ export default function InvoicesPage() {
         })),
       };
       if (form.companyId) data.companyId = form.companyId;
-      if (form.dueDate) data.dueDate = form.dueDate;
+      const days = parseInt(form.paymentTerms) || 14;
+      const due = new Date(); due.setDate(due.getDate() + days);
+      data.dueDate = due.toISOString();
       await invoicing.invoices.create(data); setOpen(false); setForm(emptyForm()); load(filter || undefined);
     } finally { setSaving(false); }
   };
@@ -262,6 +264,20 @@ export default function InvoicesPage() {
                 {viewItem.number && (
                   <ActionBtn label="Note de crédit" color="#7C3AED" bg="#F5F3FF" border="#DDD6FE"
                     onClick={() => router.push(`/dashboard/credit-notes?invoiceId=${viewItem.id}&invoiceNumber=${encodeURIComponent(viewItem.number ?? '')}`)}
+                    disabled={actioning} />
+                )}
+                {viewItem.number && (
+                  <ActionBtn label="📧 Envoyer" color="#16A34A" bg="#F0FDF4" border="#BBF7D0"
+                    onClick={async () => {
+                      setActioning(true);
+                      try {
+                        const updated = await invoicing.invoices.sendAuto(viewItem.id);
+                        setFullInvoices(p => ({ ...p, [viewItem.id]: updated }));
+                        setViewItem(updated);
+                        load(filter || undefined);
+                      } catch (e: any) { alert(e.message || 'Erreur lors de l\'envoi'); }
+                      finally { setActioning(false); }
+                    }}
                     disabled={actioning} />
                 )}
                 {viewItem.status === 'DRAFT' && viewItem.number && (
@@ -375,7 +391,15 @@ export default function InvoicesPage() {
             </div>
           )}
 
-          <FormField label="Echéance"><input type="date" className={inputClass} value={form.dueDate} onChange={e => setField('dueDate', e.target.value)} /></FormField>
+          <FormField label="Conditions de paiement">
+            <select className={selectClass} value={form.paymentTerms} onChange={e => setField('paymentTerms', e.target.value)}>
+              <option value="14">14 jours (défaut)</option>
+              <option value="30">30 jours</option>
+              <option value="45">45 jours</option>
+              <option value="60">60 jours</option>
+              <option value="0">À réception</option>
+            </select>
+          </FormField>
 
           <div>
             <div className="flex items-center justify-between mb-2">

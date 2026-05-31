@@ -1,6 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCreditNoteDto, UpdateCreditNoteDto } from './dto/credit-note.dto';
+import { MailService } from '../mail/mail.service';
+
+const fmt = (n: number) => new Intl.NumberFormat('fr-LU', { style: 'currency', currency: 'EUR' }).format(n);
 
 const VAT_LU = 17;
 
@@ -13,7 +16,7 @@ const CN_INCLUDE = {
 
 @Injectable()
 export class CreditNotesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private mail: MailService) {}
 
   private async nextNumber(): Promise<string> {
     const year = new Date().getFullYear();
@@ -90,5 +93,46 @@ export class CreditNotesService {
   async remove(id: string) {
     await this.findOne(id);
     return (this.prisma as any).creditNote.delete({ where: { id } });
+  }
+
+  async send(id: string) {
+    const cn = await this.findOne(id);
+    if (cn.status !== 'ISSUED') throw new BadRequestException('La note de crédit doit être émise avant d\'être envoyée.');
+    const companyId = (cn as any).companyId ?? (cn as any).invoice?.companyId;
+    if (!companyId) throw new BadRequestException('Aucun client associé à cette note de crédit.');
+
+    const contacts = await this.prisma.contact.findMany({
+      where: { companyId, canReceiveInvoices: true, isActive: true, email: { not: null } } as any,
+      select: { email: true },
+    });
+    const recipients = contacts.map((c: any) => c.email).filter(Boolean);
+    if (recipients.length === 0) throw new BadRequestException('Aucun contact autorisé à recevoir les documents pour ce client.');
+
+    const linesHtml = ((cn as any).lines ?? []).map((l: any) =>
+      `<tr><td style="padding:6px 10px;border-bottom:1px solid #eee">${l.description}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:center">${l.quantity}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right">${fmt(l.unitPrice)}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right;font-weight:bold">${fmt(l.total)}</td></tr>`
+    ).join('');
+
+    const html = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;color:#1A1008">
+      <div style="background:#1A1008;padding:20px 30px;border-radius:8px 8px 0 0">
+        <h1 style="color:#C8803A;margin:0;font-size:24px;letter-spacing:3px">INEE</h1>
+        <p style="color:#F5EDE4;margin:4px 0 0;font-size:12px">37, Rue du Baumbusch — 8213 Mamer — TVA : LU36332830</p>
+      </div>
+      <div style="background:#fff;padding:24px 30px;border:1px solid #E8DDD5;border-top:none;border-radius:0 0 8px 8px">
+        <h2 style="color:#7C3AED;margin:0 0 4px">NOTE DE CRÉDIT ${cn.number}</h2>
+        ${(cn as any).company ? `<p style="color:#7A6050;margin:0 0 16px">Client : <strong style="color:#1A1008">${(cn as any).company.name}</strong></p>` : ''}
+        ${(cn as any).invoice ? `<p style="color:#7A6050;margin:0 0 16px">Facture liée : <strong style="color:#1A1008">${(cn as any).invoice.number}</strong></p>` : ''}
+        <table style="width:100%;border-collapse:collapse;margin:16px 0">
+          <thead><tr style="background:#F5EDE4"><th style="padding:8px 10px;text-align:left;font-size:12px;color:#7A6050">Description</th><th style="padding:8px 10px;text-align:center;font-size:12px;color:#7A6050">Qté</th><th style="padding:8px 10px;text-align:right;font-size:12px;color:#7A6050">Prix HT</th><th style="padding:8px 10px;text-align:right;font-size:12px;color:#7A6050">Total HT</th></tr></thead>
+          <tbody>${linesHtml}</tbody>
+        </table>
+        <div style="text-align:right;margin-top:8px;font-style:italic;color:#7C3AED;font-weight:bold">
+          Montant crédité : − ${fmt(cn.total)}
+        </div>
+        ${cn.notes ? `<p style="margin-top:16px;color:#7A6050;font-size:13px"><em>${cn.notes}</em></p>` : ''}
+      </div>
+    </div>`;
+
+    await this.mail.sendBilling({ to: recipients, subject: `Note de crédit ${cn.number} — INEE`, html });
+    return (this.prisma as any).creditNote.update({ where: { id }, data: {}, include: CN_INCLUDE });
   }
 }
