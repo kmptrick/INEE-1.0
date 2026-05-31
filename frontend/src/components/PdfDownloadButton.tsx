@@ -17,14 +17,25 @@ interface Props extends IneeDocumentProps {
   filename: string;
 }
 
+// Sanitise le nom de fichier (retire les caractères invalides)
+function sanitizeFilename(name: string): string {
+  return name.replace(/[/\\:*?"<>|]/g, '-').replace(/\s+/g, '_') + '.pdf';
+}
+
 export function PdfDownloadButton({ filename, ...docProps }: Props) {
+  const safeFilename = sanitizeFilename(filename.replace(/\.pdf$/, ''));
+
   return (
     <PDFDownloadLink
       document={<IneeDocumentPdf {...docProps} />}
-      fileName={filename}
-      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors"
+      fileName={safeFilename}
+      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors cursor-pointer"
     >
-      {({ loading }) => loading ? 'Génération...' : '↓ PDF'}
+      {({ loading, error }) => {
+        if (error) return '⚠ Erreur PDF';
+        if (loading) return 'Génération...';
+        return '↓ PDF';
+      }}
     </PDFDownloadLink>
   );
 }
