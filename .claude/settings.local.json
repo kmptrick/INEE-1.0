@@ -35,7 +35,8 @@
       "Bash(sed -i \"s/{ label: 'Affaire', key: 'dealValue', align: 'right' as const }, { label: 'Taux', align: 'center' as const },/{ label: 'Affaire', key: 'dealValue', align: 'right' as const }, { label: 'Taux', key: 'commissionRate', align: 'center' as const },/\" frontend/src/app/dashboard/commissions/page.tsx)",
       "Bash(sed -i \"s/{ label: 'Référence' }, { label: 'Apporteur'/{ label: 'Référence', key: 'reference' }, { label: 'Apporteur'/\" frontend/src/app/dashboard/commissions/page.tsx)",
       "Bash(sed -i \"s/{ label: 'Titre', key: 'title' }, { label: 'Client' }/{ label: 'Titre', key: 'title' }, { label: 'Client', key: 'company.name' }/\" frontend/src/app/dashboard/deals/page.tsx)",
-      "Bash(sed -i \"s/{ label: 'Valeur', key: 'value', align: 'right' }, { label: 'Proba.', align: 'center' }/{ label: 'Valeur', key: 'value', align: 'right' }, { label: 'Proba.', key: 'probability', align: 'center' }/\" frontend/src/app/dashboard/deals/page.tsx)"
+      "Bash(sed -i \"s/{ label: 'Valeur', key: 'value', align: 'right' }, { label: 'Proba.', align: 'center' }/{ label: 'Valeur', key: 'value', align: 'right' }, { label: 'Proba.', key: 'probability', align: 'center' }/\" frontend/src/app/dashboard/deals/page.tsx)",
+      "Bash(npx next *)"
     ]
   }
 }

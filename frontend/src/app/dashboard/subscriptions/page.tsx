@@ -137,9 +137,9 @@ export default function SubscriptionsPage() {
 
   // ── Totaux calculés (multi-TVA) — uniquement si modale ouverte ──────────
   const { subtotal, vatGroups, total } = (() => {
-    if (!open) return { subtotal: 0, vatGroups: {} as Record<string, number>, vatTotal: 0, total: 0 };
+    if (!open) return { subtotal: 0, vatGroups: {} as Record<string, number>, total: 0 };
     try { return calcVatGroups(form.lines, parseFloat(form.vatRate) || 17); }
-    catch { return { subtotal: 0, vatGroups: {} as Record<string, number>, vatTotal: 0, total: 0 }; }
+    catch { return { subtotal: 0, vatGroups: {} as Record<string, number>, total: 0 }; }
   })();
 
   // ── Soumission ───────────────────────────────────────────────────────────

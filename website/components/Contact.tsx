@@ -202,8 +202,8 @@ export default function Contact({ content }: { content: SiteContent['contact'] }
                     />
                     <span style={{ fontSize: '13px', color: 'rgba(250,246,241,0.45)', lineHeight: 1.6 }}>
                       {content.form.consent}{' '}
-                      <a href="/privacy-policy" style={{ color: 'var(--copper)', textDecoration: 'none' }}>{content.form.privacyLink}</a>{' '}and the{' '}
-                      <a href="/terms-of-use" style={{ color: 'var(--copper)', textDecoration: 'none' }}>{content.form.cguLink}</a>
+                      <a href={content.form.privacyHref} style={{ color: 'var(--copper)', textDecoration: 'none' }}>{content.form.privacyLink}</a>{' '}
+                      <a href={content.form.cguHref} style={{ color: 'var(--copper)', textDecoration: 'none' }}>{content.form.cguLink}</a>
                     </span>
                   </label>
 
