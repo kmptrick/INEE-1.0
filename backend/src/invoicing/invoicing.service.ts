@@ -202,6 +202,104 @@ export class InvoicingService {
     return posted;
   }
 
+  // ─── Templates email facture ──────────────────────────────────────────────
+
+  private buildInvoiceEmailHtml(invoice: any, type: string, lang: string): string {
+    const fmtDate = (d?: string) => d ? new Date(d).toLocaleDateString(lang === 'en' ? 'en-GB' : 'fr-LU') : '—';
+    const num = invoice.number ?? '—';
+    const tot = fmt(invoice.total);
+    const due = fmtDate(invoice.dueDate);
+    const bank = `Revolut | IBAN : LT07 3250 0544 6550 1204 | BIC : REVOLT21`;
+
+    const templates: Record<string, Record<string, { subject: string; body: string }>> = {
+      send: {
+        fr: {
+          subject: `Facture N° ${num} — INEE`,
+          body: `Madame, Monsieur,\n\nVeuillez trouver ci-joint notre facture N° ${num} d'un montant de ${tot}, établie le ${fmtDate(invoice.issueDate)} et payable au plus tard le ${due}.\n\nNos coordonnées bancaires :\n${bank}\n\nPour toute question, contactez-nous à invoices@inee.lu.\n\nCordialement,\nINEE S.à r.l.`,
+        },
+        en: {
+          subject: `Invoice No. ${num} — INEE`,
+          body: `Dear Sir or Madam,\n\nPlease find attached our invoice No. ${num} for ${tot}, dated ${fmtDate(invoice.issueDate)} and payable by ${due}.\n\nOur bank details:\n${bank}\n\nFor any questions, please contact us at invoices@inee.lu.\n\nKind regards,\nINEE S.à r.l.`,
+        },
+      },
+      reminder1: {
+        fr: {
+          subject: `Rappel — Facture N° ${num} échue le ${due}`,
+          body: `Madame, Monsieur,\n\nSauf erreur de notre part, notre facture N° ${num} d'un montant de ${tot}, dont l'échéance était fixée au ${due}, n'a pas encore été réglée.\n\nNous vous serions reconnaissants de bien vouloir procéder au paiement dans les meilleurs délais.\n\nSi ce paiement a déjà été effectué, veuillez ignorer ce message.\n\nCordialement,\nINEE S.à r.l.`,
+        },
+        en: {
+          subject: `Reminder — Invoice No. ${num} due ${due}`,
+          body: `Dear Sir or Madam,\n\nUnless there has been an oversight, our invoice No. ${num} for ${tot}, which was due on ${due}, has not yet been settled.\n\nWe kindly ask you to proceed with payment at your earliest convenience.\n\nIf payment has already been made, please disregard this message.\n\nKind regards,\nINEE S.à r.l.`,
+        },
+      },
+      reminder2: {
+        fr: {
+          subject: `2ème rappel — Facture N° ${num} — Règlement urgent`,
+          body: `Madame, Monsieur,\n\nMalgré notre premier rappel, nous n'avons pas reçu le règlement de notre facture N° ${num} d'un montant de ${tot}, échue depuis le ${due}.\n\nNous vous invitons instamment à régulariser votre situation dans un délai de 8 jours ouvrés.\n\nConformément à nos CGV, des intérêts de retard au taux de 8 %/an sont applicables à compter du jour suivant l'échéance.\n\nCordialement,\nINEE S.à r.l.`,
+        },
+        en: {
+          subject: `2nd Reminder — Invoice No. ${num} — Urgent Payment Required`,
+          body: `Dear Sir or Madam,\n\nDespite our previous reminder, we have not received payment for invoice No. ${num} for ${tot}, due on ${due}.\n\nWe strongly urge you to settle this balance within 8 business days.\n\nAs per our Terms and Conditions, late payment interest at 8% per annum applies from the day following the due date.\n\nKind regards,\nINEE S.à r.l.`,
+        },
+      },
+      reminder3: {
+        fr: {
+          subject: `DERNIER RAPPEL — Facture N° ${num} — Mise en demeure`,
+          body: `Madame, Monsieur,\n\nMalgré nos deux relances précédentes, la facture N° ${num} d'un montant de ${tot} demeure impayée depuis le ${due}.\n\nSans règlement sous 48 heures, nous procéderons à :\n• Application d'une indemnité forfaitaire de 150 EUR\n• Suspension de toute prestation en cours\n• Transmission à notre service juridique pour recouvrement\n\nContactez-nous immédiatement à invoices@inee.lu pour trouver une solution amiable.\n\nINEE S.à r.l.`,
+        },
+        en: {
+          subject: `FINAL NOTICE — Invoice No. ${num} — Formal Demand`,
+          body: `Dear Sir or Madam,\n\nDespite two previous reminders, invoice No. ${num} for ${tot} remains unpaid since ${due}.\n\nUnless full payment is received within 48 hours, we will:\n• Apply a flat-rate collection fee of €150\n• Suspend all ongoing services\n• Refer this matter to our legal department\n\nPlease contact us immediately at invoices@inee.lu.\n\nINEE S.à r.l.`,
+        },
+      },
+    };
+
+    const tpl = templates[type]?.[lang] ?? templates.send.fr;
+    const bodyHtml = tpl.body.replace(/\n/g, '<br>');
+    return `<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;color:#1A1008">
+      <div style="background:#1A1008;padding:20px 30px;border-radius:8px 8px 0 0">
+        <h1 style="color:#C8803A;margin:0;font-size:24px;letter-spacing:3px">INEE</h1>
+        <p style="color:#F5EDE4;margin:4px 0 0;font-size:12px">37, Rue du Baumbusch — 8213 Mamer — TVA : LU36332830</p>
+      </div>
+      <div style="background:#fff;padding:24px 30px;border:1px solid #E8DDD5;border-top:none;border-radius:0 0 8px 8px">
+        <p style="color:#1A1008;line-height:1.7">${bodyHtml}</p>
+        <div style="margin-top:20px;padding:12px;background:#F0FDF4;border-radius:4px;font-size:13px">
+          <strong>Coordonnées bancaires / Bank details</strong><br>
+          ${bank}
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // ─── Envoi facture avec options (type + langue) ────────────────────────────
+
+  async sendInvoiceWithOptions(id: string, type: string, lang: string, userId?: string) {
+    const invoice = await this.findOneInvoice(id);
+    if (!(invoice as any).number) throw new BadRequestException('Comptabilisez la facture avant de l\'envoyer.');
+    const recipients = await this.getCompanyRecipients(invoice.companyId);
+    if (recipients.length === 0) throw new BadRequestException('Aucun contact autorisé pour ce client.');
+
+    const html = this.buildInvoiceEmailHtml(invoice, type, lang);
+    const num = (invoice as any).number ?? '';
+    const subjects: Record<string, Record<string, string>> = {
+      send:      { fr: `Facture N° ${num} — INEE`, en: `Invoice No. ${num} — INEE` },
+      reminder1: { fr: `Rappel 1 — Facture N° ${num}`, en: `Reminder 1 — Invoice No. ${num}` },
+      reminder2: { fr: `Rappel 2 — Facture N° ${num}`, en: `2nd Reminder — Invoice No. ${num}` },
+      reminder3: { fr: `DERNIER RAPPEL — Facture N° ${num}`, en: `FINAL NOTICE — Invoice No. ${num}` },
+    };
+    const subject = subjects[type]?.[lang] ?? subjects.send.fr;
+    const reminderLevelMap: Record<string, number> = { send: 0, reminder1: 1, reminder2: 2, reminder3: 3 };
+    const newLevel = reminderLevelMap[type] ?? 0;
+
+    await this.mail.sendBilling({ to: recipients, subject, html });
+    await this.audit.log({ entityType: 'Invoice', entityId: id, userId, action: `Facture envoyée (${type}, ${lang})`, details: `Destinataires : ${recipients.join(', ')}` });
+    return (this.prisma as any).invoice.update({
+      where: { id },
+      data: { status: 'SENT', reminderLevel: newLevel },
+      include: { company: true, lines: true },
+    });
+  }
+
   // ─── Récupération des destinataires autorisés ──────────────────────────────
 
   private async getCompanyRecipients(companyId: string | null): Promise<string[]> {

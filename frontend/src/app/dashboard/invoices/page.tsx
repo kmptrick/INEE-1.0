@@ -8,6 +8,7 @@ import { FormField, inputClass, selectClass, T } from '@/components/FormField';
 import { PageHeader, AddButton, FilterBar, DataTable, Td, StatusBadge, FormActions, usePagination, useSort, useColumns, TableFooter, useSegmentFilter, SegmentFilterBar, FilterRuleDef } from '@/components/PageShell';
 import { NotesWidget } from '@/components/NotesWidget';
 import { HistoryPanel } from '@/components/HistoryPanel';
+import { SendModal, SendType, SendLang } from '@/components/SendModal';
 import { ServicePicker } from '@/components/ServicePicker';
 import { computeVat, LU_VAT_RATES } from '@/lib/vat-rules';
 import type { IneeDocumentProps } from '@/components/IneeDocumentPdf';
@@ -105,6 +106,7 @@ export default function InvoicesPage() {
   // Detail / action modal
   const [viewItem, setViewItem] = useState<Invoice | null>(null);
   const [actioning, setActioning] = useState(false);
+  const [sendModalOpen, setSendModalOpen] = useState(false);
 
   const openEditInvoice = (inv: Invoice) => {
     setViewItem(null);
@@ -212,8 +214,20 @@ export default function InvoicesPage() {
     catch { return { subtotal: 0, vatGroups: {} as Record<string, number>, vatTotal: 0, total: 0 }; }
   })();
 
-  const buildPdfProps = (inv: Invoice): IneeDocumentProps & { filename: string } => ({
+  const getInvoiceDisplayType = (inv: Invoice): 'DEVIS' | 'FACTURE' | 'NOTE DE CRÉDIT' | 'SOUSCRIPTION' => {
+    // For reminders, we use FACTURE type but the title is overridden below
+    return 'FACTURE';
+  };
+
+  const buildPdfProps = (inv: Invoice): IneeDocumentProps & { filename: string } => {
+    const level = inv.reminderLevel ?? 0;
+    const reminderTitles: Record<number, 'DEVIS' | 'FACTURE' | 'NOTE DE CRÉDIT' | 'SOUSCRIPTION'> = {
+      0: 'FACTURE', 1: 'FACTURE', 2: 'FACTURE', 3: 'FACTURE',
+    };
+    // Override display title for reminders via notes hack (passed as type override in PDF)
+    return ({
     type: 'FACTURE',
+    customTitle: level === 0 ? undefined : level === 1 ? 'RAPPEL N°1 / REMINDER N°1' : level === 2 ? 'RAPPEL N°2 / REMINDER N°2' : 'RAPPEL N°3 / REMINDER N°3',
     number: inv.number ?? '',
     date: inv.createdAt ? new Date(inv.createdAt).toLocaleDateString('fr-LU') : today(),
     dueDate: fmtDate(inv.dueDate),
@@ -234,6 +248,7 @@ export default function InvoicesPage() {
     vatMention: inv.vatMention,
     filename: `${inv.number ?? 'brouillon'}.pdf`,
   });
+  };
 
   return (
     <div className="p-6">
@@ -321,16 +336,7 @@ export default function InvoicesPage() {
                 )}
                 {viewItem.number && (
                   <ActionBtn label="📧 Envoyer" color="#16A34A" bg="#F0FDF4" border="#BBF7D0"
-                    onClick={async () => {
-                      setActioning(true);
-                      try {
-                        const updated = await invoicing.invoices.sendAuto(viewItem.id);
-                        setFullInvoices(p => ({ ...p, [viewItem.id]: updated }));
-                        setViewItem(updated);
-                        load(filter || undefined);
-                      } catch (e: any) { alert(e.message || 'Erreur lors de l\'envoi'); }
-                      finally { setActioning(false); }
-                    }}
+                    onClick={() => setSendModalOpen(true)}
                     disabled={actioning} />
                 )}
                 {viewItem.status === 'DRAFT' && viewItem.number && (
@@ -424,6 +430,22 @@ export default function InvoicesPage() {
           <HistoryPanel entityType="Invoice" entityId={viewItem.id} />
           </div>
         </Modal>
+      )}
+
+      {/* ── Modal d'envoi ── */}
+      {viewItem && sendModalOpen && (
+        <SendModal
+          open={sendModalOpen}
+          onClose={() => setSendModalOpen(false)}
+          showTypeSelector={true}
+          title={`Envoyer la facture ${viewItem.number ?? ''}`}
+          onSend={async (type: SendType, lang: SendLang) => {
+            const updated = await invoicing.invoices.sendWithOptions(viewItem.id, type, lang);
+            setFullInvoices(p => ({ ...p, [viewItem.id]: updated }));
+            setViewItem(updated);
+            load(filter || undefined);
+          }}
+        />
       )}
 
       {/* ── Nouvelle facture ── */}

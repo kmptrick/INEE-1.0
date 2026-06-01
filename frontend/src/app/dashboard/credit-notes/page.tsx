@@ -4,6 +4,7 @@ import { useSearchParams } from 'next/navigation';
 import { creditNotes, invoicing, companies, CreditNote, Invoice, Company, Service } from '@/lib/api';
 import { Modal } from '@/components/Modal';
 import { HistoryPanel } from '@/components/HistoryPanel';
+import { SendModal, SendType, SendLang } from '@/components/SendModal';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
 import { PageHeader, AddButton, FilterBar, DataTable, Td, StatusBadge, FormActions, usePagination, useSort, TableFooter, useSegmentFilter, SegmentFilterBar, FilterRuleDef } from '@/components/PageShell';
 import { ServicePicker } from '@/components/ServicePicker';
@@ -72,6 +73,7 @@ function CreditNotesContent() {
   const [filter, setFilter] = useState('');
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+  const [sendModalOpen, setSendModalOpen] = useState(false);
   const [editingCN, setEditingCN] = useState<CreditNote | null>(null);
   const [form, setForm] = useState(emptyForm(prefillInvoiceId, prefillInvoiceNumber));
   const [saving, setSaving] = useState(false);
@@ -267,14 +269,7 @@ function CreditNotesContent() {
                 )}
                 {viewItem.status === 'ISSUED' && (
                   <ActionBtn label="📧 Envoyer" color="#16A34A" bg="#F0FDF4" border="#BBF7D0"
-                    onClick={async () => {
-                      setActioning(true);
-                      try {
-                        await creditNotes.send(viewItem.id);
-                        alert('Note de crédit envoyée avec succès !');
-                      } catch (e: any) { alert(e.message || 'Erreur lors de l\'envoi'); }
-                      finally { setActioning(false); }
-                    }}
+                    onClick={() => setSendModalOpen(true)}
                     disabled={actioning} />
                 )}
                 {viewItem.status !== 'CANCELLED' && (
@@ -335,6 +330,19 @@ function CreditNotesContent() {
           <HistoryPanel entityType="CreditNote" entityId={viewItem.id} />
           </div>
         </Modal>
+      )}
+
+      {/* ── Modal d'envoi NC ── */}
+      {viewItem && sendModalOpen && (
+        <SendModal
+          open={sendModalOpen}
+          onClose={() => setSendModalOpen(false)}
+          title={`Envoyer la note de crédit ${viewItem.number}`}
+          onSend={async (_type: SendType, _lang: SendLang) => {
+            await creditNotes.send(viewItem.id);
+            setSendModalOpen(false);
+          }}
+        />
       )}
 
       {/* ── Nouvelle note de crédit ── */}

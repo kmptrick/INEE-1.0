@@ -162,6 +162,7 @@ export const invoicing = {
       api.post<Invoice>('/invoicing/invoices/from-quote', { quoteId, dueDate }),
     post: (id: string) => api.post<Invoice>(`/invoicing/invoices/${id}/post`, {}),
     sendAuto: (id: string) => api.post<Invoice>(`/invoicing/invoices/${id}/send-auto`, {}),
+    sendWithOptions: (id: string, type: string, lang: string) => api.post<Invoice>(`/invoicing/invoices/${id}/send`, { type, lang }),
     update: (id: string, data: Partial<Invoice>) => api.put<Invoice>(`/invoicing/invoices/${id}`, data),
     delete: (id: string) => api.delete(`/invoicing/invoices/${id}`),
   },
@@ -198,7 +199,7 @@ export interface Deal { id: string; reference?: string; createdAt?: string; titl
 export interface Service { id: string; idPrestation: string; categorie: string; description: string; prixHT: number; vatRate?: number; unite?: string; remarques?: string; isActive: boolean; }
 export interface Commission { id: string; reference: string; createdAt?: string; brokerName: string; dealValue: number; commissionRate: number; commissionAmount: number; currency: string; status: string; notes?: string; company?: { id: string; name: string }; }
 export interface Quote { id: string; number: string; createdAt?: string; status: string; subtotal: number; vatRate: number; vatAmount: number; total: number; vatMention?: string; notes?: string; company?: { id: string; name: string }; lines?: QuoteLine[]; }
-export interface Invoice { id: string; number?: string; createdAt?: string; status: string; subtotal: number; vatRate: number; vatAmount: number; total: number; paidAmount: number; dueDate?: string; vatMention?: string; notes?: string; company?: { id: string; name: string }; lines?: InvoiceLine[]; }
+export interface Invoice { id: string; number?: string; createdAt?: string; reminderLevel?: number; status: string; subtotal: number; vatRate: number; vatAmount: number; total: number; paidAmount: number; dueDate?: string; vatMention?: string; notes?: string; company?: { id: string; name: string }; lines?: InvoiceLine[]; }
 export interface QuoteLine { id: string; serviceId?: string; description: string; quantity: number; unitPrice: number; unite?: string; discountRate?: number; lineVatRate?: number; periodStart?: string; periodEnd?: string; total: number; }
 export interface InvoiceLine { id: string; serviceId?: string; description: string; quantity: number; unitPrice: number; unite?: string; discountRate?: number; lineVatRate?: number; periodStart?: string; periodEnd?: string; total: number; }
 export interface Project {

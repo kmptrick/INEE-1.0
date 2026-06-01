@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import { invoicing, companies, Quote, Company, Service } from '@/lib/api';
 import { Modal } from '@/components/Modal';
 import { HistoryPanel } from '@/components/HistoryPanel';
+import { SendModal, SendType, SendLang } from '@/components/SendModal';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
 import { PageHeader, AddButton, FilterBar, DataTable, Td, StatusBadge, FormActions, usePagination, useSort, useColumns, TableFooter, useSegmentFilter, SegmentFilterBar, FilterRuleDef } from '@/components/PageShell';
 import { NotesWidget } from '@/components/NotesWidget';
@@ -82,6 +83,7 @@ export default function QuotesPage() {
   const [filter, setFilter] = useState('');
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+  const [sendModalOpen, setSendModalOpen] = useState(false);
   const [editingQuote, setEditingQuote] = useState<Quote | null>(null);
   const [form, setForm] = useState(emptyForm());
   const [saving, setSaving] = useState(false);
@@ -302,16 +304,7 @@ export default function QuotesPage() {
                 )}
                 {viewItem.status === 'DRAFT' && (
                   <ActionBtn label="📧 Envoyer" color="#16A34A" bg="#F0FDF4" border="#BBF7D0"
-                    onClick={async () => {
-                      setActioning(true);
-                      try {
-                        const updated = await invoicing.quotes.sendAuto(viewItem.id);
-                        setFullQuotes(p => ({ ...p, [viewItem.id]: updated }));
-                        setViewItem(updated);
-                        load(filter || undefined);
-                      } catch (e: any) { alert(e.message || 'Erreur lors de l\'envoi'); }
-                      finally { setActioning(false); }
-                    }}
+                    onClick={() => setSendModalOpen(true)}
                     disabled={actioning} />
                 )}
                 {viewItem.status === 'SENT' && (<>
@@ -381,6 +374,21 @@ export default function QuotesPage() {
           <HistoryPanel entityType="Quote" entityId={viewItem.id} />
           </div>
         </Modal>
+      )}
+
+      {/* ── Modal d'envoi devis ── */}
+      {viewItem && sendModalOpen && (
+        <SendModal
+          open={sendModalOpen}
+          onClose={() => setSendModalOpen(false)}
+          title={`Envoyer le devis ${viewItem.number}`}
+          onSend={async (_type: SendType, lang: SendLang) => {
+            const updated = await invoicing.quotes.sendAuto(viewItem.id);
+            setFullQuotes(p => ({ ...p, [viewItem.id]: updated }));
+            setViewItem(updated);
+            load(filter || undefined);
+          }}
+        />
       )}
 
       {/* ── Convertir en facture ── */}

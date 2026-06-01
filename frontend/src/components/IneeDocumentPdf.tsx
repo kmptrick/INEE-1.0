@@ -124,6 +124,7 @@ export interface DocLine {
 
 export interface IneeDocumentProps {
   type: 'DEVIS' | 'FACTURE' | 'NOTE DE CRÉDIT' | 'SOUSCRIPTION';
+  customTitle?: string; // ex: "RAPPEL N°1 / REMINDER N°1"
   number: string;
   date: string;
   dueDate?: string;
@@ -152,9 +153,10 @@ function getIntroMessage(type: string, company?: { name: string }): string {
 
 // ── Composant principal ────────────────────────────────────────────────────────
 export function IneeDocumentPdf({
-  type, number, date, dueDate, company, lines,
+  type, customTitle, number, date, dueDate, company, lines,
   subtotal, vatRate, vatAmount, total, vatMention, notes, paymentTerms,
 }: IneeDocumentProps) {
+  const displayType = customTitle ?? type;
 
   // Grouper TVA par taux
   const vatGroups: Record<string, number> = {};
@@ -164,7 +166,7 @@ export function IneeDocumentPdf({
     vatGroups[rate] = (vatGroups[rate] || 0) + lineHT;
   });
 
-  const introMsg = getIntroMessage(type, company);
+  const introMsg = getIntroMessage(customTitle ?? type, company);
 
   return (
     <Document>
@@ -188,7 +190,7 @@ export function IneeDocumentPdf({
           {/* ── Titre + méta ── */}
           <View style={s.docTitleRow}>
             <View style={s.docTitleBox}>
-              <Text style={s.docType}>{type}</Text>
+              <Text style={s.docType}>{displayType}</Text>
               <Text style={s.docNumber}>N° {number}</Text>
             </View>
             <View style={s.docMetaBox}>
