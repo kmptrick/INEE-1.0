@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import Logo from './Logo'
+import type { SiteContent } from '@/lib/fr'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -53,7 +54,7 @@ function DoubleDiamond() {
   )
 }
 
-export default function Hero() {
+export default function Hero({ content }: { content: SiteContent['hero'] }) {
   return (
     <section
       style={{
@@ -130,7 +131,7 @@ export default function Hero() {
           >
             {/* Section label */}
             <motion.div variants={fadeUp} transition={transition(0)}>
-              <span className="section-label">Vous créez. On structure. C&apos;est notre expertise.</span>
+              <span className="section-label">{content.label}</span>
             </motion.div>
 
             {/* H1 */}
@@ -147,13 +148,13 @@ export default function Hero() {
                 margin: 0,
               }}
             >
-              Votre partenaire de
+              {content.title[0]}
               <br />
-              services aux entreprises
+              {content.title[1]}
               <br />
-              au Luxembourg et
+              {content.title[2]}
               <br />
-              <em style={{ fontStyle: 'italic', color: 'var(--copper)' }}>les trois frontières</em>
+              <em style={{ fontStyle: 'italic', color: 'var(--copper)' }}>{content.titleAccent}</em>
             </motion.h1>
 
             {/* Copper line */}
@@ -176,9 +177,7 @@ export default function Hero() {
                 margin: 0,
               }}
             >
-              INEE accompagne les entrepreneurs et PME du Luxembourg dans leur
-              gestion comptable, fiscale et juridique. Une expertise locale, un
-              service sur mesure.
+              {content.subtitle}
             </motion.p>
 
             {/* CTA buttons */}
@@ -193,10 +192,10 @@ export default function Hero() {
               }}
             >
               <a href="#contact" className="btn-primary">
-                Prendre rendez-vous
+                {content.cta1}
               </a>
               <a href="#services" className="btn-secondary">
-                Nos services →
+                {content.cta2}
               </a>
             </motion.div>
 
@@ -244,11 +243,7 @@ export default function Hero() {
                 width: '100%',
               }}
             >
-              {[
-                'Services aux entreprises',
-                'Grande Région & Luxembourg',
-                'Conseil & Accompagnement',
-              ].map((item) => (
+              {content.credentials.map((item) => (
                 <li
                   key={item}
                   style={{

@@ -6,20 +6,20 @@ import Skills from '@/components/Skills'
 import Events from '@/components/Events'
 import Contact from '@/components/Contact'
 import Footer from '@/components/Footer'
-import { en } from '@/lib/en'
+import { fr } from '@/lib/fr'
 
-export default function Home() {
+export default function HomeFr() {
   return (
     <>
-      <Nav content={en.nav} />
+      <Nav content={fr.nav} />
       <main>
-        <Hero content={en.hero} />
-        <Services content={en.services} />
-        <Skills content={en.skills} />
-        <Events content={en.events} />
-        <Contact content={en.contact} />
+        <Hero content={fr.hero} />
+        <Services content={fr.services} />
+        <Skills content={fr.skills} />
+        <Events content={fr.events} />
+        <Contact content={fr.contact} />
       </main>
-      <Footer content={en.footer} />
+      <Footer content={fr.footer} />
     </>
   )
 }

@@ -2,13 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { LogoInline } from './Logo'
-
-const NAV_LINKS = [
-  { label: 'Services', href: '#services' },
-  { label: 'Expertise', href: '#expertise' },
-  { label: 'Actualités', href: '#actualites' },
-  { label: 'Contact', href: '#contact' },
-]
+import type { SiteContent } from '@/lib/fr'
 
 function DiamondIcon() {
   return (
@@ -25,7 +19,7 @@ function DiamondIcon() {
   )
 }
 
-export default function Nav() {
+export default function Nav({ content }: { content: SiteContent['nav'] }) {
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -84,26 +78,42 @@ export default function Nav() {
               alignItems: 'center',
             }}
           >
-            {NAV_LINKS.map((link) => (
+            {content.links.map((link) => (
               <NavLink key={link.href} href={link.href} label={link.label} />
             ))}
           </nav>
 
-          {/* CTA + hamburger */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+          {/* CTA + lang switch + hamburger */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <a
               href="#contact"
               className="btn-primary nav-cta"
               style={{ padding: '12px 24px', fontSize: 11 }}
             >
-              Prendre rendez-vous
+              {content.cta}
+            </a>
+
+            <a
+              href={content.langSwitch.href}
+              className="nav-lang"
+              style={{
+                fontFamily: "'Montserrat', sans-serif", fontSize: '11px', fontWeight: 600,
+                letterSpacing: '2px', textTransform: 'uppercase' as const,
+                color: 'var(--text-medium)', textDecoration: 'none',
+                padding: '8px 12px', border: '1px solid var(--border)',
+                borderRadius: '2px', transition: 'all 0.2s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.color = 'var(--copper)'; e.currentTarget.style.borderColor = 'var(--copper)' }}
+              onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-medium)'; e.currentTarget.style.borderColor = 'var(--border)' }}
+            >
+              {content.langSwitch.label}
             </a>
 
             {/* Hamburger — mobile */}
             <button
               className="nav-hamburger"
               onClick={() => setMenuOpen((o) => !o)}
-              aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+              aria-label={menuOpen ? 'Close menu' : 'Open menu'}
               style={{
                 display: 'none',
                 flexDirection: 'column',
@@ -160,7 +170,7 @@ export default function Nav() {
           transition: 'opacity 0.3s ease',
         }}
       >
-        {NAV_LINKS.map((link, i) => (
+        {content.links.map((link, i) => (
           <a
             key={link.href}
             href={link.href}
@@ -192,7 +202,20 @@ export default function Nav() {
           onClick={() => setMenuOpen(false)}
           style={{ marginTop: 8 }}
         >
-          Prendre rendez-vous
+          {content.cta}
+        </a>
+        <a
+          href={content.langSwitch.href}
+          onClick={() => setMenuOpen(false)}
+          style={{
+            fontFamily: "'Montserrat', sans-serif", fontSize: '11px', fontWeight: 600,
+            letterSpacing: '2px', textTransform: 'uppercase' as const,
+            color: 'var(--text-medium)', textDecoration: 'none',
+            padding: '8px 12px', border: '1px solid var(--border)',
+            borderRadius: '2px',
+          }}
+        >
+          {content.langSwitch.label}
         </a>
       </div>
 
@@ -201,6 +224,7 @@ export default function Nav() {
           .nav-desktop { display: none !important; }
           .nav-hamburger { display: flex !important; }
           .nav-cta { display: none !important; }
+          .nav-lang { display: none !important; }
         }
       `}</style>
     </>

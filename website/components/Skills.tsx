@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import type { SiteContent } from "@/lib/fr";
 
 function LocalIcon() {
   return (
@@ -51,35 +52,9 @@ function LockIcon() {
   );
 }
 
-const arguments_ = [
-  {
-    icon: <LocalIcon />,
-    title: "Expertise locale",
-    text: "Nous connaissons parfaitement le cadre légal et fiscal luxembourgeois : TVA, CCSS, droit des sociétés, fiscalité transfrontalière.",
-  },
-  {
-    icon: <ReactivityIcon />,
-    title: "Réactivité & Disponibilité",
-    text: "Votre conseiller dédié répond sous 24h. Pas de standard téléphonique, vous avez un contact direct avec votre expert.",
-  },
-  {
-    icon: <TechIcon />,
-    title: "Technologie & Modernité",
-    text: "Comptabilité 100% digitale, accès à vos documents en ligne, alertes fiscales automatisées et reporting en temps réel.",
-  },
-  {
-    icon: <LockIcon />,
-    title: "Confidentialité absolue",
-    text: "Soumis au secret professionnel, nous traitons vos données avec la plus stricte confidentialité, conformément au RGPD.",
-  },
-];
+const argIcons = [<LocalIcon key={0} />, <ReactivityIcon key={1} />, <TechIcon key={2} />, <LockIcon key={3} />];
 
-const stats = [
-  { value: "15+", label: "Cumulé d'ancienneté" },
-  { value: "6", label: "Domaines d'expertise" },
-];
-
-export default function Skills() {
+export default function Skills({ content }: { content: SiteContent['skills'] }) {
   const leftRef = useRef<HTMLDivElement>(null);
   const rightRef = useRef<HTMLDivElement>(null);
 
@@ -109,28 +84,27 @@ export default function Skills() {
       <div className="container">
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: "80px" }}>
-          <p className="section-label">Notre expertise</p>
+          <p className="section-label">{content.label}</p>
           <h2
             className="section-title"
             style={{ marginTop: "16px" }}
-            dangerouslySetInnerHTML={{
-              __html: "Pourquoi choisir <em>INEE</em>&nbsp;?",
-            }}
-          />
+          >
+            {content.title}<em>{content.titleAccent}</em>{content.titleEnd}
+          </h2>
         </div>
 
         {/* Two-column layout */}
         <div className="skills-layout">
           {/* Left column — arguments */}
           <div ref={leftRef} className="reveal">
-            {arguments_.map((arg, index) => (
+            {content.arguments.map((arg, index) => (
               <div
                 key={index}
                 style={{
                   display: "flex",
                   flexDirection: "row",
                   gap: "20px",
-                  marginBottom: index < arguments_.length - 1 ? "40px" : 0,
+                  marginBottom: index < content.arguments.length - 1 ? "40px" : 0,
                   alignItems: "flex-start",
                 }}
               >
@@ -148,7 +122,7 @@ export default function Skills() {
                     justifyContent: "center",
                   }}
                 >
-                  {arg.icon}
+                  {argIcons[index]}
                 </div>
 
                 {/* Text */}
@@ -195,7 +169,7 @@ export default function Skills() {
                   margin: "0 0 16px",
                 }}
               >
-                En chiffres
+                {content.statsTitle}
               </h3>
 
               {/* Copper line */}
@@ -217,7 +191,7 @@ export default function Skills() {
                   marginBottom: "40px",
                 }}
               >
-                {stats.map((stat, index) => (
+                {content.stats.map((stat, index) => (
                   <div key={index}>
                     <p
                       style={{
@@ -260,8 +234,7 @@ export default function Skills() {
                   lineHeight: 1.6,
                 }}
               >
-                INEE, c&apos;est l&apos;assurance d&apos;un regard expert et
-                bienveillant sur votre activité, chaque jour.
+                {content.quote}
               </blockquote>
             </div>
           </div>

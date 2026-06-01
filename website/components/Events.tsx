@@ -1,36 +1,9 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import type { SiteContent } from '@/lib/fr'
 
-interface Article {
-  date: string
-  category: string
-  title: string
-  summary: string
-}
-
-interface Article {
-  date: string
-  category: string
-  title: string
-  summary: string
-  link: string
-  cta: string
-}
-
-const articles: Article[] = [
-  {
-    date: '11 Juillet 2026 — 11h30',
-    category: 'FORMATION & ATELIER #01',
-    title: 'Ce que ton comptable ne te dit pas !',
-    summary:
-      'Tu gères une activité au Luxembourg et tu paies sans vraiment comprendre pourquoi ? INEE t\'invite à une matinée concrète et sans jargon sur la CCSS, les impôts et la TVA. Entrée gratuite — 30 places disponibles.',
-    link: 'https://www.eventbrite.com/e/brunch-atelier-inee-tickets-1990523110206',
-    cta: 'Réserver ma place gratuite →',
-  },
-]
-
-export default function Events() {
+export default function Events({ content }: { content: SiteContent['events'] }) {
   const sectionRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
@@ -53,9 +26,9 @@ export default function Events() {
       style={{ background: 'var(--bg-cream)', padding: '120px 0' }}
     >
       <div className="container">
-        <p className="section-label">Actualités &amp; Événements</p>
+        <p className="section-label">{content.label}</p>
         <h2 className="section-title">
-          Restez informé des <em>nouveautés fiscales</em>
+          {content.title}<em>{content.titleAccent}</em>
         </h2>
 
         <div
@@ -67,7 +40,7 @@ export default function Events() {
             marginTop: '56px',
           }}
         >
-          {articles.map((article, i) => (
+          {content.items.map((article, i) => (
             <article
               key={i}
               className="card"
@@ -141,16 +114,12 @@ export default function Events() {
                 >
                   {article.summary}
                 </p>
-                {i === 0 && (
+                {article.details && article.details.length > 0 && (
                   <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {[
-                      { icon: '📍', text: '20 rue des Peupliers, L-2328 Luxembourg — Paladuim Pal\'Art' },
-                      { icon: '🎟', text: 'Entrée gratuite · 30 places disponibles' },
-                      { icon: '📌', text: 'CCSS · Impôts · TVA' },
-                    ].map((item, j) => (
+                    {article.details.map((text, j) => (
                       <div key={j} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-                        <span style={{ fontSize: '13px' }}>{item.icon}</span>
-                        <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: 'var(--text-light)', lineHeight: 1.5 }}>{item.text}</span>
+                        <span style={{ fontSize: '13px' }}>{['📍', '🎟', '📌'][j] ?? '•'}</span>
+                        <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: 'var(--text-light)', lineHeight: 1.5 }}>{text}</span>
                       </div>
                     ))}
                   </div>

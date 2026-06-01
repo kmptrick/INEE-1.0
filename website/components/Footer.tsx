@@ -1,5 +1,6 @@
 'use client'
 import { LogoInline } from './Logo'
+import type { SiteContent } from '@/lib/fr'
 
 function FooterLink({ href = '#', children }: { href?: string; children: React.ReactNode }) {
   return (
@@ -26,7 +27,7 @@ function ColTitle({ children }: { children: React.ReactNode }) {
   )
 }
 
-export default function Footer() {
+export default function Footer({ content }: { content: SiteContent['footer'] }) {
   return (
     <footer style={{ background: 'var(--bg-dark-mid)', padding: '80px 0 40px' }}>
       <div className="container">
@@ -40,7 +41,7 @@ export default function Footer() {
               <LogoInline size={28} textSize={18} dark />
             </div>
             <p style={{ fontSize: '13px', color: 'rgba(250,246,241,0.45)', lineHeight: 1.75, marginBottom: '20px' }}>
-              Services aux entreprises au Luxembourg et dans la Grande Région. Comptabilité, fiscalité, RH, conseil et communication digitale.
+              {content.tagline}
             </p>
             <button
               onClick={() => {
@@ -55,50 +56,42 @@ export default function Footer() {
               <p style={{ fontSize: '12px', color: 'rgba(250,246,241,0.35)', marginBottom: '2px', transition: 'color 0.2s', margin: 0 }}
                 onMouseEnter={e => (e.currentTarget.style.color = 'var(--copper)')}
                 onMouseLeave={e => (e.currentTarget.style.color = 'rgba(250,246,241,0.35)')}>
-                37, Rue du Baumbusch — 8213 Mamer
+                {content.address1}
               </p>
-              <p style={{ fontSize: '12px', color: 'rgba(250,246,241,0.25)', marginBottom: '4px' }}>Grand-Duché de Luxembourg ↗</p>
+              <p style={{ fontSize: '12px', color: 'rgba(250,246,241,0.25)', marginBottom: '4px' }}>{content.address2} ↗</p>
             </button>
-            <p style={{ fontSize: '12px', color: 'rgba(250,246,241,0.2)' }}>TVA : LU36332830</p>
+            <p style={{ fontSize: '12px', color: 'rgba(250,246,241,0.2)' }}>{content.vat}</p>
           </div>
 
           {/* Col 2 — Services */}
           <div>
-            <ColTitle>Nos services</ColTitle>
-            <FooterLink href="#services">Comptabilité</FooterLink>
-            <FooterLink href="#services">Fiscalité & Déclarations</FooterLink>
-            <FooterLink href="#services">Administratif</FooterLink>
-            <FooterLink href="#services">Legal & Création d&apos;entreprise</FooterLink>
-            <FooterLink href="#services">RH & Salaires</FooterLink>
-            <FooterLink href="#services">Formation</FooterLink>
-            <FooterLink href="#services">Communication & Marketing</FooterLink>
-            <FooterLink href="#services">Conseil & Stratégie</FooterLink>
+            <ColTitle>{content.servicesTitle}</ColTitle>
+            {content.services.map((s, i) => (
+              <FooterLink key={i} href="#services">{s}</FooterLink>
+            ))}
           </div>
 
-          {/* Col 3 — Cabinet */}
+          {/* Col 3 — Company */}
           <div>
-            <ColTitle>Cabinet</ColTitle>
-            <FooterLink href="#equipe">Notre équipe</FooterLink>
-            <FooterLink href="#expertise">Nos valeurs</FooterLink>
-            <FooterLink href="#actualites">Actualités fiscales</FooterLink>
-            <FooterLink href="#actualites">Événements</FooterLink>
-            <FooterLink>Carrières</FooterLink>
-            <FooterLink>Partenaires</FooterLink>
+            <ColTitle>{content.companyTitle}</ColTitle>
+            {content.company.map((c, i) => (
+              <FooterLink key={i}>{c}</FooterLink>
+            ))}
           </div>
 
           {/* Col 4 — Contact */}
           <div>
-            <ColTitle>Contact</ColTitle>
+            <ColTitle>{content.contactTitle}</ColTitle>
             <a href="mailto:contact@inee.lu" style={{ color: 'rgba(250,246,241,0.55)', textDecoration: 'none', display: 'block', marginBottom: '8px', fontSize: '13px', transition: 'color 0.2s' }}
               onMouseEnter={e => (e.currentTarget.style.color = 'var(--copper)')}
               onMouseLeave={e => (e.currentTarget.style.color = 'rgba(250,246,241,0.55)')}>
               contact@inee.lu
             </a>
             <p style={{ fontSize: '13px', color: 'rgba(250,246,241,0.4)', marginBottom: '28px', lineHeight: 1.6 }}>
-              Lun–Ven · 8h30–18h00
+              {content.hours}
             </p>
             <a href="#contact" className="btn-primary" style={{ fontSize: '10px', padding: '12px 20px', textDecoration: 'none', display: 'inline-flex' }}>
-              Prendre rendez-vous
+              {content.ctaBtn}
             </a>
           </div>
         </div>
@@ -109,15 +102,10 @@ export default function Footer() {
         {/* Bottom */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
           <span style={{ fontSize: '12px', color: 'rgba(250,246,241,0.25)', fontFamily: "'Inter', sans-serif" }}>
-            © 2026 INEE S.à r.l.-S. Tous droits réservés.
+            {content.copyright}
           </span>
           <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
-            {[
-            { label: 'Politique de confidentialité', href: '/confidentialite' },
-            { label: 'CGU', href: '/cgu' },
-            { label: 'Mentions légales', href: '/mentions-legales' },
-            { label: 'CGV', href: '/cgv' },
-          ].map(({ label, href }) => (
+            {content.legal.map(({ label, href }) => (
               <a key={label} href={href} style={{ fontSize: '12px', color: 'rgba(250,246,241,0.25)', textDecoration: 'none', fontFamily: "'Inter', sans-serif", transition: 'color 0.2s' }}
                 onMouseEnter={e => (e.currentTarget.style.color = 'var(--copper)')}
                 onMouseLeave={e => (e.currentTarget.style.color = 'rgba(250,246,241,0.25)')}>
