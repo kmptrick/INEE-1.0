@@ -80,10 +80,10 @@ export function SendModal({ open, onClose, onSend, showTypeSelector = false, tit
           </div>
         )}
 
-        {/* Aperçu sujet */}
+        {/* Aperçu expéditeur */}
         <div className="rounded-lg px-3 py-2 text-xs" style={{ background: T.head, border: `1px solid ${T.border}` }}>
           <span style={{ color: T.muted }}>Expéditeur : </span>
-          <span style={{ color: T.dark }}>invoices@inee.lu</span>
+          <span style={{ color: T.dark }}>{showTypeSelector ? 'invoices@inee.lu' : 'contact@inee.lu'}</span>
         </div>
 
         {/* Boutons */}

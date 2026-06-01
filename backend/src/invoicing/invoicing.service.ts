@@ -358,11 +358,7 @@ export class InvoicingService {
     }
     const recipients = await this.getCompanyRecipients(quote.companyId);
     // Récupérer l'email de l'utilisateur connecté comme expéditeur
-    let senderEmail = 'invoices@inee.lu';
-    if (userId) {
-      const user = await this.prisma.user.findUnique({ where: { id: userId }, select: { email: true, firstName: true, lastName: true } });
-      if (user?.email) senderEmail = `${user.firstName} ${user.lastName} — INEE <${user.email}>`;
-    }
+    const senderEmail = 'INEE <contact@inee.lu>';
     if (recipients.length === 0) throw new BadRequestException('Aucun contact autorisé à recevoir les documents pour ce client.');
     const linesHtml = (quote.lines ?? []).map((l: any) =>
       `<tr><td style="padding:6px 10px;border-bottom:1px solid #eee">${l.description}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:center">${l.quantity}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right">${fmt(l.unitPrice)}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right;font-weight:bold">${fmt(l.total)}</td></tr>`
