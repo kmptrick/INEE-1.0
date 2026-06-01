@@ -4,13 +4,7 @@ import {
 } from '@react-pdf/renderer';
 import { INEE } from '@/lib/inee-brand';
 
-Font.register({
-  family: 'Helvetica',
-  fonts: [
-    { src: 'Helvetica' },
-    { src: 'Helvetica-Bold', fontWeight: 'bold' },
-  ],
-});
+// Helvetica est une police built-in PDF, pas besoin de Font.register en v4
 
 const BLUE       = '#1565C0';
 const BLUE_LIGHT = '#EBF5FB';
