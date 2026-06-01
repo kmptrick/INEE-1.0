@@ -202,7 +202,8 @@ export default function Contact() {
                     />
                     <span style={{ fontSize: '13px', color: 'rgba(250,246,241,0.45)', lineHeight: 1.6 }}>
                       Je consens au traitement de mes données personnelles conformément à la{' '}
-                      <a href="/confidentialite" style={{ color: 'var(--copper)', textDecoration: 'none' }}>politique de confidentialité</a>
+                      <a href="/confidentialite" style={{ color: 'var(--copper)', textDecoration: 'none' }}>politique de confidentialité</a>{' '}et les{' '}
+                      <a href="/cgu" style={{ color: 'var(--copper)', textDecoration: 'none' }}>CGU</a>
                     </span>
                   </label>
 
