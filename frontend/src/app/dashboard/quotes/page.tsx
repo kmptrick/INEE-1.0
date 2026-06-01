@@ -301,7 +301,18 @@ export default function QuotesPage() {
                     disabled={actioning} />
                 )}
                 {viewItem.status === 'DRAFT' && (
-                  <ActionBtn label="Marquer envoyé" color="#1D6FD8" bg="#EFF6FF" border="#BFDBFE" onClick={() => updateStatus(viewItem, 'SENT')} disabled={actioning} />
+                  <ActionBtn label="📧 Envoyer" color="#16A34A" bg="#F0FDF4" border="#BBF7D0"
+                    onClick={async () => {
+                      setActioning(true);
+                      try {
+                        const updated = await invoicing.quotes.sendAuto(viewItem.id);
+                        setFullQuotes(p => ({ ...p, [viewItem.id]: updated }));
+                        setViewItem(updated);
+                        load(filter || undefined);
+                      } catch (e: any) { alert(e.message || 'Erreur lors de l\'envoi'); }
+                      finally { setActioning(false); }
+                    }}
+                    disabled={actioning} />
                 )}
                 {viewItem.status === 'SENT' && (<>
                   <ActionBtn label="Accepter" color="#16A34A" bg="#F0FDF4" border="#BBF7D0" onClick={() => updateStatus(viewItem, 'ACCEPTED')} disabled={actioning} />

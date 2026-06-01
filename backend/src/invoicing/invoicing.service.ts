@@ -253,10 +253,18 @@ export class InvoicingService {
 
   // ─── Envoi automatique DEVIS ───────────────────────────────────────────────
 
-  async sendQuoteAuto(id: string) {
+  async sendQuoteAuto(id: string, userId?: string) {
     const quote = await this.findOneQuote(id);
-    if (quote.status !== 'ACCEPTED') throw new BadRequestException('Le devis doit être accepté avant d\'être envoyé.');
+    if (['REJECTED', 'EXPIRED', 'CANCELLED'].includes(quote.status as string)) {
+      throw new BadRequestException('Ce devis ne peut plus être envoyé.');
+    }
     const recipients = await this.getCompanyRecipients(quote.companyId);
+    // Récupérer l'email de l'utilisateur connecté comme expéditeur
+    let senderEmail = 'invoices@inee.lu';
+    if (userId) {
+      const user = await this.prisma.user.findUnique({ where: { id: userId }, select: { email: true, firstName: true, lastName: true } });
+      if (user?.email) senderEmail = `${user.firstName} ${user.lastName} — INEE <${user.email}>`;
+    }
     if (recipients.length === 0) throw new BadRequestException('Aucun contact autorisé à recevoir les documents pour ce client.');
     const linesHtml = (quote.lines ?? []).map((l: any) =>
       `<tr><td style="padding:6px 10px;border-bottom:1px solid #eee">${l.description}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:center">${l.quantity}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right">${fmt(l.unitPrice)}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right;font-weight:bold">${fmt(l.total)}</td></tr>`
@@ -280,7 +288,8 @@ export class InvoicingService {
         ${quote.notes ? `<p style="margin-top:16px;color:#7A6050;font-size:13px"><em>${quote.notes}</em></p>` : ''}
       </div>
     </div>`;
-    await this.mail.sendBilling({ to: recipients, subject: `Devis ${quote.number} — INEE`, html });
+    await this.mail.send({ from: senderEmail, to: recipients, subject: `Devis ${quote.number} — INEE`, html });
+    await this.audit.log({ entityType: 'Quote', entityId: id, userId, action: 'Devis envoyé par email', details: `De : ${senderEmail} · À : ${recipients.join(', ')}` });
     return this.prisma.quote.update({ where: { id }, data: { status: 'SENT' }, include: { company: true, lines: true } });
   }
 

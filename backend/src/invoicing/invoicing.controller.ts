@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { InvoicingService } from './invoicing.service';
@@ -60,7 +60,9 @@ export class InvoicingController {
   sendInvoiceAuto(@Param('id') id: string) { return this.service.sendInvoiceAuto(id); }
 
   @Post('quotes/:id/send-auto')
-  sendQuoteAuto(@Param('id') id: string) { return this.service.sendQuoteAuto(id); }
+  sendQuoteAuto(@Param('id') id: string, @Req() req: any) {
+    return this.service.sendQuoteAuto(id, req.user?.id ?? req.user?.sub);
+  }
 
   @Post('invoices/:id/send')
   sendInvoice(@Param('id') id: string, @Body() dto: SendDto) { return this.service.sendInvoice(id, dto.recipients); }
