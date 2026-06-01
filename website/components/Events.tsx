@@ -116,10 +116,10 @@ export default function Events({ content }: { content: SiteContent['events'] }) 
                 </p>
                 {article.details && article.details.length > 0 && (
                   <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {article.details.map((text, j) => (
+                    {article.details.map((detail, j) => (
                       <div key={j} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-                        <span style={{ fontSize: '13px' }}>{['📍', '🎟', '📌'][j] ?? '•'}</span>
-                        <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: 'var(--text-light)', lineHeight: 1.5 }}>{text}</span>
+                        <span style={{ fontSize: '13px' }}>{detail.icon}</span>
+                        <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: 'var(--text-light)', lineHeight: 1.5 }}>{detail.text}</span>
                       </div>
                     ))}
                   </div>
