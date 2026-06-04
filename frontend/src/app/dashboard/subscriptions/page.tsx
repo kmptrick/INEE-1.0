@@ -168,6 +168,8 @@ export default function SubscriptionsPage() {
 
   // ── Générer les factures dues ────────────────────────────────────────────
   const handleGenerate = async () => {
+    const active = list.filter(s => s.status === 'ACTIVE');
+    if (!confirm(`Générer les factures dues pour ${active.length} souscription(s) active(s) ?\n\nDes brouillons de factures seront créés pour toutes les souscriptions dont la prochaine date de facturation est aujourd'hui ou dépassée.`)) return;
     setGenerating(true);
     try {
       const res = await subscriptions.generate();

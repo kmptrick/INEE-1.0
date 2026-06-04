@@ -4,6 +4,7 @@ import { contacts, companies, Contact, Company } from '@/lib/api';
 import { Modal } from '@/components/Modal';
 import { HistoryPanel } from '@/components/HistoryPanel';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
+import { ComboSelect } from '@/components/ComboSelect';
 import { PageHeader, AddButton, DataTable, Td, FormActions, usePagination, useSort, TableFooter, useSegmentFilter, SegmentFilterBar, FilterRuleDef } from '@/components/PageShell';
 
 const QUALIFICATIONS = ['Actionnaire', 'Associé', 'Dirigeant', 'Comptable', 'Agent payeur', 'Autre'];
@@ -49,10 +50,13 @@ function ContactFormFields({ form, set, compList, saving, onSubmit, onCancel }: 
         </select>
       </FormField>
       <FormField label="Client">
-        <select className={selectClass} value={form.companyId} onChange={e => set('companyId', e.target.value)}>
-          <option value="">— Aucune —</option>
-          {compList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-        </select>
+        <ComboSelect
+          options={compList.map(c => ({ value: c.id, label: c.name }))}
+          value={form.companyId}
+          onChange={v => set('companyId', v)}
+          placeholder="— Aucune —"
+          emptyLabel="— Aucune —"
+        />
       </FormField>
       <FormActions onCancel={onCancel} saving={saving} />
     </form>

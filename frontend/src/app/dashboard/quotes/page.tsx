@@ -6,6 +6,7 @@ import { Modal } from '@/components/Modal';
 import { HistoryPanel } from '@/components/HistoryPanel';
 import { SendModal, SendType, SendLang } from '@/components/SendModal';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
+import { ComboSelect } from '@/components/ComboSelect';
 import { PageHeader, AddButton, FilterBar, DataTable, Td, StatusBadge, FormActions, usePagination, useSort, useColumns, TableFooter, useSegmentFilter, SegmentFilterBar, FilterRuleDef } from '@/components/PageShell';
 import { NotesWidget } from '@/components/NotesWidget';
 import { ServicePicker } from '@/components/ServicePicker';
@@ -411,10 +412,13 @@ export default function QuotesPage() {
       <Modal title={editingQuote ? `Modifier le devis ${editingQuote.number}` : 'Nouveau devis'} open={open} onClose={() => { setOpen(false); setEditingQuote(null); setForm(emptyForm()); }} wide>
         <form onSubmit={handleSubmit} className="space-y-4">
           <FormField label="Client">
-            <select className={selectClass} value={form.companyId} onChange={e => onClientChange(e.target.value)}>
-              <option value="">— Aucun —</option>
-              {compList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
+            <ComboSelect
+              options={compList.map(c => ({ value: c.id, label: c.name }))}
+              value={form.companyId}
+              onChange={onClientChange}
+              placeholder="— Aucun —"
+              emptyLabel="— Aucun —"
+            />
           </FormField>
 
           {vatResult.mention && (

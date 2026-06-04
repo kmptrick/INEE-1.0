@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { projects, companies, Project, Task, Company } from '@/lib/api';
 import { Modal } from '@/components/Modal';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
+import { ComboSelect } from '@/components/ComboSelect';
 import { PageHeader, AddButton, FilterBar, FormActions, DataTable, Td, usePagination, useSort, TableFooter, useSegmentFilter, SegmentFilterBar, FilterRuleDef } from '@/components/PageShell';
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -232,10 +233,13 @@ export default function ProjectsPage() {
               </select>
             </FormField>
             <FormField label="Client">
-              <select className={selectClass} value={projectForm.companyId} onChange={e => setPF('companyId', e.target.value)}>
-                <option value="">— Aucun —</option>
-                {compList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
+              <ComboSelect
+                options={compList.map(c => ({ value: c.id, label: c.name }))}
+                value={projectForm.companyId}
+                onChange={v => setPF('companyId', v)}
+                placeholder="— Aucun —"
+                emptyLabel="— Aucun —"
+              />
             </FormField>
           </div>
           <div className="grid grid-cols-2 gap-3">

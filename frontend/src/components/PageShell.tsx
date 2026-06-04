@@ -529,7 +529,7 @@ export function FormActions({ onCancel, saving, label }: { onCancel: () => void;
       <button type="submit" disabled={saving}
         className="flex-1 px-4 py-2.5 rounded-lg text-sm font-semibold text-white transition-all cursor-pointer"
         style={{ background: T.copper, opacity: saving ? 0.7 : 1, boxShadow: '0 1px 4px rgba(200,128,58,0.3)' }}>
-        {saving ? 'Enregistrement...' : (label ?? 'Créer')}
+        {saving ? 'Enregistrement...' : (label ?? 'Enregistrer')}
       </button>
     </div>
   );
@@ -632,11 +632,12 @@ export function TableFooter({ pagination, columnSelector, export: exportProps }:
   ) : null;
 
   return (
-    <div className="flex items-center justify-between flex-wrap gap-3 px-6 py-3 fixed bottom-0 right-0 left-0 md:left-60"
+    <div className="flex items-center justify-between flex-wrap gap-3 px-6 py-3 fixed bottom-0 right-0 left-0"
       style={{
         background: '#F8F5F2',
         borderTop: `1px solid ${T.border}`,
         zIndex: 20,
+        left: 'var(--sidebar-w, 0px)',
       }}>
       <div className="flex items-center gap-4">
         {perPageBar}

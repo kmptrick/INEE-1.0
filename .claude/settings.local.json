@@ -36,7 +36,13 @@
       "Bash(sed -i \"s/{ label: 'Référence' }, { label: 'Apporteur'/{ label: 'Référence', key: 'reference' }, { label: 'Apporteur'/\" frontend/src/app/dashboard/commissions/page.tsx)",
       "Bash(sed -i \"s/{ label: 'Titre', key: 'title' }, { label: 'Client' }/{ label: 'Titre', key: 'title' }, { label: 'Client', key: 'company.name' }/\" frontend/src/app/dashboard/deals/page.tsx)",
       "Bash(sed -i \"s/{ label: 'Valeur', key: 'value', align: 'right' }, { label: 'Proba.', align: 'center' }/{ label: 'Valeur', key: 'value', align: 'right' }, { label: 'Proba.', key: 'probability', align: 'center' }/\" frontend/src/app/dashboard/deals/page.tsx)",
-      "Bash(npx next *)"
+      "Bash(npx next *)",
+      "Bash(mkdir -p C:/Users/lenovo9/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/b419a45d-e3d6-4da9-aa7a-70cc3c02403b/876c7089-ab53-4073-a809-a35e185395cd/skills/premium-website-builder/references)",
+      "Bash(mkdir -p C:/Users/lenovo9/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/b419a45d-e3d6-4da9-aa7a-70cc3c02403b/876c7089-ab53-4073-a809-a35e185395cd/skills/premium-website-builder/assets)",
+      "Read(//c/Users/lenovo9/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/b419a45d-e3d6-4da9-aa7a-70cc3c02403b/876c7089-ab53-4073-a809-a35e185395cd/skills/skill-creator/**)",
+      "Bash(python -m scripts.package_skill C:/Users/lenovo9/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/b419a45d-e3d6-4da9-aa7a-70cc3c02403b/876c7089-ab53-4073-a809-a35e185395cd/skills/premium-website-builder)",
+      "Bash(mkdir -p \"C:/PERSO/INEE 1.0/.claude\")",
+      "Bash(mkdir -p \"C:\\\\Users\\\\lenovo9\\\\AppData\\\\Roaming\\\\Claude\\\\local-agent-mode-sessions\\\\skills-plugin\\\\b419a45d-e3d6-4da9-aa7a-70cc3c02403b\\\\876c7089-ab53-4073-a809-a35e185395cd\\\\skills\\\\inee-crm-erp-deployer\\\\references\")"
     ]
   }
 }

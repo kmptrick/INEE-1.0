@@ -1,8 +1,9 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { commissions, companies, Commission, Company } from '@/lib/api';
+import { commissions, companies, contacts, Commission, Company, Contact } from '@/lib/api';
 import { Modal } from '@/components/Modal';
 import { FormField, inputClass, selectClass, T } from '@/components/FormField';
+import { ComboSelect } from '@/components/ComboSelect';
 import { PageHeader, AddButton, FilterBar, DataTable, Td, StatusBadge, FormActions, usePagination, useSort, TableFooter, useSegmentFilter, SegmentFilterBar, FilterRuleDef } from '@/components/PageShell';
 import { HistoryPanel } from '@/components/HistoryPanel';
 
@@ -35,6 +36,7 @@ const SEGMENT_DEFS: FilterRuleDef[] = [
 export default function CommissionsPage() {
   const [list, setList]         = useState<Commission[]>([]);
   const [compList, setCompList] = useState<Company[]>([]);
+  const [contactList, setContactList] = useState<Contact[]>([]);
   const [filter, setFilter]     = useState('');
   const [loading, setLoading]   = useState(true);
   const [open, setOpen]         = useState(false);
@@ -49,7 +51,7 @@ export default function CommissionsPage() {
   const pagination = usePagination(filtered);
 
   const load = (s?: string) => { setLoading(true); commissions.list(s || undefined).then(setList).finally(() => setLoading(false)); };
-  useEffect(() => { load(); companies.list().then(setCompList); }, []);
+  useEffect(() => { load(); companies.list().then(setCompList); contacts.list().then(setContactList); }, []);
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
 
   const openEdit = (c: Commission) => {
@@ -104,13 +106,28 @@ export default function CommissionsPage() {
   const CommissionForm = ({ onSubmit, onCancel }: { onSubmit: (e: React.FormEvent) => void; onCancel: () => void }) => (
     <form onSubmit={onSubmit} className="space-y-4">
       <FormField label="Nom de l'apporteur" required>
-        <input className={inputClass} value={form.brokerName} onChange={e => set('brokerName', e.target.value)} required />
+        <input
+          className={inputClass}
+          list="broker-suggestions"
+          value={form.brokerName}
+          onChange={e => set('brokerName', e.target.value)}
+          placeholder="Nom ou choisir un contact..."
+          required
+        />
+        <datalist id="broker-suggestions">
+          {contactList.map(c => (
+            <option key={c.id} value={`${c.firstName} ${c.lastName}`} />
+          ))}
+        </datalist>
       </FormField>
       <FormField label="Client">
-        <select className={selectClass} value={form.companyId} onChange={e => set('companyId', e.target.value)}>
-          <option value="">— Aucune —</option>
-          {compList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-        </select>
+        <ComboSelect
+          options={compList.map(c => ({ value: c.id, label: c.name }))}
+          value={form.companyId}
+          onChange={v => set('companyId', v)}
+          placeholder="— Aucune —"
+          emptyLabel="— Aucune —"
+        />
       </FormField>
       <div className="grid grid-cols-2 gap-3">
         <FormField label="Valeur de l'affaire (€)" required>
