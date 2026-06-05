@@ -491,13 +491,7 @@ export default function InvoicesPage() {
               </div>
             )}
             {vatResult.regime === 'LU' && (
-              <div className="flex items-center gap-2">
-                <label className="text-xs" style={{ color: T.muted }}>Taux TVA global :</label>
-                <select className={inputClass} style={{ width: 'auto', fontSize: 12, padding: '4px 8px' }}
-                  value={form.vatRate} onChange={e => setField('vatRate', e.target.value)}>
-                  {LU_VAT_RATES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
-                </select>
-              </div>
+              <p className="text-xs" style={{ color: T.muted }}>Le taux TVA est défini par prestation (17% par défaut, modifiable ligne par ligne).</p>
             )}
           </div>
 
