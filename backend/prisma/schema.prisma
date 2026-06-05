@@ -315,11 +315,13 @@ model Invoice {
   vatAmount   Float         @default(0)
   total       Float         @default(0)
   paidAmount  Float         @default(0)
-  vatMention  String?
-  notes       String?
-  creditNotes CreditNote[]
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  vatMention      String?
+  notes           String?
+  reminderLevel   Int           @default(0)
+  lastReminderAt  DateTime?
+  creditNotes     CreditNote[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 }
 
 enum InvoiceStatus {

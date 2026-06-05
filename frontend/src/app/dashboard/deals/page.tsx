@@ -62,7 +62,7 @@ export default function DealsPage() {
 
   return (
     <div className="p-6">
-      <PageHeader title="Affaires" action={<AddButton onClick={() => setOpen(true)} />} />
+      <PageHeader title="Opportunités" action={<AddButton onClick={() => setOpen(true)} />} />
       <FilterBar filters={FILTERS} active={filter} onChange={v => { setFilter(v); load(v || undefined); }} />
       <SegmentFilterBar search={search} onSearch={setSearch} placeholder="Rechercher une affaire..." defs={SEGMENT_DEFS} rules={rules} addRule={addRule} removeRule={removeRule} updateRule={updateRule} clearRules={clearRules} clearAll={clearAll} activeCount={activeCount} />
 

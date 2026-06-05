@@ -23,10 +23,10 @@ const nav = [
   {
     label: 'Commerce',
     items: [
-      { href: '/dashboard/quotes',      label: 'Devis',       icon: '📄' },
-      { href: '/dashboard/deals',       label: 'Affaires',    icon: '🤝' },
-      { href: '/dashboard/commissions', label: 'Commissions', icon: '💰' },
-      { href: '/dashboard/projects',    label: 'Projets',     icon: '📁' },
+      { href: '/dashboard/deals',       label: 'Opportunités', icon: '🤝' },
+      { href: '/dashboard/quotes',      label: 'Devis',        icon: '📄' },
+      { href: '/dashboard/commissions', label: 'Commissions',  icon: '💰' },
+      { href: '/dashboard/projects',    label: 'Projets',      icon: '📁' },
     ],
   },
   {
