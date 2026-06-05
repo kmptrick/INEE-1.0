@@ -288,14 +288,11 @@ export class InvoicingService {
       reminder3: { fr: `DERNIER RAPPEL — Facture N° ${num}`, en: `FINAL NOTICE — Invoice No. ${num}` },
     };
     const subject = subjects[type]?.[lang] ?? subjects.send.fr;
-    const reminderLevelMap: Record<string, number> = { send: 0, reminder1: 1, reminder2: 2, reminder3: 3 };
-    const newLevel = reminderLevelMap[type] ?? 0;
-
     await this.mail.sendBilling({ to: recipients, subject, html });
     await this.audit.log({ entityType: 'Invoice', entityId: id, userId, action: `Facture envoyée (${type}, ${lang})`, details: `Destinataires : ${recipients.join(', ')}` });
     return (this.prisma as any).invoice.update({
       where: { id },
-      data: { status: 'SENT', reminderLevel: newLevel },
+      data: { status: 'SENT' },
       include: { company: true, lines: true },
     });
   }
