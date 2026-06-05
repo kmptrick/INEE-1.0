@@ -423,4 +423,17 @@ function CreditNotesContent() {
 
           <FormField label="Notes"><textarea className={inputClass} rows={2} value={form.notes} onChange={e => setField('notes', e.target.value)} /></FormField>
           
-          <FormActions onCancel={() => setOpen(fa
+          <FormActions onCancel={() => { setOpen(false); setEditingCN(null); setForm(emptyForm()); }} saving={saving} label="Enregistrer" />
+        </form>
+      </Modal>
+    </div>
+  );
+}
+
+export default function CreditNotesPage() {
+  return (
+    <Suspense>
+      <CreditNotesContent />
+    </Suspense>
+  );
+}
