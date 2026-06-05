@@ -380,11 +380,11 @@ function CreditNotesContent() {
             <div className="space-y-2">
               {form.lines.map((l, i) => (
                 <div key={i} className="rounded-lg p-3 space-y-2" style={{ background: T.head, border: `1px solid ${T.border}` }}>
-                  <div className="grid gap-2 items-center" style={{ gridTemplateColumns: '1fr 64px 88px 32px 24px' }}>
-                    <input placeholder="Description" className={inputClass} value={l.description} onChange={e => setLine(i, 'description', e.target.value)} required />
+                  <div className="grid gap-2 items-center" style={{ gridTemplateColumns: '32px 1fr 64px 88px 24px' }}>
+                    <ServicePicker onSelect={s => pickService(i, s)} />
+                    <input placeholder="Description" className={inputClass} value={l.description} readOnly />
                     <input type="number" min="0" step="0.01" placeholder="Qté" className={inputClass} value={l.quantity} onChange={e => setLine(i, 'quantity', e.target.value)} />
                     <input type="number" min="0" step="0.01" placeholder="Prix HT" className={inputClass} value={l.unitPrice} onChange={e => setLine(i, 'unitPrice', e.target.value)} required />
-                    <ServicePicker onSelect={s => pickService(i, s)} />
                     {form.lines.length > 1 && <button type="button" onClick={() => removeLine(i)} className="text-lg leading-none cursor-pointer" style={{ color: '#CCC' }}>✕</button>}
                   </div>
                   <div className="grid gap-2" style={{ gridTemplateColumns: '90px 90px 1fr' }}>

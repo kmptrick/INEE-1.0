@@ -477,7 +477,7 @@ export default function InvoicesPage() {
                   Marquer envoyée
                 </button>
               )}
-              {viewItem.number && (
+              {viewItem.number && viewItem.status !== 'DRAFT' && (
                 <button type="button" onClick={() => router.push(`/dashboard/credit-notes?invoiceId=${viewItem.id}&invoiceNumber=${encodeURIComponent(viewItem.number ?? '')}`)} disabled={actioning}
                   className="px-4 py-2.5 text-sm font-medium cursor-pointer transition-colors"
                   style={{ color: T.muted, background: 'transparent', opacity: actioning ? 0.5 : 1 }}
