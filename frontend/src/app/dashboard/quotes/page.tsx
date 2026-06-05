@@ -471,18 +471,18 @@ export default function QuotesPage() {
             <div className="space-y-2">
               {form.lines.map((l, i) => (
                 <div key={i} className="rounded-lg p-3 space-y-2" style={{ background: T.head, border: `1px solid ${T.border}` }}>
-                  <div className="grid gap-2 items-center" style={{ gridTemplateColumns: '1fr 64px 88px 24px' }}>
-                    <div className="flex items-center gap-2">
-                      <ServicePicker onSelect={s => pickService(i, s)} />
-                      <div className="flex-1 px-3 py-2.5 rounded-lg text-sm truncate"
-                        style={{ background: l.description ? '#FFF' : T.head, border: `1px solid ${T.border}`, color: l.description ? T.dark : T.muted, minWidth: 0 }}>
-                        {l.description || '← Choisir une prestation'}
-                      </div>
-                      <input type="hidden" value={l.description} required />
+                  {/* Ligne prestation */}
+                  <div className="flex items-center gap-2 mb-2">
+                    <ServicePicker onSelect={s => pickService(i, s)} />
+                    <div className="flex-1 px-3 py-2.5 rounded-lg text-sm"
+                      style={{ background: l.description ? '#FFF' : T.head, border: `1px solid ${T.border}`, color: l.description ? T.dark : T.muted }}>
+                      {l.description || 'Aucune prestation sélectionnée — cliquez sur 📋'}
                     </div>
+                    {form.lines.length > 1 && <button type="button" onClick={() => removeLine(i)} className="text-lg leading-none cursor-pointer flex-shrink-0" style={{ color: '#CCC' }}>✕</button>}
+                  </div>
+                  <div className="grid gap-2 items-center" style={{ gridTemplateColumns: '64px 88px' }}>
                     <input type="number" min="0" step="0.01" placeholder="Qté" className={inputClass} value={l.quantity} onChange={e => setLine(i, 'quantity', e.target.value)} />
                     <input type="number" min="0" step="0.01" placeholder="Prix HT" className={inputClass} value={l.unitPrice} onChange={e => setLine(i, 'unitPrice', e.target.value)} required />
-                    {form.lines.length > 1 && <button type="button" onClick={() => removeLine(i)} className="text-lg leading-none cursor-pointer" style={{ color: '#CCC' }}>✕</button>}
                   </div>
                   <div className="grid gap-2" style={{ gridTemplateColumns: '90px 90px 1fr' }}>
                     <div>
