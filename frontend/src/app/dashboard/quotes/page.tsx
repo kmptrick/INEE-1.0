@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { invoicing, companies, Quote, Company, Service } from '@/lib/api';
 import { Modal } from '@/components/Modal';
@@ -290,50 +290,53 @@ export default function QuotesPage() {
         <Modal title={`Devis ${viewItem.number}`} open={!!viewItem} onClose={() => setViewItem(null)} wide>
           <div className="grid gap-6" style={{ gridTemplateColumns: 'minmax(0,1fr) 260px' }}>
           <div className="space-y-4">
-            {/* Status + actions */}
-            <div className="flex flex-wrap items-center gap-2 pb-3" style={{ borderBottom: `1px solid ${T.border}` }}>
-              <NotesWidget value={viewItem.notes ?? ''} onChange={v => setViewItem(d => d ? { ...d, notes: v } : d)} />
-              {(() => { const ss = STATUS_ST[viewItem.status] ?? { bg: '#F5F5F5', color: '#888' }; return <StatusBadge label={STATUS_FR[viewItem.status] ?? viewItem.status} bg={ss.bg} color={ss.color} />; })()}
-              <div className="flex flex-wrap gap-2 ml-auto">
-                <PdfDownloadButton {...buildPdfProps(viewItem)} />
-                {/* Modifier : DRAFT ou SENT uniquement */}
-                {['DRAFT', 'SENT'].includes(viewItem.status) && (
-                  <ActionBtn label="✎ Modifier" color={T.copper} bg={T.head} border={T.border}
-                    onClick={() => openEditQuote(fullQuotes[viewItem.id] ?? viewItem)}
-                    disabled={actioning} />
-                )}
-                {viewItem.status === 'ACCEPTED' && (
-                  <ActionBtn label="📧 Envoyer" color="#16A34A" bg="#F0FDF4" border="#BBF7D0"
-                    onClick={async () => {
-                      setActioning(true);
-                      try {
-                        const updated = await invoicing.quotes.sendAuto(viewItem.id);
-                        setFullQuotes(p => ({ ...p, [viewItem.id]: updated }));
-                        setViewItem(updated);
-                        load(filter || undefined);
-                      } catch (e: any) { alert(e.message || 'Erreur lors de l\'envoi'); }
-                      finally { setActioning(false); }
-                    }}
-                    disabled={actioning} />
-                )}
-                {viewItem.status === 'DRAFT' && (
-                  <ActionBtn label="📧 Envoyer" color="#16A34A" bg="#F0FDF4" border="#BBF7D0"
-                    onClick={() => setSendModalOpen(true)}
-                    disabled={actioning} />
-                )}
-                {viewItem.status === 'SENT' && (<>
-                  <ActionBtn label="Accepter" color="#16A34A" bg="#F0FDF4" border="#BBF7D0" onClick={() => updateStatus(viewItem, 'ACCEPTED')} disabled={actioning} />
-                  <ActionBtn label="Refuser" color="#DC2626" bg="#FEF2F2" border="#FECACA" onClick={() => updateStatus(viewItem, 'REJECTED')} disabled={actioning} />
-                  <ActionBtn label="Expiré" color="#C2410C" bg="#FFF7ED" border="#FED7AA" onClick={() => updateStatus(viewItem, 'EXPIRED')} disabled={actioning} />
-                </>)}
-                {viewItem.status === 'ACCEPTED' && (
-                  <ActionBtn label="Convertir en facture" color="#FFF" bg={T.copper} border={T.copper} onClick={() => { const d = new Date(); d.setDate(d.getDate() + 14); setConvertDueDate(d.toISOString().slice(0,10)); setConvertOpen(true); }} disabled={actioning} />
-                )}
-                {viewItem.status === 'DRAFT' && (
-                  <ActionBtn label="Remettre en brouillon" color={T.muted} bg="#F5F5F5" border={T.border} onClick={() => updateStatus(viewItem, 'DRAFT')} disabled={actioning} />
-                )}
-              </div>
-            </div>
+            {/* Status + PDF + menu ⋮ */}
+            {(() => {
+              const ss = STATUS_ST[viewItem.status] ?? { bg: '#F5F5F5', color: '#888' };
+              const [moreOpen, setMoreOpen] = useState(false);
+              const moreRef = useRef<HTMLDivElement>(null);
+              useEffect(() => {
+                const h = (e: MouseEvent) => { if (moreRef.current && !moreRef.current.contains(e.target as Node)) setMoreOpen(false); };
+                document.addEventListener('mousedown', h);
+                return () => document.removeEventListener('mousedown', h);
+              }, []);
+              const menuItem = (label: string, onClick: () => void, danger?: boolean) => (
+                <button key={label} type="button" onClick={() => { onClick(); setMoreOpen(false); }}
+                  className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-2 cursor-pointer transition-colors"
+                  style={{ color: danger ? '#DC2626' : T.dark, background: 'transparent', border: 'none' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = T.head)}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                  {label}
+                </button>
+              );
+              return (
+                <div className="flex items-center gap-3 pb-3" style={{ borderBottom: `1px solid ${T.border}` }}>
+                  <StatusBadge label={STATUS_FR[viewItem.status] ?? viewItem.status} bg={ss.bg} color={ss.color} />
+                  <NotesWidget value={viewItem.notes ?? ''} onChange={v => setViewItem(d => d ? { ...d, notes: v } : d)} />
+                  <div className="ml-auto flex items-center gap-2">
+                    <PdfDownloadButton {...buildPdfProps(viewItem)} />
+                    <div ref={moreRef} className="relative">
+                      <button type="button" onClick={() => setMoreOpen(o => !o)}
+                        className="flex items-center justify-center w-8 h-8 rounded-lg cursor-pointer transition-colors"
+                        style={{ background: moreOpen ? T.head : 'transparent', border: `1px solid ${T.border}`, color: T.muted }}>
+                        ···
+                      </button>
+                      {moreOpen && (
+                        <div className="absolute right-0 top-9 z-50 rounded-xl shadow-xl overflow-hidden min-w-[200px]"
+                          style={{ background: '#FFF', border: `1px solid ${T.border}` }}>
+                          {['DRAFT', 'SENT'].includes(viewItem.status) && menuItem('✎ Modifier', () => openEditQuote(fullQuotes[viewItem.id] ?? viewItem))}
+                          {viewItem.status === 'SENT' && menuItem('✕ Marquer expiré', () => updateStatus(viewItem, 'EXPIRED'))}
+                          {viewItem.status === 'SENT' && menuItem('✕ Refuser', () => updateStatus(viewItem, 'REJECTED'), true)}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Action tabs — bas de fiche (style TeamLeader) */}
+            <div style={{ display: 'none' }} />
 
             {/* Info */}
             <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
@@ -384,6 +387,41 @@ export default function QuotesPage() {
                 <span style={{ color: '#78350F' }}>{viewItem.vatMention}</span>
               </div>
             )}
+
+            {/* ── Action tabs (style TeamLeader) ── */}
+            <div className="flex items-center flex-wrap" style={{ borderTop: `1px solid ${T.border}`, marginTop: 8 }}>
+              {(viewItem.status === 'DRAFT' || viewItem.status === 'SENT') && (
+                <button type="button" onClick={() => setSendModalOpen(true)} disabled={actioning}
+                  className="px-4 py-2.5 text-sm font-medium cursor-pointer border-r transition-colors"
+                  style={{ color: T.copper, borderColor: T.border, background: 'transparent', opacity: actioning ? 0.5 : 1 }}
+                  onMouseEnter={e => (e.currentTarget.style.background = T.head)} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                  Envoyer
+                </button>
+              )}
+              {viewItem.status === 'SENT' && (
+                <button type="button" onClick={() => updateStatus(viewItem, 'ACCEPTED')} disabled={actioning}
+                  className="px-4 py-2.5 text-sm font-medium cursor-pointer border-r transition-colors"
+                  style={{ color: T.copper, borderColor: T.border, background: 'transparent', opacity: actioning ? 0.5 : 1 }}
+                  onMouseEnter={e => (e.currentTarget.style.background = T.head)} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                  Accepter
+                </button>
+              )}
+              {viewItem.status === 'ACCEPTED' && (
+                <button type="button" onClick={() => { const d = new Date(); d.setDate(d.getDate() + 14); setConvertDueDate(d.toISOString().slice(0,10)); setConvertOpen(true); }} disabled={actioning}
+                  className="px-4 py-2.5 text-sm font-semibold cursor-pointer border-r transition-colors"
+                  style={{ color: '#FFF', background: T.copper, opacity: actioning ? 0.5 : 1 }}>
+                  Convertir en facture
+                </button>
+              )}
+              {viewItem.status === 'ACCEPTED' && (
+                <button type="button" onClick={() => setSendModalOpen(true)} disabled={actioning}
+                  className="px-4 py-2.5 text-sm font-medium cursor-pointer transition-colors"
+                  style={{ color: T.muted, background: 'transparent', opacity: actioning ? 0.5 : 1 }}
+                  onMouseEnter={e => (e.currentTarget.style.background = T.head)} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                  Envoyer
+                </button>
+              )}
+            </div>
           </div>
           <HistoryPanel entityType="Quote" entityId={viewItem.id} />
           </div>

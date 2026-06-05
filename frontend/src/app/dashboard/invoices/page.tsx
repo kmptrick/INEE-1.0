@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { invoicing, companies, creditNotes, Invoice, Company, Service } from '@/lib/api';
@@ -316,56 +316,51 @@ export default function InvoicesPage() {
         <Modal title={viewItem.number ? `Facture ${viewItem.number}` : 'Facture — Brouillon'} open={!!viewItem} onClose={() => setViewItem(null)} wide>
           <div className="grid gap-6" style={{ gridTemplateColumns: 'minmax(0,1fr) 260px' }}>
           <div className="space-y-4">
-            {/* Status + actions */}
-            <div className="flex flex-wrap items-center gap-2 pb-3" style={{ borderBottom: `1px solid ${T.border}` }}>
-              <NotesWidget value={viewItem.notes ?? ''} onChange={v => setViewItem(d => d ? { ...d, notes: v } : d)} />
-              {(() => { const ss = STATUS_ST[viewItem.status] ?? { bg: '#F5F5F5', color: '#888' }; return <StatusBadge label={STATUS_FR[viewItem.status] ?? viewItem.status} bg={ss.bg} color={ss.color} />; })()}
-              <div className="flex flex-wrap gap-2 ml-auto">
-                {viewItem.number && <PdfDownloadButton {...buildPdfProps(viewItem)} />}
-                {/* Modifier : uniquement si brouillon sans numéro */}
-                {!viewItem.number && (
-                  <ActionBtn label="✎ Modifier" color={T.copper} bg={T.head} border={T.border}
-                    onClick={() => openEditInvoice(fullInvoices[viewItem.id] ?? viewItem)}
-                    disabled={actioning} />
-                )}
-                {/* Comptabiliser : uniquement si pas encore de numéro */}
-                {!viewItem.number && (
-                  <ActionBtn label="✓ Comptabiliser" color="#FFF" bg={T.copper} border={T.copper}
-                    onClick={async () => {
-                      setActioning(true);
-                      try {
-                        const updated = await invoicing.invoices.post(viewItem.id);
-                        setFullInvoices(p => ({ ...p, [viewItem.id]: updated }));
-                        setViewItem(updated);
-                        load(filter || undefined);
-                      } finally { setActioning(false); }
-                    }}
-                    disabled={actioning} />
-                )}
-                {viewItem.number && (
-                  <ActionBtn label="Note de crédit" color="#7C3AED" bg="#F5F3FF" border="#DDD6FE"
-                    onClick={() => router.push(`/dashboard/credit-notes?invoiceId=${viewItem.id}&invoiceNumber=${encodeURIComponent(viewItem.number ?? '')}`)}
-                    disabled={actioning} />
-                )}
-                {viewItem.number && (
-                  <ActionBtn label="📧 Envoyer" color="#16A34A" bg="#F0FDF4" border="#BBF7D0"
-                    onClick={() => setSendModalOpen(true)}
-                    disabled={actioning} />
-                )}
-                {viewItem.status === 'DRAFT' && viewItem.number && (
-                  <ActionBtn label="Marquer envoyée" color="#1D6FD8" bg="#EFF6FF" border="#BFDBFE" onClick={() => updateStatus(viewItem, 'SENT')} disabled={actioning} />
-                )}
-                {(viewItem.status === 'SENT' || viewItem.status === 'OVERDUE') && (
-                  <ActionBtn label="Marquer payée" color="#16A34A" bg="#F0FDF4" border="#BBF7D0" onClick={() => updateStatus(viewItem, 'PAID')} disabled={actioning} />
-                )}
-                {viewItem.status === 'SENT' && (
-                  <ActionBtn label="Marquer en retard" color="#DC2626" bg="#FEF2F2" border="#FECACA" onClick={() => updateStatus(viewItem, 'OVERDUE')} disabled={actioning} />
-                )}
-                {(viewItem.status === 'DRAFT' || viewItem.status === 'SENT') && (
-                  <ActionBtn label="Annuler" color={T.muted} bg="#F5F5F5" border={T.border} onClick={() => updateStatus(viewItem, 'CANCELLED')} disabled={actioning} />
-                )}
-              </div>
-            </div>
+            {/* Status + PDF + menu ⋮ */}
+            {(() => {
+              const ss = STATUS_ST[viewItem.status] ?? { bg: '#F5F5F5', color: '#888' };
+              const [moreOpen, setMoreOpen] = useState(false);
+              const moreRef = useRef<HTMLDivElement>(null);
+              useEffect(() => {
+                const h = (e: MouseEvent) => { if (moreRef.current && !moreRef.current.contains(e.target as Node)) setMoreOpen(false); };
+                document.addEventListener('mousedown', h);
+                return () => document.removeEventListener('mousedown', h);
+              }, []);
+              const menuItem = (label: string, onClick: () => void, danger?: boolean) => (
+                <button key={label} type="button" onClick={() => { onClick(); setMoreOpen(false); }}
+                  className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-2 cursor-pointer transition-colors"
+                  style={{ color: danger ? '#DC2626' : T.dark, background: 'transparent', border: 'none' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = T.head)}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                  {label}
+                </button>
+              );
+              return (
+                <div className="flex items-center gap-3 pb-3" style={{ borderBottom: `1px solid ${T.border}` }}>
+                  <StatusBadge label={STATUS_FR[viewItem.status] ?? viewItem.status} bg={ss.bg} color={ss.color} />
+                  <NotesWidget value={viewItem.notes ?? ''} onChange={v => setViewItem(d => d ? { ...d, notes: v } : d)} />
+                  <div className="ml-auto flex items-center gap-2">
+                    {viewItem.number && <PdfDownloadButton {...buildPdfProps(viewItem)} />}
+                    <div ref={moreRef} className="relative">
+                      <button type="button" onClick={() => setMoreOpen(o => !o)}
+                        className="flex items-center justify-center w-8 h-8 rounded-lg cursor-pointer transition-colors"
+                        style={{ background: moreOpen ? T.head : 'transparent', border: `1px solid ${T.border}`, color: T.muted }}
+                        title="Plus d'actions">
+                        ···
+                      </button>
+                      {moreOpen && (
+                        <div className="absolute right-0 top-9 z-50 rounded-xl shadow-xl overflow-hidden min-w-[190px]"
+                          style={{ background: '#FFF', border: `1px solid ${T.border}` }}>
+                          {!viewItem.number && menuItem('✎ Modifier', () => openEditInvoice(fullInvoices[viewItem.id] ?? viewItem))}
+                          {viewItem.status === 'SENT' && menuItem('⏰ Marquer en retard', () => updateStatus(viewItem, 'OVERDUE'))}
+                          {(viewItem.status === 'DRAFT' || viewItem.status === 'SENT') && menuItem('✕ Annuler la facture', () => updateStatus(viewItem, 'CANCELLED'), true)}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Info */}
             <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
@@ -439,6 +434,51 @@ export default function InvoicesPage() {
                 <span style={{ color: '#78350F' }}>{viewItem.vatMention}</span>
               </div>
             )}
+
+            {/* ── Action tabs (style TeamLeader) ── */}
+            <div className="flex items-center flex-wrap" style={{ borderTop: `1px solid ${T.border}`, marginTop: 8 }}>
+              {!viewItem.number && (
+                <button type="button" disabled={actioning} onClick={async () => {
+                  setActioning(true);
+                  try { const u = await invoicing.invoices.post(viewItem.id); setFullInvoices(p => ({ ...p, [viewItem.id]: u })); setViewItem(u); load(filter || undefined); } finally { setActioning(false); }
+                }} className="px-4 py-2.5 text-sm font-semibold cursor-pointer transition-colors"
+                  style={{ color: '#FFF', background: T.copper, borderRadius: 6, margin: '8px 8px 0 0', opacity: actioning ? 0.6 : 1 }}>
+                  ✓ Comptabiliser
+                </button>
+              )}
+              {viewItem.number && (
+                <button type="button" onClick={() => setSendModalOpen(true)} disabled={actioning}
+                  className="px-4 py-2.5 text-sm font-medium cursor-pointer border-r transition-colors"
+                  style={{ color: T.copper, borderColor: T.border, background: 'transparent', opacity: actioning ? 0.5 : 1 }}
+                  onMouseEnter={e => (e.currentTarget.style.background = T.head)} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                  Envoyer
+                </button>
+              )}
+              {(viewItem.status === 'SENT' || viewItem.status === 'OVERDUE') && (
+                <button type="button" onClick={() => updateStatus(viewItem, 'PAID')} disabled={actioning}
+                  className="px-4 py-2.5 text-sm font-medium cursor-pointer border-r transition-colors"
+                  style={{ color: T.copper, borderColor: T.border, background: 'transparent', opacity: actioning ? 0.5 : 1 }}
+                  onMouseEnter={e => (e.currentTarget.style.background = T.head)} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                  Marquer payée
+                </button>
+              )}
+              {viewItem.status === 'DRAFT' && viewItem.number && (
+                <button type="button" onClick={() => updateStatus(viewItem, 'SENT')} disabled={actioning}
+                  className="px-4 py-2.5 text-sm font-medium cursor-pointer border-r transition-colors"
+                  style={{ color: T.copper, borderColor: T.border, background: 'transparent', opacity: actioning ? 0.5 : 1 }}
+                  onMouseEnter={e => (e.currentTarget.style.background = T.head)} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                  Marquer envoyée
+                </button>
+              )}
+              {viewItem.number && (
+                <button type="button" onClick={() => router.push(`/dashboard/credit-notes?invoiceId=${viewItem.id}&invoiceNumber=${encodeURIComponent(viewItem.number ?? '')}`)} disabled={actioning}
+                  className="px-4 py-2.5 text-sm font-medium cursor-pointer transition-colors"
+                  style={{ color: T.muted, background: 'transparent', opacity: actioning ? 0.5 : 1 }}
+                  onMouseEnter={e => (e.currentTarget.style.background = T.head)} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                  Note de crédit
+                </button>
+              )}
+            </div>
           </div>
           <HistoryPanel entityType="Invoice" entityId={viewItem.id} />
           </div>
