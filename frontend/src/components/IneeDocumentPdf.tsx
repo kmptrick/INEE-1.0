@@ -124,7 +124,8 @@ export interface DocLine {
 
 export interface IneeDocumentProps {
   type: 'DEVIS' | 'FACTURE' | 'NOTE DE CRÉDIT' | 'SOUSCRIPTION';
-  customTitle?: string; // ex: "RAPPEL N°1 / REMINDER N°1"
+  customTitle?: string;
+  lang?: 'fr' | 'en';
   number: string;
   date: string;
   dueDate?: string;
@@ -140,14 +141,43 @@ export interface IneeDocumentProps {
   paymentTerms?: string;
 }
 
-// ── Message intro selon type ───────────────────────────────────────────────────
-function getIntroMessage(type: string, company?: { name: string }): string {
+// ── Traductions ────────────────────────────────────────────────────────────────
+const TRANS = {
+  fr: {
+    typeLabel: { 'DEVIS': 'DEVIS', 'FACTURE': 'FACTURE', 'NOTE DE CRÉDIT': 'NOTE DE CRÉDIT', 'SOUSCRIPTION': 'SOUSCRIPTION' },
+    date: 'Date', dueDate: 'Échéance', payment: 'Paiement',
+    client: 'Client', payInfo: 'Informations de paiement',
+    bank: 'Banque', bic: 'BIC/SWIFT', conditions: 'Conditions',
+    desc: 'Description', qty: 'Qté', unitPrice: 'Prix HT', vat: 'TVA', total: 'Total HT',
+    subtotal: 'Sous-total HT', totalTTC: 'Total TTC', vatNum: 'TVA',
+  },
+  en: {
+    typeLabel: { 'DEVIS': 'QUOTE', 'FACTURE': 'INVOICE', 'NOTE DE CRÉDIT': 'CREDIT NOTE', 'SOUSCRIPTION': 'SUBSCRIPTION' },
+    date: 'Date', dueDate: 'Due date', payment: 'Payment terms',
+    client: 'Bill to', payInfo: 'Payment information',
+    bank: 'Bank', bic: 'BIC/SWIFT', conditions: 'Terms',
+    desc: 'Description', qty: 'Qty', unitPrice: 'Unit price', vat: 'VAT', total: 'Total excl. VAT',
+    subtotal: 'Subtotal excl. VAT', totalTTC: 'Total incl. VAT', vatNum: 'VAT no.',
+  },
+} as const;
+
+// ── Message intro selon type et langue ────────────────────────────────────────
+function getIntroMessage(type: string, lang: 'fr' | 'en', company?: { name: string }): string {
+  if (lang === 'en') {
+    const client = company?.name ? `for ${company.name}` : '';
+    switch (type) {
+      case 'FACTURE':        return `Dear Sir/Madam,\n\nPlease find enclosed our invoice ${client}. Thank you for your trust and do not hesitate to contact us for any questions.`;
+      case 'DEVIS':          return `Dear Sir/Madam,\n\nWe are pleased to submit our quotation ${client}. This document is valid for 14 days from its issue date.`;
+      case 'NOTE DE CRÉDIT': return `Dear Sir/Madam,\n\nPlease find enclosed our credit note ${client}.`;
+      default:               return `Dear Sir/Madam,\n\nPlease find enclosed this document ${client}.`;
+    }
+  }
   const client = company?.name ? `à l'attention de ${company.name}` : '';
   switch (type) {
-    case 'FACTURE':       return `Madame, Monsieur,\n\nVeuillez trouver ci-joint notre facture ${client}. Nous vous remercions de votre confiance et restons disponibles pour toute question.`;
-    case 'DEVIS':         return `Madame, Monsieur,\n\nNous avons le plaisir de vous soumettre notre devis ${client}. Ce document est valable 14 jours à compter de sa date d'émission.`;
-    case 'NOTE DE CRÉDIT':return `Madame, Monsieur,\n\nVeuillez trouver ci-joint notre note de crédit ${client}.`;
-    default:              return `Madame, Monsieur,\n\nVeuillez trouver ci-joint ce document ${client}.`;
+    case 'FACTURE':        return `Madame, Monsieur,\n\nVeuillez trouver ci-joint notre facture ${client}. Nous vous remercions de votre confiance et restons disponibles pour toute question.`;
+    case 'DEVIS':          return `Madame, Monsieur,\n\nNous avons le plaisir de vous soumettre notre devis ${client}. Ce document est valable 14 jours à compter de sa date d'émission.`;
+    case 'NOTE DE CRÉDIT': return `Madame, Monsieur,\n\nVeuillez trouver ci-joint notre note de crédit ${client}.`;
+    default:               return `Madame, Monsieur,\n\nVeuillez trouver ci-joint ce document ${client}.`;
   }
 }
 

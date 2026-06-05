@@ -92,6 +92,13 @@ function ActionBtn({ label, color, bg, border, onClick, disabled }: { label: str
 }
 
 export default function QuotesPage() {
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const h = (e: MouseEvent) => { if (moreRef.current && !moreRef.current.contains(e.target as Node)) setMoreOpen(false); };
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
+  }, []);
   const [list, setList] = useState<Quote[]>([]);
   const [compList, setCompList] = useState<Company[]>([]);
   const [filter, setFilter] = useState('');
@@ -293,13 +300,6 @@ export default function QuotesPage() {
             {/* Status + PDF + menu ⋮ */}
             {(() => {
               const ss = STATUS_ST[viewItem.status] ?? { bg: '#F5F5F5', color: '#888' };
-              const [moreOpen, setMoreOpen] = useState(false);
-              const moreRef = useRef<HTMLDivElement>(null);
-              useEffect(() => {
-                const h = (e: MouseEvent) => { if (moreRef.current && !moreRef.current.contains(e.target as Node)) setMoreOpen(false); };
-                document.addEventListener('mousedown', h);
-                return () => document.removeEventListener('mousedown', h);
-              }, []);
               const menuItem = (label: string, onClick: () => void, danger?: boolean) => (
                 <button key={label} type="button" onClick={() => { onClick(); setMoreOpen(false); }}
                   className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-2 cursor-pointer transition-colors"

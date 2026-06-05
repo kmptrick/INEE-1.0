@@ -106,6 +106,13 @@ export default function InvoicesPage() {
   const [filter, setFilter] = useState('');
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const h = (e: MouseEvent) => { if (moreRef.current && !moreRef.current.contains(e.target as Node)) setMoreOpen(false); };
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
+  }, []);
   const [form, setForm] = useState(emptyForm());
   const [saving, setSaving] = useState(false);
   const [fullInvoices, setFullInvoices] = useState<Record<string, Invoice>>({});
@@ -319,16 +326,9 @@ export default function InvoicesPage() {
             {/* Status + PDF + menu ⋮ */}
             {(() => {
               const ss = STATUS_ST[viewItem.status] ?? { bg: '#F5F5F5', color: '#888' };
-              const [moreOpen, setMoreOpen] = useState(false);
-              const moreRef = useRef<HTMLDivElement>(null);
-              useEffect(() => {
-                const h = (e: MouseEvent) => { if (moreRef.current && !moreRef.current.contains(e.target as Node)) setMoreOpen(false); };
-                document.addEventListener('mousedown', h);
-                return () => document.removeEventListener('mousedown', h);
-              }, []);
               const menuItem = (label: string, onClick: () => void, danger?: boolean) => (
                 <button key={label} type="button" onClick={() => { onClick(); setMoreOpen(false); }}
-                  className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-2 cursor-pointer transition-colors"
+                  className="w-full text-left px-4 py-2.5 text-sm cursor-pointer transition-colors"
                   style={{ color: danger ? '#DC2626' : T.dark, background: 'transparent', border: 'none' }}
                   onMouseEnter={e => (e.currentTarget.style.background = T.head)}
                   onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
