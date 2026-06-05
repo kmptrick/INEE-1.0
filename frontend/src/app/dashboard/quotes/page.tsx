@@ -18,6 +18,19 @@ const PdfDownloadButton = dynamic(
   { ssr: false }
 ) as React.ComponentType<IneeDocumentProps & { filename: string }>;
 
+async function generatePdfBase64(props: IneeDocumentProps): Promise<string | null> {
+  try {
+    const { pdf } = await import('@react-pdf/renderer');
+    const { IneeDocumentPdf } = await import('@/components/IneeDocumentPdf');
+    const blob = await pdf(IneeDocumentPdf(props) as any).toBlob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve((reader.result as string).split(',')[1]);
+      reader.readAsDataURL(blob);
+    });
+  } catch { return null; }
+}
+
 const STATUS_ST: Record<string, { bg: string; color: string }> = {
   DRAFT:    { bg: '#F5F5F5', color: '#666'    },
   SENT:     { bg: '#EFF6FF', color: '#1D6FD8' },
@@ -383,8 +396,9 @@ export default function QuotesPage() {
           open={sendModalOpen}
           onClose={() => setSendModalOpen(false)}
           title={`Envoyer le devis ${viewItem.number}`}
-          onSend={async (_type: SendType, lang: SendLang) => {
-            const updated = await invoicing.quotes.sendAuto(viewItem.id);
+          generatePdf={() => generatePdfBase64(buildPdfProps(viewItem))}
+          onSend={async (_type: SendType, _lang: SendLang, pdfBase64?: string) => {
+            const updated = await invoicing.quotes.sendAuto(viewItem.id, pdfBase64);
             setFullQuotes(p => ({ ...p, [viewItem.id]: updated }));
             setViewItem(updated);
             load(filter || undefined);

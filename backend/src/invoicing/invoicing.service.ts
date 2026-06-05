@@ -273,7 +273,7 @@ export class InvoicingService {
 
   // ─── Envoi facture avec options (type + langue) ────────────────────────────
 
-  async sendInvoiceWithOptions(id: string, type: string, lang: string, userId?: string) {
+  async sendInvoiceWithOptions(id: string, type: string, lang: string, userId?: string, pdfBase64?: string) {
     const invoice = await this.findOneInvoice(id);
     if (!(invoice as any).number) throw new BadRequestException('Comptabilisez la facture avant de l\'envoyer.');
     const recipients = await this.getCompanyRecipients(invoice.companyId);
@@ -288,7 +288,7 @@ export class InvoicingService {
       reminder3: { fr: `DERNIER RAPPEL — Facture N° ${num}`, en: `FINAL NOTICE — Invoice No. ${num}` },
     };
     const subject = subjects[type]?.[lang] ?? subjects.send.fr;
-    await this.mail.sendBilling({ to: recipients, subject, html });
+    await this.mail.sendBilling({ to: recipients, subject, html, pdfBase64, pdfFilename: pdfBase64 ? `${num}.pdf` : undefined });
     await this.audit.log({ entityType: 'Invoice', entityId: id, userId, action: `Facture envoyée (${type}, ${lang})`, details: `Destinataires : ${recipients.join(', ')}` });
     return (this.prisma as any).invoice.update({
       where: { id },
@@ -348,7 +348,7 @@ export class InvoicingService {
 
   // ─── Envoi automatique DEVIS ───────────────────────────────────────────────
 
-  async sendQuoteAuto(id: string, userId?: string) {
+  async sendQuoteAuto(id: string, userId?: string, pdfBase64?: string) {
     const quote = await this.findOneQuote(id);
     if (['REJECTED', 'EXPIRED', 'CANCELLED'].includes(quote.status as string)) {
       throw new BadRequestException('Ce devis ne peut plus être envoyé.');
@@ -379,7 +379,7 @@ export class InvoicingService {
         ${quote.notes ? `<p style="margin-top:16px;color:#7A6050;font-size:13px"><em>${quote.notes}</em></p>` : ''}
       </div>
     </div>`;
-    await this.mail.send({ from: senderEmail, to: recipients, subject: `Devis ${quote.number} — INEE`, html });
+    await this.mail.send({ from: senderEmail, to: recipients, subject: `Devis ${quote.number} — INEE`, html, pdfBase64, pdfFilename: pdfBase64 ? `${quote.number}.pdf` : undefined });
     await this.audit.log({ entityType: 'Quote', entityId: id, userId, action: 'Devis envoyé par email', details: `De : ${senderEmail} · À : ${recipients.join(', ')}` });
     return this.prisma.quote.update({ where: { id }, data: { status: 'SENT' }, include: { company: true, lines: true } });
   }

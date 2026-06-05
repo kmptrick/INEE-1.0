@@ -62,13 +62,13 @@ export class InvoicingController {
   @Post('invoices/:id/send')
   sendInvoiceWithOptions(
     @Param('id') id: string,
-    @Body() body: { type: string; lang: string },
+    @Body() body: { type: string; lang: string; pdfBase64?: string },
     @Req() req: any,
-  ) { return this.service.sendInvoiceWithOptions(id, body.type, body.lang, req.user?.id ?? req.user?.sub); }
+  ) { return this.service.sendInvoiceWithOptions(id, body.type, body.lang, req.user?.id ?? req.user?.sub, body.pdfBase64); }
 
   @Post('quotes/:id/send-auto')
-  sendQuoteAuto(@Param('id') id: string, @Req() req: any) {
-    return this.service.sendQuoteAuto(id, req.user?.id ?? req.user?.sub);
+  sendQuoteAuto(@Param('id') id: string, @Body() body: { pdfBase64?: string }, @Req() req: any) {
+    return this.service.sendQuoteAuto(id, req.user?.id ?? req.user?.sub, body.pdfBase64);
   }
 
   @Post('invoices/:id/send')

@@ -152,7 +152,7 @@ export const invoicing = {
     create: (data: Partial<Quote>) => api.post<Quote>('/invoicing/quotes', data),
     update: (id: string, data: Partial<Quote>) => api.put<Quote>(`/invoicing/quotes/${id}`, data),
     delete: (id: string) => api.delete(`/invoicing/quotes/${id}`),
-    sendAuto: (id: string) => api.post<Quote>(`/invoicing/quotes/${id}/send-auto`, {}),
+    sendAuto: (id: string, pdfBase64?: string) => api.post<Quote>(`/invoicing/quotes/${id}/send-auto`, { pdfBase64 }),
   },
   invoices: {
     list: (status?: string) => api.get<Invoice[]>(`/invoicing/invoices${status ? `?status=${status}` : ''}`),
@@ -162,7 +162,7 @@ export const invoicing = {
       api.post<Invoice>('/invoicing/invoices/from-quote', { quoteId, dueDate }),
     post: (id: string) => api.post<Invoice>(`/invoicing/invoices/${id}/post`, {}),
     sendAuto: (id: string) => api.post<Invoice>(`/invoicing/invoices/${id}/send-auto`, {}),
-    sendWithOptions: (id: string, type: string, lang: string) => api.post<Invoice>(`/invoicing/invoices/${id}/send`, { type, lang }),
+    sendWithOptions: (id: string, type: string, lang: string, pdfBase64?: string) => api.post<Invoice>(`/invoicing/invoices/${id}/send`, { type, lang, pdfBase64 }),
     update: (id: string, data: Partial<Invoice>) => api.put<Invoice>(`/invoicing/invoices/${id}`, data),
     delete: (id: string) => api.delete(`/invoicing/invoices/${id}`),
   },

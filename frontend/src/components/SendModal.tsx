@@ -9,7 +9,8 @@ export type SendLang = 'fr' | 'en';
 interface Props {
   open: boolean;
   onClose: () => void;
-  onSend: (type: SendType, lang: SendLang) => Promise<void>;
+  onSend: (type: SendType, lang: SendLang, pdfBase64?: string) => Promise<void>;
+  generatePdf?: () => Promise<string | null>;
   showTypeSelector?: boolean; // true pour factures
   title?: string;
 }
@@ -21,20 +22,29 @@ const TYPE_OPTIONS = [
   { value: 'reminder3',label: '3ème rappel',  labelEn: '3rd reminder' },
 ];
 
-export function SendModal({ open, onClose, onSend, showTypeSelector = false, title = 'Envoyer le document' }: Props) {
+export function SendModal({ open, onClose, onSend, generatePdf, showTypeSelector = false, title = 'Envoyer le document' }: Props) {
   const [lang, setLang] = useState<SendLang>('fr');
   const [type, setType] = useState<SendType>('send');
   const [sending, setSending] = useState(false);
+  const [status, setStatus] = useState<string>('');
 
   const handleSend = async () => {
     setSending(true);
     try {
-      await onSend(type, lang);
+      let pdfBase64: string | undefined;
+      if (generatePdf) {
+        setStatus('Génération du PDF…');
+        const b64 = await generatePdf();
+        if (b64) pdfBase64 = b64;
+      }
+      setStatus('Envoi en cours…');
+      await onSend(type, lang, pdfBase64);
       onClose();
     } catch (e: any) {
       alert(e.message || 'Erreur lors de l\'envoi');
     } finally {
       setSending(false);
+      setStatus('');
     }
   };
 
@@ -96,7 +106,7 @@ export function SendModal({ open, onClose, onSend, showTypeSelector = false, tit
           <button onClick={handleSend} disabled={sending}
             className="flex-1 px-4 py-2.5 rounded-lg text-sm font-semibold cursor-pointer"
             style={{ background: T.copper, color: '#FFF', opacity: sending ? 0.7 : 1 }}>
-            {sending ? 'Envoi en cours…' : '📧 Envoyer'}
+            {sending ? (status || 'Envoi en cours…') : '📧 Envoyer'}
           </button>
         </div>
       </div>

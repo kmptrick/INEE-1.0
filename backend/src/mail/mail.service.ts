@@ -6,6 +6,8 @@ export interface SendMailParams {
   subject: string;
   html: string;
   from?: string;
+  pdfBase64?: string;
+  pdfFilename?: string;
 }
 
 @Injectable()
@@ -36,7 +38,15 @@ export class MailService {
       this.logger.log(`[MAIL MOCK] From: ${from} | To: ${[params.to].flat().join(', ')} | Subject: ${params.subject}`);
       return;
     }
-    await this.transporter.sendMail({ from, to: params.to, subject: params.subject, html: params.html });
+    const mailOptions: any = { from, to: params.to, subject: params.subject, html: params.html };
+    if (params.pdfBase64 && params.pdfFilename) {
+      mailOptions.attachments = [{
+        filename: params.pdfFilename,
+        content: Buffer.from(params.pdfBase64, 'base64'),
+        contentType: 'application/pdf',
+      }];
+    }
+    await this.transporter.sendMail(mailOptions);
   }
 
   /** Billing emails — sender is always invoices@inee.lu */
