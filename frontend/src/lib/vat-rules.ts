@@ -37,9 +37,10 @@ export function computeVat(
 
   if (isEU) {
     if (isBusiness) {
+      const vatRef = client.vatNumber ? ` — N° TVA client : ${client.vatNumber}` : '';
       return {
         regime: 'EU_B2B', rate: 0,
-        mention: 'Autoliquidation — Art. 44 Dir. 2006/112/CE',
+        mention: `Autoliquidation — Art. 44 Dir. 2006/112/CE${vatRef}`,
         label: 'UE B2B — 0% (autoliquidation)',
       };
     }

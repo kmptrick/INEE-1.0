@@ -439,15 +439,34 @@ export default function QuotesPage() {
             />
           </FormField>
 
-          {vatResult.mention && (
-            <div className="rounded-lg px-3 py-2.5 text-xs" style={{ background: '#FEF3C7', border: '1px solid #FDE68A' }}>
-              <span className="font-semibold" style={{ color: T.dark }}>{vatResult.label}</span>
-              <span className="block mt-0.5" style={{ color: '#92400E' }}>Mention : «{vatResult.mention}»</span>
-              {vatResult.regime === 'EU_B2B' && selectedClient && !selectedClient.vatNumber && (
-                <span className="block mt-0.5 font-semibold" style={{ color: '#DC2626' }}>N° TVA client requis pour l&apos;autoliquidation</span>
-              )}
+          {/* ── Régime TVA ── */}
+          <div className="rounded-lg p-3 space-y-2" style={{ background: vatResult.regime === 'LU' ? T.head : '#FEF3C7', border: `1px solid ${vatResult.regime === 'LU' ? T.border : '#FDE68A'}` }}>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider" style={{ color: T.muted }}>Régime TVA</span>
+              <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: vatResult.regime === 'LU' ? T.copper + '20' : '#FDE68A', color: vatResult.regime === 'LU' ? T.copper : '#92400E' }}>
+                {vatResult.label}
+              </span>
             </div>
-          )}
+            {vatResult.regime === 'EU_B2B' && selectedClient && !selectedClient.vatNumber && (
+              <p className="text-xs font-semibold" style={{ color: '#DC2626' }}>⚠ N° TVA client requis pour l&apos;autoliquidation — ajoutez-le dans la fiche client</p>
+            )}
+            {vatResult.mention && (
+              <div>
+                <label className="block text-xs mb-1" style={{ color: '#92400E' }}>Mention légale (apparaîtra sur le document)</label>
+                <textarea rows={2} className={inputClass} value={form.vatMention} onChange={e => setField('vatMention', e.target.value)}
+                  style={{ fontSize: 11 }} />
+              </div>
+            )}
+            {vatResult.regime === 'LU' && (
+              <div className="flex items-center gap-2">
+                <label className="text-xs" style={{ color: T.muted }}>Taux TVA global :</label>
+                <select className={inputClass} style={{ width: 'auto', fontSize: 12, padding: '4px 8px' }}
+                  value={form.vatRate} onChange={e => setField('vatRate', e.target.value)}>
+                  {LU_VAT_RATES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                </select>
+              </div>
+            )}
+          </div>
 
 
           <div>
@@ -469,7 +488,7 @@ export default function QuotesPage() {
                     <div>
                       <label className="block text-xs mb-0.5" style={{ color: T.muted }}>TVA %</label>
                       <select className={inputClass} value={l.lineVatRate} onChange={e => setLine(i, 'lineVatRate', e.target.value)}>
-                        <option value="">17% — Défaut</option>
+                        <option value="">{form.vatRate}% — Défaut</option>
                         {LU_VAT_RATES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
                       </select>
                     </div>
