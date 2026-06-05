@@ -7,8 +7,8 @@ import { AuditService } from '../audit/audit.service';
 const fmt = (n: number) =>
   new Intl.NumberFormat('fr-LU', { style: 'currency', currency: 'EUR' }).format(n);
 
-const fmtDate = (d: Date | string | null | undefined) =>
-  d ? new Date(d).toLocaleDateString('fr-LU') : '—';
+const fmtDate = (d: Date | string | null | undefined, lang = 'fr') =>
+  d ? new Date(d).toLocaleDateString(lang === 'en' ? 'en-GB' : 'fr-LU') : '—';
 
 // Délais de rappel en jours après l'échéance
 const REMINDER_DELAYS = [1, 15, 29]; // Rappel 1, 2, 3
@@ -71,8 +71,9 @@ export class InvoicingScheduler {
           continue;
         }
 
-        const subject = this.buildSubject(nextLevel, invoice.number);
-        const html = this.buildHtml(nextLevel, invoice);
+        const invoiceLang = invoice.lang ?? 'fr';
+        const subject = this.buildSubject(nextLevel, invoice.number, invoiceLang);
+        const html = this.buildHtml(nextLevel, invoice, invoiceLang);
 
         await this.mail.sendBilling({ to: recipients, subject, html });
 
@@ -106,16 +107,16 @@ export class InvoicingScheduler {
     }
   }
 
-  private buildSubject(level: number, number: string): string {
-    const subjects: Record<number, string> = {
-      1: `Rappel — Facture N° ${number} en attente de paiement`,
-      2: `2ème rappel — Facture N° ${number} impayée`,
-      3: `DERNIER RAPPEL — Mise en demeure — Facture N° ${number}`,
+  private buildSubject(level: number, number: string, lang = 'fr'): string {
+    const subjects: Record<number, Record<string, string>> = {
+      1: { fr: `Rappel — Facture N° ${number} en attente de paiement`,    en: `Payment reminder — Invoice No. ${number}` },
+      2: { fr: `2ème rappel — Facture N° ${number} impayée`,              en: `2nd reminder — Invoice No. ${number} unpaid` },
+      3: { fr: `DERNIER RAPPEL — Mise en demeure — Facture N° ${number}`, en: `FINAL NOTICE — Invoice No. ${number}` },
     };
-    return subjects[level] ?? `Rappel facture N° ${number}`;
+    return subjects[level]?.[lang] ?? `Rappel facture N° ${number}`;
   }
 
-  private buildHtml(level: number, invoice: any): string {
+  private buildHtml(level: number, invoice: any, lang = 'fr'): string {
     const linesHtml = (invoice.lines ?? []).map((l: any) =>
       `<tr>
         <td style="padding:6px 10px;border-bottom:1px solid #eee">${l.description}</td>
@@ -125,24 +126,23 @@ export class InvoicingScheduler {
       </tr>`
     ).join('');
 
-    const messages: Record<number, { title: string; intro: string; warning?: string }> = {
+    const due = fmtDate(invoice.dueDate, lang);
+    const messages: Record<number, Record<string, { title: string; intro: string; warning?: string }>> = {
       1: {
-        title: 'Rappel de paiement',
-        intro: `Nous nous permettons de vous rappeler que la facture <strong>${invoice.number}</strong> d'un montant de <strong>${fmt(invoice.total)}</strong>, dont l'échéance était fixée au <strong>${fmtDate(invoice.dueDate)}</strong>, reste à ce jour impayée.<br><br>Si vous avez déjà procédé au règlement, veuillez ne pas tenir compte de ce message. Dans le cas contraire, nous vous remercions de bien vouloir régulariser votre situation dans les meilleurs délais.`,
+        fr: { title: 'Rappel de paiement', intro: `Nous nous permettons de vous rappeler que la facture <strong>${invoice.number}</strong> d'un montant de <strong>${fmt(invoice.total)}</strong>, dont l'échéance était fixée au <strong>${due}</strong>, reste à ce jour impayée.<br><br>Si vous avez déjà procédé au règlement, veuillez ne pas tenir compte de ce message. Dans le cas contraire, nous vous remercions de bien vouloir régulariser votre situation dans les meilleurs délais.` },
+        en: { title: 'Payment reminder', intro: `This is a friendly reminder that invoice <strong>${invoice.number}</strong> for <strong>${fmt(invoice.total)}</strong>, which was due on <strong>${due}</strong>, remains unpaid.<br><br>If you have already made the payment, please disregard this message. Otherwise, we kindly ask you to settle the outstanding amount at your earliest convenience.` },
       },
       2: {
-        title: '2ème rappel — Facture impayée',
-        intro: `Malgré notre précédent rappel, nous n'avons toujours pas reçu le paiement de la facture <strong>${invoice.number}</strong> d'un montant de <strong>${fmt(invoice.total)}</strong>, échue le <strong>${fmtDate(invoice.dueDate)}</strong>.<br><br>Nous vous prions instamment de procéder au règlement dans un délai de <strong>8 jours</strong> afin d'éviter tout recours supplémentaire.`,
-        warning: 'Sans retour de votre part sous 8 jours, nous nous verrons contraints d\'engager une procédure de recouvrement.',
+        fr: { title: '2ème rappel — Facture impayée', intro: `Malgré notre précédent rappel, nous n'avons toujours pas reçu le paiement de la facture <strong>${invoice.number}</strong> d'un montant de <strong>${fmt(invoice.total)}</strong>, échue le <strong>${due}</strong>.<br><br>Nous vous prions instamment de procéder au règlement dans un délai de <strong>8 jours</strong> afin d'éviter tout recours supplémentaire.`, warning: "Sans retour de votre part sous 8 jours, nous nous verrons contraints d'engager une procédure de recouvrement." },
+        en: { title: '2nd reminder — Unpaid invoice', intro: `Despite our previous reminder, we have not yet received payment for invoice <strong>${invoice.number}</strong> for <strong>${fmt(invoice.total)}</strong>, which was due on <strong>${due}</strong>.<br><br>We urgently request that you settle this balance within <strong>8 days</strong> to avoid further action.`, warning: 'Failure to pay within 8 days may result in debt collection proceedings.' },
       },
       3: {
-        title: 'DERNIER RAPPEL — Mise en demeure',
-        intro: `En l'absence de réponse à nos précédents rappels, nous vous mettons en demeure de régler la facture <strong>${invoice.number}</strong> d'un montant de <strong>${fmt(invoice.total)}</strong>, échue le <strong>${fmtDate(invoice.dueDate)}</strong>, dans un délai de <strong>8 jours calendaires</strong> à compter de la réception du présent courrier.<br><br>À défaut de paiement dans ce délai, nous nous réservons le droit d'engager toute procédure judiciaire ou de recouvrement nécessaire, sans autre préavis.`,
-        warning: 'Ce courrier vaut mise en demeure au sens du droit luxembourgeois.',
+        fr: { title: 'DERNIER RAPPEL — Mise en demeure', intro: `En l'absence de réponse à nos précédents rappels, nous vous mettons en demeure de régler la facture <strong>${invoice.number}</strong> d'un montant de <strong>${fmt(invoice.total)}</strong>, échue le <strong>${due}</strong>, dans un délai de <strong>8 jours calendaires</strong> à compter de la réception du présent courrier.<br><br>À défaut de paiement dans ce délai, nous nous réservons le droit d'engager toute procédure judiciaire ou de recouvrement nécessaire, sans autre préavis.`, warning: 'Ce courrier vaut mise en demeure au sens du droit luxembourgeois.' },
+        en: { title: 'FINAL NOTICE — Formal demand', intro: `Having received no response to our previous reminders, we hereby formally demand payment of invoice <strong>${invoice.number}</strong> for <strong>${fmt(invoice.total)}</strong>, due on <strong>${due}</strong>, within <strong>8 calendar days</strong> of receipt of this notice.<br><br>Failure to pay within this period will leave us no alternative but to pursue legal or debt collection proceedings without further notice.`, warning: 'This notice constitutes a formal demand under Luxembourg law.' },
       },
     };
+    const msg = messages[level]?.[lang] ?? messages[1].fr;
 
-    const msg = messages[level] ?? messages[1];
     const headerColor = level === 3 ? '#DC2626' : '#C8803A';
 
     return `

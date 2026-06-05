@@ -292,7 +292,7 @@ export class InvoicingService {
     await this.audit.log({ entityType: 'Invoice', entityId: id, userId, action: `Facture envoyée (${type}, ${lang})`, details: `Destinataires : ${recipients.join(', ')}` });
     return (this.prisma as any).invoice.update({
       where: { id },
-      data: { status: 'SENT' },
+      data: { status: 'SENT', lang },
       include: { company: true, lines: true },
     });
   }
