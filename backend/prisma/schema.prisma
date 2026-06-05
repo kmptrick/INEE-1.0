@@ -320,6 +320,7 @@ model Invoice {
   reminderLevel   Int           @default(0)
   lastReminderAt  DateTime?
   lang            String        @default("fr")
+  waivedInterest  Boolean       @default(false)
   creditNotes     CreditNote[]
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt

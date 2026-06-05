@@ -394,6 +394,22 @@ export default function InvoicesPage() {
                           style={{ background: '#FFF', border: `1px solid ${T.border}` }}>
                           {!viewItem.number && menuItem('✎ Modifier', () => openEditInvoice(fullInvoices[viewItem.id] ?? viewItem))}
                           {viewItem.status === 'SENT' && menuItem('⏰ Marquer en retard', () => updateStatus(viewItem, 'OVERDUE'))}
+                          {viewItem.status === 'OVERDUE' && !((viewItem as any).waivedInterest) && menuItem('🤝 Annuler les intérêts', async () => {
+                            setActioning(true);
+                            try {
+                              const updated = await invoicing.invoices.update(viewItem.id, { waivedInterest: true, vatRate: viewItem.vatRate, notes: viewItem.notes, lines: (viewItem.lines ?? []).map((l: any) => ({ ...(l.serviceId ? { serviceId: l.serviceId } : {}), description: l.description, quantity: l.quantity, unitPrice: l.unitPrice })) } as any);
+                              setFullInvoices(p => ({ ...p, [viewItem.id]: updated }));
+                              setViewItem(updated);
+                            } finally { setActioning(false); }
+                          })}
+                          {viewItem.status === 'OVERDUE' && (viewItem as any).waivedInterest && menuItem('↩ Rétablir les intérêts', async () => {
+                            setActioning(true);
+                            try {
+                              const updated = await invoicing.invoices.update(viewItem.id, { waivedInterest: false, vatRate: viewItem.vatRate, notes: viewItem.notes, lines: (viewItem.lines ?? []).map((l: any) => ({ ...(l.serviceId ? { serviceId: l.serviceId } : {}), description: l.description, quantity: l.quantity, unitPrice: l.unitPrice })) } as any);
+                              setFullInvoices(p => ({ ...p, [viewItem.id]: updated }));
+                              setViewItem(updated);
+                            } finally { setActioning(false); }
+                          })}
                           {(viewItem.status === 'DRAFT' || viewItem.status === 'SENT') && menuItem('✕ Annuler la facture', () => updateStatus(viewItem, 'CANCELLED'), true)}
                         </div>
                       )}
@@ -408,6 +424,13 @@ export default function InvoicesPage() {
               <div><span style={{ color: T.muted }}>Client : </span><span className="font-semibold" style={{ color: T.dark }}>{viewItem.company?.name ?? '—'}</span></div>
               <div><span style={{ color: T.muted }}>Échéance : </span><span className="font-semibold" style={{ color: T.dark }}>{fmtDate(viewItem.dueDate) ?? '—'}</span></div>
               <div><span style={{ color: T.muted }}>Montant payé : </span><span className="font-semibold" style={{ color: '#16A34A' }}>{fmt(viewItem.paidAmount)}</span></div>
+              {(viewItem as any).waivedInterest && (
+                <div className="col-span-2">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold" style={{ background: '#F0FDF4', color: '#16A34A', border: '1px solid #BBF7D0' }}>
+                    🤝 Intérêts de retard annulés
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Lines */}

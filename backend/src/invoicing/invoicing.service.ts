@@ -463,12 +463,13 @@ export class InvoicingService {
 
   async updateInvoice(id: string, data: UpdateInvoiceDto) {
     await this.findOneInvoice(id);
-    const { lines, vatRate = VAT_LU, paidAmount, status, ...rest } = data;
+    const { lines, vatRate = VAT_LU, paidAmount, status, waivedInterest, ...rest } = data as any;
     const totals = this.calcTotals(lines, vatRate);
 
     const updateData: any = { ...rest, ...totals };
     if (paidAmount !== undefined) updateData.paidAmount = paidAmount;
     if (status) updateData.status = status;
+    if (waivedInterest !== undefined) updateData.waivedInterest = waivedInterest;
 
     const inv = await this.prisma.invoice.update({
       where: { id },

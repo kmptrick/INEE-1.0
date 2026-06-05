@@ -13,6 +13,12 @@ const fmtDate = (d: Date | string | null | undefined, lang = 'fr') =>
 // Délais de rappel en jours après l'échéance
 const REMINDER_DELAYS = [1, 15, 29]; // Rappel 1, 2, 3
 
+// Taux d'intérêt légal luxembourgeois B2B (8% par an)
+const INTEREST_RATE_ANNUAL = 0.08;
+function calcInterest(principal: number, daysOverdue: number): number {
+  return Math.round(principal * INTEREST_RATE_ANNUAL * (daysOverdue / 365) * 100) / 100;
+}
+
 @Injectable()
 export class InvoicingScheduler {
   private readonly logger = new Logger(InvoicingScheduler.name);
@@ -73,7 +79,8 @@ export class InvoicingScheduler {
 
         const invoiceLang = invoice.lang ?? 'fr';
         const subject = this.buildSubject(nextLevel, invoice.number, invoiceLang);
-        const html = this.buildHtml(nextLevel, invoice, invoiceLang);
+        const interest = invoice.waivedInterest ? 0 : calcInterest(invoice.total, daysOverdue);
+        const html = this.buildHtml(nextLevel, invoice, invoiceLang, daysOverdue, interest);
 
         await this.mail.sendBilling({ to: recipients, subject, html });
 
@@ -116,7 +123,7 @@ export class InvoicingScheduler {
     return subjects[level]?.[lang] ?? `Rappel facture N° ${number}`;
   }
 
-  private buildHtml(level: number, invoice: any, lang = 'fr'): string {
+  private buildHtml(level: number, invoice: any, lang = 'fr', daysOverdue = 0, interest = 0): string {
     const linesHtml = (invoice.lines ?? []).map((l: any) =>
       `<tr>
         <td style="padding:6px 10px;border-bottom:1px solid #eee">${l.description}</td>
@@ -176,6 +183,17 @@ export class InvoicingScheduler {
       <p style="margin:4px 0;font-size:13px;color:#7A6050">TVA : ${fmt(invoice.vatAmount)}</p>
       <p style="margin:8px 0 0;font-size:16px;font-weight:bold;color:${headerColor}">Total TTC : ${fmt(invoice.total)}</p>
     </div>
+
+    ${interest > 0 ? `
+    <div style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:4px;padding:12px 16px;font-size:13px;margin-bottom:16px">
+      <strong style="color:#C2410C">${lang === 'en' ? '⚠ Late payment interest (Art. L.115-2 Luxembourg)' : '⚠ Intérêts de retard (Art. L.115-2 du Code de commerce LU)'}</strong><br>
+      <span style="color:#7C2D12">
+        ${lang === 'en'
+          ? `${daysOverdue} days overdue · Rate: 8% p.a. · Interest: <strong>${fmt(interest)}</strong> · Total due incl. interest: <strong>${fmt(invoice.total + interest)}</strong>`
+          : `${daysOverdue} jours de retard · Taux : 8% / an · Intérêts : <strong>${fmt(interest)}</strong> · Total dû avec intérêts : <strong>${fmt(invoice.total + interest)}</strong>`
+        }
+      </span>
+    </div>` : ''}
 
     <div style="background:#F0FDF4;border-radius:4px;padding:12px 16px;font-size:13px;margin-bottom:16px">
       <strong>Coordonnées bancaires</strong><br>
