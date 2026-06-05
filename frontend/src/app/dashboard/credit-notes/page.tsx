@@ -96,6 +96,14 @@ function CreditNotesContent() {
     if (prefillInvoiceId) setOpen(true);
   }, []);
 
+  // Auto-remplir le client quand on arrive depuis une facture
+  useEffect(() => {
+    if (prefillInvoiceId && invoiceList.length > 0) {
+      onInvoiceChange(prefillInvoiceId);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [invoiceList]);
+
   useEffect(() => {
     list.forEach(cn => {
       if (!fullCNs[cn.id]) creditNotes.get(cn.id).then(full => setFullCNs(p => ({ ...p, [cn.id]: full })));
@@ -352,7 +360,7 @@ function CreditNotesContent() {
             <select className={selectClass} value={form.invoiceId} onChange={e => onInvoiceChange(e.target.value)} required>
               <option value="">— Sélectionner une facture —</option>
               {invoiceList.map(inv => (
-                <option key={inv.id} value={inv.id}>{inv.number}{inv.company ? ` — ${inv.company.name}` : ''}</option>
+                <option key={inv.id} value={inv.id}>{inv.number}</option>
               ))}
             </select>
           </FormField>
