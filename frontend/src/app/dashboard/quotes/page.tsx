@@ -510,7 +510,7 @@ export default function QuotesPage() {
 
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#4A3020' }}>Lignes</label>
+              <label className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#6B4C35' }}>Lignes</label>
               <button type="button" onClick={addLine} className="text-xs font-semibold" style={{ color: T.copper }}>+ Ajouter ligne</button>
             </div>
             <div className="space-y-2">

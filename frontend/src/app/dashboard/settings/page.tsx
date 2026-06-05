@@ -4,7 +4,7 @@ import { useAuth } from '@/lib/auth-context';
 import { users, leaveTypes, LeaveType, UserProfile } from '@/lib/api';
 import { T, inputClass, selectClass } from '@/components/FormField';
 
-const LEAVE_COLORS = ['#16A34A','#DC2626','#1D6FD8','#C8803A','#7C3AED','#0891B2','#DB2777','#6B7280'];
+const LEAVE_COLORS = ['#16A34A','#DC2626','#1D6FD8','#D9924E','#7C3AED','#0891B2','#DB2777','#6B7280'];
 
 export default function SettingsPage() {
   const { user } = useAuth();
@@ -119,7 +119,7 @@ export default function SettingsPage() {
           </div>
           <form onSubmit={handleChangePw} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: '#4A3020' }}>Utilisateur</label>
+              <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: '#6B4C35' }}>Utilisateur</label>
               <select value={pwUserId} onChange={e => setPwUserId(e.target.value)} required className={selectClass}
                 style={{ color: pwUserId ? T.dark : T.muted }}>
                 <option value="">— Sélectionner un utilisateur —</option>
@@ -130,12 +130,12 @@ export default function SettingsPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: '#4A3020' }}>Nouveau mot de passe</label>
+                <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: '#6B4C35' }}>Nouveau mot de passe</label>
                 <input type="password" value={pwNew} onChange={e => setPwNew(e.target.value)} required minLength={8}
                   placeholder="••••••••" className={inputClass} />
               </div>
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: '#4A3020' }}>Confirmer</label>
+                <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: '#6B4C35' }}>Confirmer</label>
                 <input type="password" value={pwConfirm} onChange={e => setPwConfirm(e.target.value)} required
                   placeholder="••••••••" className={inputClass} />
               </div>
@@ -161,7 +161,7 @@ export default function SettingsPage() {
           {/* List */}
           <div className="rounded-xl overflow-hidden" style={{ background: '#FFF', border: `1px solid ${T.border}` }}>
             <div className="px-4 py-3" style={{ background: T.head, borderBottom: `1px solid ${T.border}` }}>
-              <span className="text-xs font-bold uppercase tracking-wider" style={{ color: '#4A3020' }}>Types de congés</span>
+              <span className="text-xs font-bold uppercase tracking-wider" style={{ color: '#6B4C35' }}>Types de congés</span>
             </div>
             {ltLoading ? (
               <div className="px-4 py-8 text-center text-sm" style={{ color: T.muted }}>Chargement...</div>
@@ -209,16 +209,16 @@ export default function SettingsPage() {
             <form onSubmit={handleSaveLt} className="space-y-4">
               <div className="grid grid-cols-3 gap-4">
                 <div className="col-span-1">
-                  <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: '#4A3020' }}>Nom</label>
+                  <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: '#6B4C35' }}>Nom</label>
                   <input className={inputClass} required value={ltForm.name} onChange={e => setLtForm(f => ({ ...f, name: e.target.value }))} placeholder="Congé annuel" />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: '#4A3020' }}>Jours max / an</label>
+                  <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: '#6B4C35' }}>Jours max / an</label>
                   <input type="number" min="1" max="365" className={inputClass} value={ltForm.maxDaysPerYear}
                     onChange={e => setLtForm(f => ({ ...f, maxDaysPerYear: e.target.value }))} />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: '#4A3020' }}>Couleur</label>
+                  <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: '#6B4C35' }}>Couleur</label>
                   <div className="flex gap-1.5 flex-wrap mt-1">
                     {LEAVE_COLORS.map(c => (
                       <button key={c} type="button" onClick={() => setLtForm(f => ({ ...f, color: c }))}

@@ -14,7 +14,7 @@ const DAYS_FR   = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
 const HOURS = Array.from({ length: 13 }, (_, i) => i + 7); // 7:00 – 19:00
 
 const EVENT_COLORS: Record<string, string> = {
-  MEETING: '#1D6FD8', CALL: '#16A34A', TASK: '#C8803A', OTHER: '#7C3AED',
+  MEETING: '#1D6FD8', CALL: '#16A34A', TASK: '#D9924E', OTHER: '#7C3AED',
 };
 const EVENT_FR: Record<string, string> = {
   MEETING: 'Réunion', CALL: 'Appel', TASK: 'Tâche', OTHER: 'Autre',
@@ -79,7 +79,7 @@ function QuotaBar({ leaves, ltypes, isOwnCalendar, userName }: {
   return (
     <div className="px-4 py-3 flex-shrink-0" style={{ background: '#FFF', borderBottom: `1px solid ${T.border}` }}>
       <div className="flex items-center gap-2 mb-2">
-        <span className="text-xs font-bold uppercase tracking-wider" style={{ color: '#4A3020' }}>
+        <span className="text-xs font-bold uppercase tracking-wider" style={{ color: '#6B4C35' }}>
           {isOwnCalendar ? 'Mes quotas de congés' : `Congés de ${userName}`} — {year}
         </span>
       </div>
@@ -325,39 +325,39 @@ export default function AgendaPage() {
             <>
               <div className="grid grid-cols-2 gap-3">
                 <div className="col-span-2">
-                  <label className="block text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#4A3020' }}>Titre *</label>
+                  <label className="block text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#6B4C35' }}>Titre *</label>
                   <input className="w-full px-3 py-2 rounded-lg text-sm border outline-none" required
                     value={evForm.title} onChange={e => setEvForm(f => ({ ...f, title: e.target.value }))} style={{ borderColor: T.border }} />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#4A3020' }}>Type</label>
+                  <label className="block text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#6B4C35' }}>Type</label>
                   <select className="w-full px-3 py-2 rounded-lg text-sm border outline-none" value={evForm.type}
                     onChange={e => setEvForm(f => ({ ...f, type: e.target.value }))} style={{ borderColor: T.border }}>
                     {Object.entries(EVENT_FR).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#4A3020' }}>Lieu</label>
+                  <label className="block text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#6B4C35' }}>Lieu</label>
                   <input className="w-full px-3 py-2 rounded-lg text-sm border outline-none" value={evForm.location}
                     onChange={e => setEvForm(f => ({ ...f, location: e.target.value }))} style={{ borderColor: T.border }} />
                 </div>
               </div>
               <div>
-                <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold uppercase tracking-wider" style={{ color: '#4A3020' }}>
+                <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold uppercase tracking-wider" style={{ color: '#6B4C35' }}>
                   <input type="checkbox" checked={evForm.allDay} onChange={e => setEvForm(f => ({ ...f, allDay: e.target.checked }))} className="accent-amber-600 cursor-pointer" />
                   Journée entière
                 </label>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#4A3020' }}>Début *</label>
+                  <label className="block text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#6B4C35' }}>Début *</label>
                   <input type="date" required className="w-full px-3 py-2 rounded-lg text-sm border outline-none" value={evForm.startDate}
                     onChange={e => setEvForm(f => ({ ...f, startDate: e.target.value }))} style={{ borderColor: T.border }} />
                   {!evForm.allDay && <input type="time" className="w-full px-3 py-2 rounded-lg text-sm border outline-none mt-1" value={evForm.startTime}
                     onChange={e => setEvForm(f => ({ ...f, startTime: e.target.value }))} style={{ borderColor: T.border }} />}
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#4A3020' }}>Fin *</label>
+                  <label className="block text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#6B4C35' }}>Fin *</label>
                   <input type="date" required className="w-full px-3 py-2 rounded-lg text-sm border outline-none" value={evForm.endDate}
                     onChange={e => setEvForm(f => ({ ...f, endDate: e.target.value }))} style={{ borderColor: T.border }} />
                   {!evForm.allDay && <input type="time" className="w-full px-3 py-2 rounded-lg text-sm border outline-none mt-1" value={evForm.endTime}
@@ -365,7 +365,7 @@ export default function AgendaPage() {
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#4A3020' }}>Description</label>
+                <label className="block text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#6B4C35' }}>Description</label>
                 <textarea className="w-full px-3 py-2 rounded-lg text-sm border outline-none resize-none" rows={2}
                   value={evForm.description} onChange={e => setEvForm(f => ({ ...f, description: e.target.value }))} style={{ borderColor: T.border }} />
               </div>
@@ -373,7 +373,7 @@ export default function AgendaPage() {
           ) : (
             <>
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#4A3020' }}>Type de congé *</label>
+                <label className="block text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#6B4C35' }}>Type de congé *</label>
                 <select required className="w-full px-3 py-2 rounded-lg text-sm border outline-none" value={lvForm.leaveTypeId}
                   onChange={e => setLvForm(f => ({ ...f, leaveTypeId: e.target.value }))} style={{ borderColor: T.border }}>
                   <option value="">— Choisir —</option>
@@ -386,18 +386,18 @@ export default function AgendaPage() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#4A3020' }}>Date de début *</label>
+                  <label className="block text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#6B4C35' }}>Date de début *</label>
                   <input type="date" required className="w-full px-3 py-2 rounded-lg text-sm border outline-none" value={lvForm.startDate}
                     onChange={e => setLvForm(f => ({ ...f, startDate: e.target.value }))} style={{ borderColor: T.border }} />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#4A3020' }}>Date de fin *</label>
+                  <label className="block text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#6B4C35' }}>Date de fin *</label>
                   <input type="date" required className="w-full px-3 py-2 rounded-lg text-sm border outline-none" value={lvForm.endDate}
                     onChange={e => setLvForm(f => ({ ...f, endDate: e.target.value }))} style={{ borderColor: T.border }} />
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#4A3020' }}>Motif</label>
+                <label className="block text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#6B4C35' }}>Motif</label>
                 <textarea className="w-full px-3 py-2 rounded-lg text-sm border outline-none resize-none" rows={2}
                   value={lvForm.notes} onChange={e => setLvForm(f => ({ ...f, notes: e.target.value }))} style={{ borderColor: T.border }} />
               </div>
@@ -511,7 +511,7 @@ function MonthView({ cursor, events, leaves, ltypes, onDayClick, onEventClick, o
     <div className="rounded-xl overflow-hidden" style={{ background: '#FFF', border: `1px solid ${T.border}` }}>
       <div className="grid grid-cols-7 border-b" style={{ borderColor: T.border }}>
         {['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'].map(d => (
-          <div key={d} className="px-2 py-2 text-xs font-bold text-center uppercase tracking-wider" style={{ color: '#4A3020', background: T.head }}>
+          <div key={d} className="px-2 py-2 text-xs font-bold text-center uppercase tracking-wider" style={{ color: '#6B4C35', background: T.head }}>
             {d}
           </div>
         ))}
@@ -583,7 +583,7 @@ function WeekView({ cursor, events, leaves, ltypes, onSlotClick, onEventClick, o
         <div style={{ background: T.head }} />
         {days.map((d, i) => (
           <div key={i} className="px-2 py-2 text-center border-l" style={{ background: T.head, borderColor: T.border }}>
-            <p className="text-xs font-bold uppercase tracking-wider" style={{ color: '#4A3020' }}>{DAYS_FR[(i + 1) % 7]}</p>
+            <p className="text-xs font-bold uppercase tracking-wider" style={{ color: '#6B4C35' }}>{DAYS_FR[(i + 1) % 7]}</p>
             <p className="text-sm font-bold mt-0.5 w-7 h-7 mx-auto flex items-center justify-center rounded-full"
               style={{ background: sameDay(d, today) ? T.copper : 'transparent', color: sameDay(d, today) ? '#FFF' : T.dark }}>
               {d.getDate()}

@@ -8,7 +8,7 @@ import { PageHeader, AddButton, FilterBar, DataTable, Td, StatusBadge, FormActio
 
 const STATUS_FR: Record<string, string> = { OPEN: 'En cours', WON: 'Gagné', LOST: 'Perdu' };
 const STATUS_ST: Record<string, { bg: string; color: string }> = {
-  OPEN: { bg: '#FDF3E8', color: '#C8803A' },
+  OPEN: { bg: '#FDF3E8', color: '#D9924E' },
   WON:  { bg: '#F0FDF4', color: '#16A34A' },
   LOST: { bg: '#FEF2F2', color: '#DC2626' },
 };

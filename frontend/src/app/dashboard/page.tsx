@@ -5,7 +5,7 @@ import { deals, commissions, invoicing, PipelineStats, CommissionStats, Invoicin
 
 const DEAL_STATUS_FR: Record<string, string> = { OPEN: 'En cours', WON: 'Gagné', LOST: 'Perdu' };
 const INV_STATUS_FR: Record<string, string> = { DRAFT: 'Brouillon', SENT: 'Envoyée', PAID: 'Payée', OVERDUE: 'En retard', CANCELLED: 'Annulée' };
-const dotColor: Record<string, string> = { OPEN: '#C8803A', WON: '#16A34A', LOST: '#DC2626' };
+const dotColor: Record<string, string> = { OPEN: '#D9924E', WON: '#16A34A', LOST: '#DC2626' };
 
 const fmt = (n: number) => new Intl.NumberFormat('fr-LU', { style: 'currency', currency: 'EUR' }).format(n);
 
@@ -48,7 +48,7 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-2 gap-4 mb-6 lg:grid-cols-4">
         <StatCard label="Affaires en cours" value={String(openDeals?._count ?? 0)}
-          sub={openDeals ? fmt(openDeals._sum?.value ?? 0) : undefined} accent="#C8803A" />
+          sub={openDeals ? fmt(openDeals._sum?.value ?? 0) : undefined} accent="#D9924E" />
         <StatCard label="Affaires gagnées"  value={String(wonDeals?._count ?? 0)}
           sub={wonDeals  ? fmt(wonDeals._sum?.value ?? 0)  : undefined} accent="#16A34A" />
         <StatCard label="Commissions en attente" value={comStats ? fmt(comStats.pendingAmount) : '—'}
@@ -59,7 +59,7 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="rounded-xl p-5" style={card}>
-          <h2 className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: '#4A3020' }}>Pipeline affaires</h2>
+          <h2 className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: '#6B4C35' }}>Pipeline affaires</h2>
           <div className="space-y-3">
             {pipeline.length === 0 && <p className="text-sm" style={{ color: '#A8988A' }}>Aucune affaire</p>}
             {pipeline.map(p => (
@@ -76,12 +76,12 @@ export default function DashboardPage() {
         </div>
 
         <div className="rounded-xl p-5" style={card}>
-          <h2 className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: '#4A3020' }}>Commissions</h2>
+          <h2 className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: '#6B4C35' }}>Commissions</h2>
           {comStats ? (
             <div className="space-y-3">
               {[
                 { label: 'Total affaires',     value: fmt(comStats.totalDeals),       color: '#1A1008' },
-                { label: 'Total commissions',  value: fmt(comStats.totalCommissions), color: '#C8803A' },
+                { label: 'Total commissions',  value: fmt(comStats.totalCommissions), color: '#D9924E' },
                 { label: 'En attente',         value: fmt(comStats.pendingAmount),    color: '#D97706' },
                 { label: 'Payées',             value: fmt(comStats.paidAmount),       color: '#16A34A' },
               ].map(r => (
@@ -95,7 +95,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="rounded-xl p-5 lg:col-span-2" style={card}>
-          <h2 className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: '#4A3020' }}>Facturation</h2>
+          <h2 className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: '#6B4C35' }}>Facturation</h2>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             {invStats?.invoiceStats.map((s: any) => (
               <div key={s.status} className="p-4 rounded-lg" style={{ background: '#F8F5F2', border: '1px solid #E8DDD5' }}>

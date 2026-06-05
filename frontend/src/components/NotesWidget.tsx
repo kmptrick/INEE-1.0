@@ -84,7 +84,7 @@ export function NotesWidget({ value, onChange, onSave, saving }: NotesWidgetProp
                 onClick={() => { onSave(); setOpen(false); }}
                 disabled={saving}
                 className="px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors"
-                style={{ background: '#C8803A', color: '#FFF', opacity: saving ? 0.6 : 1 }}>
+                style={{ background: '#D9924E', color: '#FFF', opacity: saving ? 0.6 : 1 }}>
                 {saving ? '…' : 'Enregistrer'}
               </button>
             </div>

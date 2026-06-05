@@ -218,7 +218,7 @@ function CompanyDetailModal({ company, onClose, onNoteSaved }: { company: Compan
             />
             <ContactBlock
               title="Autres intervenants"
-              color="#C8803A"
+              color="#D9924E"
               qualifications={QUALS_AUTRES}
               contactList={ctList}
               companyId={company.id}

@@ -8,7 +8,7 @@ import { PageHeader, AddButton, FilterBar, DataTable, Td, StatusBadge, FormActio
 import { HistoryPanel } from '@/components/HistoryPanel';
 
 const STATUS_ST: Record<string, { bg: string; color: string }> = {
-  PENDING:   { bg: '#FDF3E8', color: '#C8803A' },
+  PENDING:   { bg: '#FDF3E8', color: '#D9924E' },
   APPROVED:  { bg: '#EFF6FF', color: '#1D6FD8' },
   PAID:      { bg: '#F0FDF4', color: '#16A34A' },
   CANCELLED: { bg: '#F5F5F5', color: '#888'    },

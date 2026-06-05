@@ -7,8 +7,8 @@ interface FormFieldProps {
 export function FormField({ label, children, required }: FormFieldProps) {
   return (
     <div>
-      <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: '#4A3020' }}>
-        {label}{required && <span className="ml-1" style={{ color: '#C8803A' }}>*</span>}
+      <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: '#6B4C35' }}>
+        {label}{required && <span className="ml-1" style={{ color: '#D9924E' }}>*</span>}
       </label>
       {children}
     </div>
@@ -19,7 +19,7 @@ export const inputClass = [
   'w-full px-3 py-2.5 rounded-lg text-sm outline-none transition-all',
   'bg-white text-[#1A1008]',
   'border border-[#E0D5CC]',
-  'focus:border-[#C8803A] focus:ring-2 focus:ring-[#C8803A]/15',
+  'focus:border-[#D9924E] focus:ring-2 focus:ring-[#D9924E]/15',
 ].join(' ');
 
 export const selectClass = inputClass;
@@ -33,8 +33,8 @@ export const T = {
   head:     '#F5EDE4',
   dark:     '#1A1008',
   muted:    '#7A6050',
-  copper:   '#C8803A',
-  copperHover: '#A86C2E',
-  copperBg: '#FDF3E8',
-  addBtn:   { background: '#C8803A', color: '#FFFFFF', boxShadow: '0 1px 4px rgba(200,128,58,0.3)' } as React.CSSProperties,
+  copper:   '#D9924E',
+  copperHover: '#C07E3A',
+  copperBg: '#FEF6EE',
+  addBtn:   { background: '#D9924E', color: '#FFFFFF', boxShadow: '0 1px 4px rgba(217,146,78,0.3)' } as React.CSSProperties,
 } as const;

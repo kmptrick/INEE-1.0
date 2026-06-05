@@ -3,7 +3,7 @@ import { Document, Page, Text, View, StyleSheet, Svg, Path, Line, Circle } from 
 import { INEE } from '@/lib/inee-brand';
 
 // ── Couleurs INEE ─────────────────────────────────────────────────────────────
-const COPPER   = '#C8803A';
+const COPPER   = '#D9924E';
 const DARK     = '#1A1008';
 const CREAM    = '#F5EDE4';
 const LIGHT    = '#FAF6F1';
@@ -352,14 +352,14 @@ export function IneeDocumentPdf({
 const cgvStyles = StyleSheet.create({
   page:    { fontFamily: 'Helvetica', fontSize: 6, color: '#1A1A1A', backgroundColor: '#FFFFFF', paddingTop: 0, paddingBottom: 28, paddingLeft: 0, paddingRight: 0 },
   hband:   { backgroundColor: '#1A1008', paddingTop: 8, paddingBottom: 8, paddingLeft: 20, paddingRight: 20, marginBottom: 10 },
-  htitle:  { fontSize: 9, fontWeight: 'bold', color: '#C8803A', letterSpacing: 1 },
+  htitle:  { fontSize: 9, fontWeight: 'bold', color: '#D9924E', letterSpacing: 1 },
   hsub:    { fontSize: 6.5, color: '#F5EDE4', marginTop: 2 },
   cols:    { flexDirection: 'row', paddingLeft: 16, paddingRight: 16, gap: 14, flex: 1 },
   col:     { flex: 1 },
-  artTitle:{ fontSize: 6.5, fontWeight: 'bold', color: '#C8803A', marginBottom: 1.5, marginTop: 6 },
+  artTitle:{ fontSize: 6.5, fontWeight: 'bold', color: '#D9924E', marginBottom: 1.5, marginTop: 6 },
   artBody: { lineHeight: 1.35, color: '#1A1A1A' },
   divider: { height: 0.5, backgroundColor: '#E0C8B0', marginTop: 6, marginBottom: 2 },
-  footer:  { position: 'absolute', bottom: 8, left: 16, right: 16, borderTopWidth: 0.5, borderTopColor: '#C8803A', borderTopStyle: 'solid', paddingTop: 3 },
+  footer:  { position: 'absolute', bottom: 8, left: 16, right: 16, borderTopWidth: 0.5, borderTopColor: '#D9924E', borderTopStyle: 'solid', paddingTop: 3 },
   footT:   { fontSize: 5.5, color: '#7A6050', textAlign: 'center' },
 });
 

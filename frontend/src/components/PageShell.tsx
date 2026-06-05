@@ -470,7 +470,7 @@ export function DataTable({ headers, children, empty, loading, sort, onSort }: {
             {headers.map((h, i) => (
               <th key={i}
                 className={`px-4 py-3 text-xs font-bold uppercase tracking-wider text-${h.align ?? 'left'}${h.key && onSort ? ' cursor-pointer select-none' : ''}`}
-                style={{ color: '#4A3020' }}
+                style={{ color: '#6B4C35' }}
                 onClick={h.key && onSort ? () => onSort(h.key!) : undefined}>
                 <span className="inline-flex items-center gap-1">
                   {h.label}

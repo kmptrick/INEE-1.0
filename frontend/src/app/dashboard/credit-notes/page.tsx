@@ -374,7 +374,7 @@ function CreditNotesContent() {
 
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#4A3020' }}>Lignes à créditer</label>
+              <label className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#6B4C35' }}>Lignes à créditer</label>
               <button type="button" onClick={addLine} className="text-xs font-semibold" style={{ color: T.copper }}>+ Ajouter ligne</button>
             </div>
             <div className="space-y-2">
@@ -423,17 +423,4 @@ function CreditNotesContent() {
 
           <FormField label="Notes"><textarea className={inputClass} rows={2} value={form.notes} onChange={e => setField('notes', e.target.value)} /></FormField>
           
-          <FormActions onCancel={() => setOpen(false)} saving={saving} label="Enregistrer" />
-        </form>
-      </Modal>
-    </div>
-  );
-}
-
-export default function CreditNotesPage() {
-  return (
-    <Suspense>
-      <CreditNotesContent />
-    </Suspense>
-  );
-}
+          <FormActions onCancel={() => setOpen(fa

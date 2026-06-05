@@ -34,7 +34,7 @@ function ResetPasswordForm() {
     return (
       <div className="text-center space-y-3 py-4">
         <p className="text-sm" style={{ color: '#B91C1C' }}>Lien invalide. Veuillez recommencer depuis la page de connexion.</p>
-        <button onClick={() => router.replace('/login')} className="text-xs font-semibold" style={{ color: '#C8803A' }}>← Retour à la connexion</button>
+        <button onClick={() => router.replace('/login')} className="text-xs font-semibold" style={{ color: '#D9924E' }}>← Retour à la connexion</button>
       </div>
     );
   }
@@ -43,32 +43,32 @@ function ResetPasswordForm() {
     <div className="text-center space-y-3 py-4">
       <p className="text-3xl">✓</p>
       <p className="font-semibold text-sm" style={{ color: '#16A34A' }}>Mot de passe mis à jour</p>
-      <p className="text-xs" style={{ color: '#4A3020' }}>Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.</p>
+      <p className="text-xs" style={{ color: '#6B4C35' }}>Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.</p>
       <button onClick={() => router.replace('/login')}
         className="mt-2 w-full font-semibold py-3 px-4 rounded-lg text-sm"
-        style={{ background: '#C8803A', color: '#FFF' }}>
+        style={{ background: '#D9924E', color: '#FFF' }}>
         Se connecter →
       </button>
     </div>
   ) : (
     <form onSubmit={handleSubmit} className="space-y-5">
       <div>
-        <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: '#4A3020' }}>Nouveau mot de passe</label>
+        <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: '#6B4C35' }}>Nouveau mot de passe</label>
         <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} required minLength={8}
           placeholder="••••••••"
           className="w-full px-4 py-3 rounded-lg text-sm outline-none transition-all"
           style={{ background: '#FFFFFF', border: '1.5px solid #E0D5CC', color: '#1A1008' }}
-          onFocus={e => { e.target.style.borderColor = '#C8803A'; e.target.style.boxShadow = '0 0 0 3px rgba(200,128,58,0.12)'; }}
+          onFocus={e => { e.target.style.borderColor = '#D9924E'; e.target.style.boxShadow = '0 0 0 3px rgba(200,128,58,0.12)'; }}
           onBlur={e => { e.target.style.borderColor = '#E0D5CC'; e.target.style.boxShadow = 'none'; }}
         />
       </div>
       <div>
-        <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: '#4A3020' }}>Confirmer le mot de passe</label>
+        <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: '#6B4C35' }}>Confirmer le mot de passe</label>
         <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} required
           placeholder="••••••••"
           className="w-full px-4 py-3 rounded-lg text-sm outline-none transition-all"
           style={{ background: '#FFFFFF', border: '1.5px solid #E0D5CC', color: '#1A1008' }}
-          onFocus={e => { e.target.style.borderColor = '#C8803A'; e.target.style.boxShadow = '0 0 0 3px rgba(200,128,58,0.12)'; }}
+          onFocus={e => { e.target.style.borderColor = '#D9924E'; e.target.style.boxShadow = '0 0 0 3px rgba(200,128,58,0.12)'; }}
           onBlur={e => { e.target.style.borderColor = '#E0D5CC'; e.target.style.boxShadow = 'none'; }}
         />
       </div>
@@ -79,7 +79,7 @@ function ResetPasswordForm() {
       )}
       <button type="submit" disabled={loading}
         className="w-full font-semibold py-3 px-4 rounded-lg text-sm transition-all"
-        style={{ background: loading ? '#A06828' : '#C8803A', color: '#FFFFFF', letterSpacing: '0.03em', boxShadow: '0 2px 8px rgba(200,128,58,0.35)' }}>
+        style={{ background: loading ? '#A06828' : '#D9924E', color: '#FFFFFF', letterSpacing: '0.03em', boxShadow: '0 2px 8px rgba(200,128,58,0.35)' }}>
         {loading ? 'Enregistrement...' : 'Enregistrer le nouveau mot de passe →'}
       </button>
     </form>
@@ -94,18 +94,18 @@ export default function ResetPasswordPage() {
         style={{ background: 'linear-gradient(160deg, #1A1008 0%, #2E1A0A 100%)', borderRight: '1px solid #2E1E10' }}>
         <div>
           <svg width="52" height="52" viewBox="0 0 100 100" fill="none">
-            <path d="M50 4 L96 50 L50 96 L4 50 Z" stroke="#C8803A" strokeWidth="4" fill="none" />
-            <path d="M50 16 L84 50 L50 84 L16 50 Z" stroke="#C8803A" strokeWidth="2" fill="none" />
+            <path d="M50 4 L96 50 L50 96 L4 50 Z" stroke="#D9924E" strokeWidth="4" fill="none" />
+            <path d="M50 16 L84 50 L50 84 L16 50 Z" stroke="#D9924E" strokeWidth="2" fill="none" />
             <line x1="50" y1="30" x2="50" y2="70" stroke="#F5EDE4" strokeWidth="4.5" strokeLinecap="round" />
             <line x1="36" y1="30" x2="64" y2="30" stroke="#F5EDE4" strokeWidth="4.5" strokeLinecap="round" />
             <line x1="36" y1="70" x2="64" y2="70" stroke="#F5EDE4" strokeWidth="4.5" strokeLinecap="round" />
-            <circle cx="50" cy="50" r="5" fill="#C8803A" />
+            <circle cx="50" cy="50" r="5" fill="#D9924E" />
           </svg>
           <h1 className="text-4xl font-bold tracking-[0.22em] mt-6" style={{ color: '#F5EDE4' }}>INEE</h1>
-          <p className="mt-3 text-base" style={{ color: '#C8803A', letterSpacing: '0.05em' }}>CRM & ERP — Luxembourg</p>
+          <p className="mt-3 text-base" style={{ color: '#D9924E', letterSpacing: '0.05em' }}>CRM & ERP — Luxembourg</p>
         </div>
         <div style={{ borderTop: '1px solid #2E1E10', paddingTop: '2rem' }}>
-          <p className="text-sm" style={{ color: '#4A3020', lineHeight: 1.8 }}>
+          <p className="text-sm" style={{ color: '#6B4C35', lineHeight: 1.8 }}>
             37, Rue du Baumbusch<br />
             8213 Mamer — Luxembourg<br />
             TVA : LU36332830
