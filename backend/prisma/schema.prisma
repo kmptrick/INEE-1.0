@@ -301,7 +301,7 @@ model QuoteLine {
 
 model Invoice {
   id          String        @id @default(cuid())
-  number      String        @unique
+  number      String?       @unique
   status      InvoiceStatus @default(DRAFT)
   issueDate   DateTime      @default(now())
   dueDate     DateTime?

@@ -314,7 +314,7 @@ export default function QuotesPage() {
                   <ActionBtn label="Expiré" color="#C2410C" bg="#FFF7ED" border="#FED7AA" onClick={() => updateStatus(viewItem, 'EXPIRED')} disabled={actioning} />
                 </>)}
                 {viewItem.status === 'ACCEPTED' && (
-                  <ActionBtn label="Convertir en facture" color="#FFF" bg={T.copper} border={T.copper} onClick={() => { setConvertDueDate(''); setConvertOpen(true); }} disabled={actioning} />
+                  <ActionBtn label="Convertir en facture" color="#FFF" bg={T.copper} border={T.copper} onClick={() => { const d = new Date(); d.setDate(d.getDate() + 14); setConvertDueDate(d.toISOString().slice(0,10)); setConvertOpen(true); }} disabled={actioning} />
                 )}
                 {viewItem.status === 'DRAFT' && (
                   <ActionBtn label="Remettre en brouillon" color={T.muted} bg="#F5F5F5" border={T.border} onClick={() => updateStatus(viewItem, 'DRAFT')} disabled={actioning} />
@@ -395,14 +395,18 @@ export default function QuotesPage() {
       {/* ── Convertir en facture ── */}
       <Modal title="Convertir en facture" open={convertOpen} onClose={() => setConvertOpen(false)}>
         <div className="space-y-4">
-          <p className="text-sm" style={{ color: T.muted }}>Le devis <strong style={{ color: T.dark }}>{viewItem?.number}</strong> sera converti en facture.</p>
-          <FormField label="Date d&apos;échéance (optionnel)">
-            <input type="date" className={inputClass} value={convertDueDate} onChange={e => setConvertDueDate(e.target.value)} />
-          </FormField>
+          <p className="text-sm" style={{ color: T.muted }}>
+            Le devis <strong style={{ color: T.dark }}>{viewItem?.number}</strong> sera converti en facture brouillon.
+          </p>
+          <div className="rounded-lg px-4 py-3 text-sm" style={{ background: T.head, border: `1px solid ${T.border}` }}>
+            <span style={{ color: T.muted }}>Échéance automatique : </span>
+            <strong style={{ color: T.dark }}>{convertDueDate ? new Date(convertDueDate).toLocaleDateString('fr-LU') : '—'}</strong>
+            <span style={{ color: T.muted }}> (aujourd'hui + 14 jours)</span>
+          </div>
           <div className="flex gap-3 pt-1">
-            <button onClick={() => setConvertOpen(false)} className="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium" style={{ border: `1px solid ${T.border}`, color: T.muted }}>Annuler</button>
-            <button onClick={convertToInvoice} disabled={converting} className="flex-1 px-4 py-2.5 rounded-lg text-sm font-semibold text-white" style={{ background: T.copper }}>
-              {converting ? 'Conversion...' : 'Convertir'}
+            <button onClick={() => setConvertOpen(false)} className="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium cursor-pointer" style={{ border: `1px solid ${T.border}`, color: T.muted }}>Annuler</button>
+            <button onClick={convertToInvoice} disabled={converting} className="flex-1 px-4 py-2.5 rounded-lg text-sm font-semibold text-white cursor-pointer" style={{ background: T.copper, opacity: converting ? 0.7 : 1 }}>
+              {converting ? 'Conversion...' : 'Convertir ✓'}
             </button>
           </div>
         </div>
