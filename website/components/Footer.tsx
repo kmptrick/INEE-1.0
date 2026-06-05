@@ -60,7 +60,6 @@ export default function Footer({ content }: { content: SiteContent['footer'] }) 
               </p>
               <p style={{ fontSize: '12px', color: 'rgba(250,246,241,0.25)', marginBottom: '4px' }}>{content.address2} ↗</p>
             </button>
-            <p style={{ fontSize: '12px', color: 'rgba(250,246,241,0.2)' }}>{content.vat}</p>
           </div>
 
           {/* Col 2 — Services */}

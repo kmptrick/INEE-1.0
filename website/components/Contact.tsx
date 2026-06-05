@@ -237,7 +237,7 @@ export default function Contact({ content }: { content: SiteContent['contact'] }
             <a href={`mailto:${content.info.emailValue}`} style={{ textDecoration: 'none' }}>
               <InfoBlock label={content.info.emailLabel} value={content.info.emailValue} icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>} />
             </a>
-            <InfoBlock label={content.info.vatLabel} value={content.info.vatValue} icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>} />
+
             <InfoBlock label={content.info.hoursLabel} value={content.info.hoursValue} icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>} />
 
             <div style={{ height: '1px', background: 'rgba(250,246,241,0.08)', margin: '16px 0 32px' }} />
