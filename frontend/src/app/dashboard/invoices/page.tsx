@@ -128,6 +128,10 @@ export default function InvoicesPage() {
   const [actioning, setActioning] = useState(false);
   const [sendModalOpen, setSendModalOpen] = useState(false);
 
+  // Paiement partiel / total
+  const [payModalOpen, setPayModalOpen] = useState(false);
+  const [payAmount, setPayAmount] = useState('');
+
   const openEditInvoice = (inv: Invoice) => {
     setViewItem(null);
     setForm({
@@ -173,6 +177,33 @@ export default function InvoicesPage() {
       setFullInvoices(p => ({ ...p, [inv.id]: updated }));
       setViewItem(updated);
       load(filter || undefined);
+    } finally { setActioning(false); }
+  };
+
+  const recordPayment = async () => {
+    if (!viewItem) return;
+    const amount = parseFloat(payAmount.replace(',', '.'));
+    if (isNaN(amount) || amount <= 0) return;
+    setActioning(true);
+    try {
+      const newPaid = Math.min((viewItem.paidAmount ?? 0) + amount, viewItem.total);
+      const newStatus = newPaid >= viewItem.total ? 'PAID' : viewItem.status;
+      const updated = await invoicing.invoices.update(viewItem.id, {
+        paidAmount: newPaid,
+        status: newStatus,
+        vatRate: viewItem.vatRate,
+        notes: viewItem.notes,
+        lines: (viewItem.lines ?? []).map(l => ({
+          ...(l.serviceId ? { serviceId: l.serviceId } : {}),
+          description: l.description, quantity: l.quantity, unitPrice: l.unitPrice,
+          ...(l.unite ? { unite: l.unite } : {}),
+        })),
+      } as any);
+      setFullInvoices(p => ({ ...p, [viewItem.id]: updated }));
+      setViewItem(updated);
+      load(filter || undefined);
+      setPayModalOpen(false);
+      setPayAmount('');
     } finally { setActioning(false); }
   };
 
@@ -462,11 +493,11 @@ export default function InvoicesPage() {
                 </button>
               )}
               {(viewItem.status === 'SENT' || viewItem.status === 'OVERDUE') && (
-                <button type="button" onClick={() => updateStatus(viewItem, 'PAID')} disabled={actioning}
+                <button type="button" onClick={() => { setPayAmount(String(viewItem.total - (viewItem.paidAmount ?? 0))); setPayModalOpen(true); }} disabled={actioning}
                   className="px-4 py-2.5 text-sm font-medium cursor-pointer border-r transition-colors"
                   style={{ color: T.copper, borderColor: T.border, background: 'transparent', opacity: actioning ? 0.5 : 1 }}
                   onMouseEnter={e => (e.currentTarget.style.background = T.head)} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                  Marquer payée
+                  Enregistrer paiement
                 </button>
               )}
               {viewItem.status === 'DRAFT' && viewItem.number && (
@@ -488,6 +519,45 @@ export default function InvoicesPage() {
             </div>
           </div>
           <HistoryPanel entityType="Invoice" entityId={viewItem.id} />
+          </div>
+        </Modal>
+      )}
+
+      {/* ── Modal paiement ── */}
+      {viewItem && payModalOpen && (
+        <Modal title="Enregistrer un paiement" open={payModalOpen} onClose={() => { setPayModalOpen(false); setPayAmount(''); }}>
+          <div className="space-y-4">
+            <div className="rounded-lg p-3 text-sm" style={{ background: T.head, border: `1px solid ${T.border}` }}>
+              <div className="flex justify-between"><span style={{ color: T.muted }}>Total facture</span><span className="font-semibold" style={{ color: T.dark }}>{fmt(viewItem.total)}</span></div>
+              <div className="flex justify-between mt-1"><span style={{ color: T.muted }}>Déjà payé</span><span className="font-semibold" style={{ color: '#16A34A' }}>{fmt(viewItem.paidAmount ?? 0)}</span></div>
+              <div className="flex justify-between mt-1 pt-1" style={{ borderTop: `1px solid ${T.border}` }}>
+                <span className="font-semibold" style={{ color: T.dark }}>Reste à payer</span>
+                <span className="font-bold" style={{ color: T.copper }}>{fmt(viewItem.total - (viewItem.paidAmount ?? 0))}</span>
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: T.muted }}>Montant reçu (€)</label>
+              <input type="number" min="0.01" step="0.01" max={viewItem.total - (viewItem.paidAmount ?? 0)}
+                className="w-full px-3 py-2.5 rounded-lg text-sm outline-none border"
+                style={{ border: `1px solid ${T.border}`, color: T.dark }}
+                value={payAmount} onChange={e => setPayAmount(e.target.value)}
+                autoFocus />
+              <p className="text-xs mt-1" style={{ color: T.muted }}>
+                Si le montant couvre le solde restant, la facture passera automatiquement en "Payée".
+              </p>
+            </div>
+            <div className="flex gap-3 pt-1">
+              <button type="button" onClick={() => { setPayModalOpen(false); setPayAmount(''); }}
+                className="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium border"
+                style={{ color: T.muted, background: 'transparent', borderColor: T.border }}>
+                Annuler
+              </button>
+              <button type="button" onClick={recordPayment} disabled={actioning || !payAmount}
+                className="flex-1 px-4 py-2.5 rounded-lg text-sm font-semibold"
+                style={{ background: T.copper, color: '#FFF', opacity: actioning || !payAmount ? 0.6 : 1 }}>
+                {actioning ? 'Enregistrement...' : 'Confirmer'}
+              </button>
+            </div>
           </div>
         </Modal>
       )}
