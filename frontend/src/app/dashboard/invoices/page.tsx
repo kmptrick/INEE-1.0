@@ -83,7 +83,8 @@ const ALL_COLS_INV = [
   { key: 'subtotal',  label: 'HT'       },
   { key: 'vatAmount', label: 'TVA'      },
   { key: 'total',     label: 'TTC'      },
-  { key: 'paidAmount',label: 'Payé'     },
+  { key: 'paidAmount',  label: 'Payé'     },
+  { key: 'remaining',   label: 'À payer'  },
   { key: 'dueDate',   label: 'Échéance'  },
   { key: 'createdAt', label: 'Création'  },
   { key: 'status',    label: 'Statut'    },
@@ -321,7 +322,8 @@ export default function InvoicesPage() {
           ...(visible.includes('subtotal')  ? [{ label: 'HT',     key: 'subtotal',  align: 'right' as const }] : []),
           ...(visible.includes('vatAmount') ? [{ label: 'TVA',    key: 'vatAmount', align: 'right' as const }] : []),
           ...(visible.includes('total')     ? [{ label: 'TTC',    key: 'total',     align: 'right' as const }] : []),
-          ...(visible.includes('paidAmount')? [{ label: 'Payé',     key: 'paidAmount', align: 'right' as const }] : []),
+          ...(visible.includes('paidAmount') ? [{ label: 'Payé',    key: 'paidAmount', align: 'right' as const }] : []),
+          ...(visible.includes('remaining')  ? [{ label: 'À payer', key: 'remaining',  align: 'right' as const }] : []),
           ...(visible.includes('dueDate')   ? [{ label: 'Échéance',  key: 'dueDate'  }] : []),
           ...(visible.includes('createdAt') ? [{ label: 'Création',  key: 'createdAt' }] : []),
           ...(visible.includes('status')    ? [{ label: 'Statut',    key: 'status',    align: 'center' as const }] : []),
@@ -344,6 +346,7 @@ export default function InvoicesPage() {
               {visible.includes('vatAmount')  && <td className="px-4 py-3 text-right text-sm" style={{ color: T.muted }}>{fmt(inv.vatAmount)}</td>}
               {visible.includes('total')      && <td className="px-4 py-3 text-right text-sm font-bold" style={{ color: T.dark }}>{fmt(inv.total)}</td>}
               {visible.includes('paidAmount') && <td className="px-4 py-3 text-right text-sm font-semibold" style={{ color: '#16A34A' }}>{fmt(inv.paidAmount)}</td>}
+              {visible.includes('remaining')  && (() => { const r = Math.max(0, inv.total - (inv.paidAmount ?? 0)); return <td className="px-4 py-3 text-right text-sm font-semibold" style={{ color: r > 0 ? '#DC2626' : '#16A34A' }}>{r > 0 ? fmt(r) : '—'}</td>; })()}
               {visible.includes('dueDate')    && <Td>{inv.dueDate ? new Date(inv.dueDate).toLocaleDateString('fr-LU') : '—'}</Td>}
               {visible.includes('createdAt')  && <Td>{inv.createdAt ? new Date(inv.createdAt).toLocaleDateString('fr-LU') : '—'}</Td>}
               {visible.includes('status')     && <td className="px-4 py-3 text-center"><StatusBadge label={STATUS_FR[inv.status] ?? inv.status} bg={ss.bg} color={ss.color} /></td>}
