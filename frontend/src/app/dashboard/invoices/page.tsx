@@ -18,11 +18,11 @@ const PdfDownloadButton = dynamic(
   { ssr: false }
 ) as React.ComponentType<IneeDocumentProps & { filename: string }>;
 
-async function generatePdfBase64(props: IneeDocumentProps): Promise<string | null> {
+async function generatePdfBase64(props: IneeDocumentProps, lang: 'fr' | 'en' = 'fr'): Promise<string | null> {
   try {
     const { pdf } = await import('@react-pdf/renderer');
     const { IneeDocumentPdf } = await import('@/components/IneeDocumentPdf');
-    const blob = await pdf(IneeDocumentPdf(props) as any).toBlob();
+    const blob = await pdf(IneeDocumentPdf({ ...props, lang }) as any).toBlob();
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onloadend = () => resolve((reader.result as string).split(',')[1]);
@@ -492,7 +492,7 @@ export default function InvoicesPage() {
           onClose={() => setSendModalOpen(false)}
           showTypeSelector={true}
           title={`Envoyer la facture ${viewItem.number ?? ''}`}
-          generatePdf={() => generatePdfBase64(buildPdfProps(viewItem))}
+          generatePdf={(lang) => generatePdfBase64(buildPdfProps(viewItem), lang)}
           onSend={async (type: SendType, lang: SendLang, pdfBase64?: string) => {
             const updated = await invoicing.invoices.sendWithOptions(viewItem.id, type, lang, pdfBase64);
             setFullInvoices(p => ({ ...p, [viewItem.id]: updated }));

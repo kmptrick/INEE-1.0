@@ -183,10 +183,11 @@ function getIntroMessage(type: string, lang: 'fr' | 'en', company?: { name: stri
 
 // ── Composant principal ────────────────────────────────────────────────────────
 export function IneeDocumentPdf({
-  type, customTitle, number, date, dueDate, company, lines,
+  type, customTitle, lang = 'fr', number, date, dueDate, company, lines,
   subtotal, vatRate, vatAmount, total, vatMention, notes, paymentTerms,
 }: IneeDocumentProps) {
-  const displayType = customTitle ?? type;
+  const t = TRANS[lang];
+  const displayType = customTitle ?? t.typeLabel[type as keyof typeof t.typeLabel] ?? type;
 
   // Grouper TVA par taux
   const vatGroups: Record<string, number> = {};
@@ -196,7 +197,7 @@ export function IneeDocumentPdf({
     vatGroups[rate] = (vatGroups[rate] || 0) + lineHT;
   });
 
-  const introMsg = getIntroMessage(customTitle ?? type, company);
+  const introMsg = getIntroMessage(customTitle ?? type, lang, company);
 
   return (
     <Document>
@@ -224,9 +225,9 @@ export function IneeDocumentPdf({
               <Text style={s.docNumber}>N° {number}</Text>
             </View>
             <View style={s.docMetaBox}>
-              <Text style={s.docMetaLabel}>Date : <Text style={s.docMetaValue}>{date}</Text></Text>
-              {dueDate && <Text style={[s.docMetaLabel, { marginTop: 3 }]}>Échéance : <Text style={s.docMetaValue}>{dueDate}</Text></Text>}
-              {paymentTerms && <Text style={[s.docMetaLabel, { marginTop: 3 }]}>Paiement : <Text style={s.docMetaValue}>{paymentTerms}</Text></Text>}
+              <Text style={s.docMetaLabel}>{t.date} : <Text style={s.docMetaValue}>{date}</Text></Text>
+              {dueDate && <Text style={[s.docMetaLabel, { marginTop: 3 }]}>{t.dueDate} : <Text style={s.docMetaValue}>{dueDate}</Text></Text>}
+              {paymentTerms && <Text style={[s.docMetaLabel, { marginTop: 3 }]}>{t.payment} : <Text style={s.docMetaValue}>{paymentTerms}</Text></Text>}
             </View>
           </View>
 
@@ -235,23 +236,23 @@ export function IneeDocumentPdf({
           {/* ── Client + conditions ── */}
           <View style={s.infoRow}>
             <View style={s.clientBox}>
-              <Text style={s.boxTitle}>Client</Text>
+              <Text style={s.boxTitle}>{t.client}</Text>
               {company ? (
                 <>
                   <Text style={s.clientName}>{company.name}</Text>
                   {company.address && <Text style={s.clientDetail}>{company.address}</Text>}
                   {(company.postalCode || company.city) && <Text style={s.clientDetail}>{[company.postalCode, company.city].filter(Boolean).join(' ')}</Text>}
                   {company.country && company.country !== 'LU' && <Text style={s.clientDetail}>{company.country}</Text>}
-                  {company.vatNumber && <Text style={s.clientDetail}>TVA : {company.vatNumber}</Text>}
+                  {company.vatNumber && <Text style={s.clientDetail}>{t.vatNum} : {company.vatNumber}</Text>}
                 </>
               ) : <Text style={s.clientDetail}>—</Text>}
             </View>
             <View style={s.paymentBox}>
-              <Text style={s.boxTitle}>Informations de paiement</Text>
-              <View style={s.payRow}><Text style={s.payLabel}>Banque</Text><Text style={s.payValue}>{INEE.bank}</Text></View>
+              <Text style={s.boxTitle}>{t.payInfo}</Text>
+              <View style={s.payRow}><Text style={s.payLabel}>{t.bank}</Text><Text style={s.payValue}>{INEE.bank}</Text></View>
               <View style={s.payRow}><Text style={s.payLabel}>IBAN</Text><Text style={s.payValue}>{INEE.iban}</Text></View>
-              <View style={s.payRow}><Text style={s.payLabel}>BIC/SWIFT</Text><Text style={s.payValue}>{INEE.bic}</Text></View>
-              {paymentTerms && <View style={[s.payRow, { marginTop: 4 }]}><Text style={s.payLabel}>Conditions</Text><Text style={s.payValue}>{paymentTerms}</Text></View>}
+              <View style={s.payRow}><Text style={s.payLabel}>{t.bic}</Text><Text style={s.payValue}>{INEE.bic}</Text></View>
+              {paymentTerms && <View style={[s.payRow, { marginTop: 4 }]}><Text style={s.payLabel}>{t.conditions}</Text><Text style={s.payValue}>{paymentTerms}</Text></View>}
             </View>
           </View>
 
@@ -262,11 +263,11 @@ export function IneeDocumentPdf({
 
           {/* ── Tableau ── */}
           <View style={s.tableHeader}>
-            <Text style={[s.thCell, s.cDesc]}>Description</Text>
-            <Text style={[s.thCell, s.cQty]}>Qté</Text>
-            <Text style={[s.thCell, s.cPU]}>Prix HT</Text>
-            <Text style={[s.thCell, s.cVAT]}>TVA</Text>
-            <Text style={[s.thCell, s.cTot]}>Total HT</Text>
+            <Text style={[s.thCell, s.cDesc]}>{t.desc}</Text>
+            <Text style={[s.thCell, s.cQty]}>{t.qty}</Text>
+            <Text style={[s.thCell, s.cPU]}>{t.unitPrice}</Text>
+            <Text style={[s.thCell, s.cVAT]}>{t.vat}</Text>
+            <Text style={[s.thCell, s.cTot]}>{t.total}</Text>
           </View>
           {lines.map((l, i) => {
             const disc = l.discountRate ?? 0;
@@ -290,20 +291,20 @@ export function IneeDocumentPdf({
           <View style={s.totalsSection}>
             <View style={s.totalsBox}>
               <View style={s.totalRow}>
-                <Text style={s.totalLabel}>Total HT</Text>
+                <Text style={s.totalLabel}>{t.subtotal}</Text>
                 <Text style={s.totalValue}>{fmt(subtotal)}</Text>
               </View>
               {Object.entries(vatGroups).sort((a, b) => Number(a[0]) - Number(b[0])).map(([rate, base]) => {
                 const tva = Math.round(base * Number(rate) / 100 * 100) / 100;
                 return (
                   <View key={rate} style={s.totalRow}>
-                    <Text style={s.totalLabel}>TVA {rate}%</Text>
+                    <Text style={s.totalLabel}>{t.vat} {rate}%</Text>
                     <Text style={s.totalValue}>{fmt(tva)}</Text>
                   </View>
                 );
               })}
               <View style={s.grandBox}>
-                <Text style={s.grandLabel}>TOTAL TTC</Text>
+                <Text style={s.grandLabel}>{t.totalTTC.toUpperCase()}</Text>
                 <Text style={s.grandValue}>{fmt(total)}</Text>
               </View>
             </View>

@@ -10,7 +10,7 @@ interface Props {
   open: boolean;
   onClose: () => void;
   onSend: (type: SendType, lang: SendLang, pdfBase64?: string) => Promise<void>;
-  generatePdf?: () => Promise<string | null>;
+  generatePdf?: (lang: SendLang) => Promise<string | null>;
   showTypeSelector?: boolean; // true pour factures
   title?: string;
 }
@@ -34,7 +34,7 @@ export function SendModal({ open, onClose, onSend, generatePdf, showTypeSelector
       let pdfBase64: string | undefined;
       if (generatePdf) {
         setStatus('Génération du PDF…');
-        const b64 = await generatePdf();
+        const b64 = await generatePdf(lang);
         if (b64) pdfBase64 = b64;
       }
       setStatus('Envoi en cours…');
