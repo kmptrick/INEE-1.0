@@ -256,16 +256,40 @@ export class InvoicingService {
 
     const tpl = templates[type]?.[lang] ?? templates.send.fr;
     const bodyHtml = tpl.body.replace(/\n/g, '<br>');
+    const isEn = lang === 'en';
+    const linesHtml = (invoice.lines ?? []).map((l: any) =>
+      `<tr><td style="padding:6px 10px;border-bottom:1px solid #eee">${l.description}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:center">${l.quantity}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right">${fmt(l.unitPrice)}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right;font-weight:bold">${fmt(l.total)}</td></tr>`
+    ).join('');
+    const docLabel   = isEn ? 'INVOICE' : 'FACTURE';
+    const descLabel  = isEn ? 'Description' : 'Description';
+    const qtyLabel   = isEn ? 'Qty' : 'Qté';
+    const puLabel    = isEn ? 'Unit price' : 'Prix HT';
+    const totLabel   = isEn ? 'Total' : 'Total HT';
+    const htLabel    = isEn ? 'Subtotal excl. VAT' : 'HT';
+    const ttcLabel   = isEn ? 'Total incl. VAT' : 'Total TTC';
+    const bankLabel  = isEn ? 'Bank details' : 'Coordonnées bancaires';
     return `<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;color:#1A1008">
       <div style="background:#1A1008;padding:20px 30px;border-radius:8px 8px 0 0">
         <h1 style="color:#C8803A;margin:0;font-size:24px;letter-spacing:3px">INEE</h1>
         <p style="color:#F5EDE4;margin:4px 0 0;font-size:12px">37, Rue du Baumbusch — 8213 Mamer — TVA : LU36332830</p>
       </div>
       <div style="background:#fff;padding:24px 30px;border:1px solid #E8DDD5;border-top:none;border-radius:0 0 8px 8px">
-        <p style="color:#1A1008;line-height:1.7">${bodyHtml}</p>
+        <p style="font-size:14px;line-height:1.7;color:#1A1008;margin:0 0 20px">${bodyHtml}</p>
+        <div style="border-top:1px solid #E8DDD5;padding-top:16px">
+          <h2 style="color:#C8803A;margin:0 0 4px;font-size:16px">${docLabel} N° ${num}</h2>
+          ${invoice.company ? `<p style="color:#7A6050;margin:0 0 12px;font-size:13px">${isEn ? 'Client' : 'Client'} : <strong style="color:#1A1008">${invoice.company.name}</strong></p>` : ''}
+          ${linesHtml.length ? `<table style="width:100%;border-collapse:collapse;margin:12px 0;font-size:13px">
+            <thead><tr style="background:#F5EDE4"><th style="padding:8px 10px;text-align:left;color:#7A6050">${descLabel}</th><th style="padding:8px 10px;text-align:center;color:#7A6050">${qtyLabel}</th><th style="padding:8px 10px;text-align:right;color:#7A6050">${puLabel}</th><th style="padding:8px 10px;text-align:right;color:#7A6050">${totLabel}</th></tr></thead>
+            <tbody>${linesHtml}</tbody>
+          </table>
+          <div style="text-align:right;margin-top:8px">
+            <p style="margin:4px 0;color:#7A6050;font-size:13px">${htLabel} : ${fmt(invoice.subtotal)}</p>
+            <p style="margin:8px 0;font-size:15px;font-weight:bold;background:#C8803A;color:#fff;display:inline-block;padding:6px 16px;border-radius:4px">${ttcLabel} : ${tot}</p>
+          </div>` : ''}
+          ${invoice.vatMention ? `<p style="margin-top:12px;font-size:11px;color:#92400E;background:#FEF3C7;padding:8px 12px;border-radius:4px">${invoice.vatMention}</p>` : ''}
+        </div>
         <div style="margin-top:20px;padding:12px;background:#F0FDF4;border-radius:4px;font-size:13px">
-          <strong>Coordonnées bancaires / Bank details</strong><br>
-          ${bank}
+          <strong>${bankLabel}</strong><br>${bank}
         </div>
       </div>
     </div>`;
@@ -348,7 +372,7 @@ export class InvoicingService {
 
   // ─── Envoi automatique DEVIS ───────────────────────────────────────────────
 
-  async sendQuoteAuto(id: string, userId?: string, pdfBase64?: string) {
+  async sendQuoteAuto(id: string, userId?: string, pdfBase64?: string, lang = 'fr') {
     const quote = await this.findOneQuote(id);
     if (['REJECTED', 'EXPIRED', 'CANCELLED'].includes(quote.status as string)) {
       throw new BadRequestException('Ce devis ne peut plus être envoyé.');
@@ -357,30 +381,54 @@ export class InvoicingService {
     // Récupérer l'email de l'utilisateur connecté comme expéditeur
     const senderEmail = 'INEE <contact@inee.lu>';
     if (recipients.length === 0) throw new BadRequestException('Aucun contact autorisé à recevoir les documents pour ce client.');
+    const isEn = lang === 'en';
+    const clientName = (quote.company as any)?.name ?? '';
     const linesHtml = (quote.lines ?? []).map((l: any) =>
       `<tr><td style="padding:6px 10px;border-bottom:1px solid #eee">${l.description}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:center">${l.quantity}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right">${fmt(l.unitPrice)}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right;font-weight:bold">${fmt(l.total)}</td></tr>`
     ).join('');
+    const introText = isEn
+      ? `Dear Sir/Madam,<br><br>We are pleased to submit our quotation <strong>${quote.number}</strong>${clientName ? ` for <strong>${clientName}</strong>` : ''}. This document is valid for 30 days from its issue date.<br><br>Please find the full quote attached to this email.<br><br>We remain available for any questions and thank you for the trust you place in us.`
+      : `Madame, Monsieur,<br><br>Nous avons le plaisir de vous soumettre notre devis <strong>${quote.number}</strong>${clientName ? ` à l'attention de <strong>${clientName}</strong>` : ''}. Ce document est valable 30 jours à compter de sa date d'émission.<br><br>Vous trouverez le devis complet en pièce jointe à cet e-mail.<br><br>Nous restons disponibles pour toute question et vous remercions de la confiance que vous nous accordez.`;
+    const signatureText = isEn ? `Kind regards,<br><strong>The INEE team</strong>` : `Cordialement,<br><strong>L'équipe INEE</strong>`;
+    const subject = isEn ? `Quotation ${quote.number} — INEE` : `Devis ${quote.number} — INEE`;
+    const docLabel = isEn ? 'QUOTATION' : 'DEVIS';
+    const descLabel = isEn ? 'Description' : 'Description';
+    const qtyLabel = isEn ? 'Qty' : 'Qté';
+    const puLabel = isEn ? 'Unit price' : 'Prix HT';
+    const totLabel = isEn ? 'Total' : 'Total HT';
+    const htLabel = isEn ? 'Subtotal excl. VAT' : 'HT';
+    const ttcLabel = isEn ? 'Total incl. VAT' : 'Total TTC';
+    const clientLabel = isEn ? 'Client' : 'Client';
+
     const html = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;color:#1A1008">
       <div style="background:#1A1008;padding:20px 30px;border-radius:8px 8px 0 0">
         <h1 style="color:#C8803A;margin:0;font-size:24px;letter-spacing:3px">INEE</h1>
         <p style="color:#F5EDE4;margin:4px 0 0;font-size:12px">37, Rue du Baumbusch — 8213 Mamer — TVA : LU36332830</p>
       </div>
       <div style="background:#fff;padding:24px 30px;border:1px solid #E8DDD5;border-top:none;border-radius:0 0 8px 8px">
-        <h2 style="color:#C8803A;margin:0 0 4px">DEVIS ${quote.number}</h2>
-        ${quote.company ? `<p style="color:#7A6050;margin:0 0 16px">Client : <strong style="color:#1A1008">${(quote.company as any).name}</strong></p>` : ''}
-        <table style="width:100%;border-collapse:collapse;margin:16px 0">
-          <thead><tr style="background:#F5EDE4"><th style="padding:8px 10px;text-align:left;font-size:12px;color:#7A6050">Description</th><th style="padding:8px 10px;text-align:center;font-size:12px;color:#7A6050">Qté</th><th style="padding:8px 10px;text-align:right;font-size:12px;color:#7A6050">Prix HT</th><th style="padding:8px 10px;text-align:right;font-size:12px;color:#7A6050">Total HT</th></tr></thead>
-          <tbody>${linesHtml}</tbody>
-        </table>
-        <div style="text-align:right;margin-top:8px">
-          <p style="margin:4px 0;color:#7A6050">HT : ${fmt(quote.subtotal)}</p>
-          <p style="margin:8px 0;font-size:16px;font-weight:bold;background:#C8803A;color:#fff;display:inline-block;padding:6px 16px;border-radius:4px">Total TTC : ${fmt(quote.total)}</p>
+        <p style="font-size:14px;line-height:1.7;color:#1A1008;margin:0 0 20px">${introText}</p>
+        <div style="border-top:1px solid #E8DDD5;padding-top:20px">
+          <h2 style="color:#C8803A;margin:0 0 4px;font-size:16px">${docLabel} ${quote.number}</h2>
+          ${clientName ? `<p style="color:#7A6050;margin:0 0 16px;font-size:13px">${clientLabel} : <strong style="color:#1A1008">${clientName}</strong></p>` : ''}
+          <table style="width:100%;border-collapse:collapse;margin:12px 0;font-size:13px">
+            <thead><tr style="background:#F5EDE4"><th style="padding:8px 10px;text-align:left;color:#7A6050">${descLabel}</th><th style="padding:8px 10px;text-align:center;color:#7A6050">${qtyLabel}</th><th style="padding:8px 10px;text-align:right;color:#7A6050">${puLabel}</th><th style="padding:8px 10px;text-align:right;color:#7A6050">${totLabel}</th></tr></thead>
+            <tbody>${linesHtml}</tbody>
+          </table>
+          <div style="text-align:right;margin-top:8px">
+            <p style="margin:4px 0;color:#7A6050;font-size:13px">${htLabel} : ${fmt(quote.subtotal)}</p>
+            <p style="margin:8px 0;font-size:15px;font-weight:bold;background:#C8803A;color:#fff;display:inline-block;padding:6px 16px;border-radius:4px">${ttcLabel} : ${fmt(quote.total)}</p>
+          </div>
+          ${quote.vatMention ? `<p style="margin-top:12px;font-size:11px;color:#92400E;background:#FEF3C7;padding:8px 12px;border-radius:4px">${quote.vatMention}</p>` : ''}
+          ${quote.notes ? `<p style="margin-top:12px;color:#7A6050;font-size:13px"><em>${quote.notes}</em></p>` : ''}
         </div>
-        ${quote.notes ? `<p style="margin-top:16px;color:#7A6050;font-size:13px"><em>${quote.notes}</em></p>` : ''}
+        <div style="margin-top:24px;padding-top:16px;border-top:1px solid #E8DDD5;font-size:13px;color:#1A1008;line-height:1.6">
+          ${signatureText}<br>
+          <span style="color:#7A6050;font-size:12px">invoices@inee.lu</span>
+        </div>
       </div>
     </div>`;
-    await this.mail.send({ from: senderEmail, to: recipients, subject: `Devis ${quote.number} — INEE`, html, pdfBase64, pdfFilename: pdfBase64 ? `${quote.number}.pdf` : undefined });
-    await this.audit.log({ entityType: 'Quote', entityId: id, userId, action: 'Devis envoyé par email', details: `De : ${senderEmail} · À : ${recipients.join(', ')}` });
+    await this.mail.send({ from: senderEmail, to: recipients, subject, html, pdfBase64, pdfFilename: pdfBase64 ? `${quote.number}.pdf` : undefined });
+    await this.audit.log({ entityType: 'Quote', entityId: id, userId, action: `Devis envoyé par email (${lang})`, details: `De : ${senderEmail} · À : ${recipients.join(', ')}` });
     return this.prisma.quote.update({ where: { id }, data: { status: 'SENT' }, include: { company: true, lines: true } });
   }
 

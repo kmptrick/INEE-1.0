@@ -435,8 +435,8 @@ export default function QuotesPage() {
           onClose={() => setSendModalOpen(false)}
           title={`Envoyer le devis ${viewItem.number}`}
           generatePdf={(lang) => generatePdfBase64(buildPdfProps(viewItem), lang)}
-          onSend={async (_type: SendType, _lang: SendLang, pdfBase64?: string) => {
-            const updated = await invoicing.quotes.sendAuto(viewItem.id, pdfBase64);
+          onSend={async (_type: SendType, lang: SendLang, pdfBase64?: string) => {
+            const updated = await invoicing.quotes.sendAuto(viewItem.id, pdfBase64, lang);
             setFullQuotes(p => ({ ...p, [viewItem.id]: updated }));
             setViewItem(updated);
             load(filter || undefined);

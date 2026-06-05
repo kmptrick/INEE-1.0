@@ -152,7 +152,7 @@ export const invoicing = {
     create: (data: Partial<Quote>) => api.post<Quote>('/invoicing/quotes', data),
     update: (id: string, data: Partial<Quote>) => api.put<Quote>(`/invoicing/quotes/${id}`, data),
     delete: (id: string) => api.delete(`/invoicing/quotes/${id}`),
-    sendAuto: (id: string, pdfBase64?: string) => api.post<Quote>(`/invoicing/quotes/${id}/send-auto`, { pdfBase64 }),
+    sendAuto: (id: string, pdfBase64?: string, lang?: string) => api.post<Quote>(`/invoicing/quotes/${id}/send-auto`, { pdfBase64, lang }),
   },
   invoices: {
     list: (status?: string) => api.get<Invoice[]>(`/invoicing/invoices${status ? `?status=${status}` : ''}`),

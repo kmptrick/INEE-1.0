@@ -67,8 +67,8 @@ export class InvoicingController {
   ) { return this.service.sendInvoiceWithOptions(id, body.type, body.lang, req.user?.id ?? req.user?.sub, body.pdfBase64); }
 
   @Post('quotes/:id/send-auto')
-  sendQuoteAuto(@Param('id') id: string, @Body() body: { pdfBase64?: string }, @Req() req: any) {
-    return this.service.sendQuoteAuto(id, req.user?.id ?? req.user?.sub, body.pdfBase64);
+  sendQuoteAuto(@Param('id') id: string, @Body() body: { pdfBase64?: string; lang?: string }, @Req() req: any) {
+    return this.service.sendQuoteAuto(id, req.user?.id ?? req.user?.sub, body.pdfBase64, body.lang ?? 'fr');
   }
 
   @Post('invoices/:id/send')
