@@ -39,6 +39,23 @@ export class InvoicingScheduler {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    // Passer automatiquement en OVERDUE toutes les factures SENT dont l'échéance est dépassée
+    try {
+      const overdueMoved = await (this.prisma as any).invoice.updateMany({
+        where: {
+          status: 'SENT',
+          dueDate: { lt: today },
+          number: { not: null },
+        },
+        data: { status: 'OVERDUE' },
+      });
+      if (overdueMoved.count > 0) {
+        this.logger.log(`${overdueMoved.count} facture(s) passée(s) automatiquement en OVERDUE.`);
+      }
+    } catch (err) {
+      this.logger.error('Erreur lors du passage automatique en OVERDUE', err);
+    }
+
     let sent = 0;
 
     try {

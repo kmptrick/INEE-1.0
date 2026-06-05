@@ -393,7 +393,6 @@ export default function InvoicesPage() {
                         <div className="absolute right-0 top-9 z-50 rounded-xl shadow-xl overflow-hidden min-w-[190px]"
                           style={{ background: '#FFF', border: `1px solid ${T.border}` }}>
                           {!viewItem.number && menuItem('✎ Modifier', () => openEditInvoice(fullInvoices[viewItem.id] ?? viewItem))}
-                          {viewItem.status === 'SENT' && menuItem('⏰ Marquer en retard', () => updateStatus(viewItem, 'OVERDUE'))}
                           {viewItem.status === 'OVERDUE' && !((viewItem as any).waivedInterest) && menuItem('🤝 Annuler les intérêts', async () => {
                             setActioning(true);
                             try {
