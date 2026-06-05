@@ -42,7 +42,7 @@ export function ServicePicker({ onSelect }: Props) {
       </button>
 
       {open && (
-        <div className="absolute z-50 mt-1 right-0 rounded-xl shadow-xl overflow-hidden"
+        <div className="absolute z-50 mt-1 left-0 rounded-xl shadow-xl overflow-hidden"
           style={{ width: '480px', background: '#FFF', border: `1px solid ${T.border}`, boxShadow: '0 8px 32px rgba(26,16,8,0.15)' }}>
           <div className="p-3" style={{ borderBottom: `1px solid ${T.border}` }}>
             <input autoFocus type="text" placeholder="Rechercher ID, description, catégorie..."

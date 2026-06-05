@@ -252,7 +252,14 @@ export default function InvoicesPage() {
     date: inv.createdAt ? new Date(inv.createdAt).toLocaleDateString('fr-LU') : today(),
     dueDate: fmtDate(inv.dueDate),
     status: inv.status,
-    company: inv.company ? { name: inv.company.name } : undefined,
+    company: inv.company ? {
+      name: inv.company.name,
+      address: (inv.company as any).address ?? undefined,
+      postalCode: (inv.company as any).postalCode ?? undefined,
+      city: (inv.company as any).city ?? undefined,
+      country: (inv.company as any).country ?? undefined,
+      vatNumber: (inv.company as any).vatNumber ?? undefined,
+    } : undefined,
     lines: (inv.lines ?? []).map(l => ({
       description: l.description,
       quantity: l.quantity,

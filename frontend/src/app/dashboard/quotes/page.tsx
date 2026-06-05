@@ -239,7 +239,14 @@ export default function QuotesPage() {
     number: q.number,
     date: q.createdAt ? new Date(q.createdAt).toLocaleDateString('fr-LU') : today(),
     status: q.status,
-    company: q.company ? { name: q.company.name } : undefined,
+    company: q.company ? {
+      name: q.company.name,
+      address: (q.company as any).address ?? undefined,
+      postalCode: (q.company as any).postalCode ?? undefined,
+      city: (q.company as any).city ?? undefined,
+      country: (q.company as any).country ?? undefined,
+      vatNumber: (q.company as any).vatNumber ?? undefined,
+    } : undefined,
     lines: (q.lines ?? []).map(l => ({
       description: l.description,
       quantity: l.quantity,
