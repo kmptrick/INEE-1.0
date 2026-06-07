@@ -210,8 +210,6 @@ export function IneeDocumentPdf({
             <Text style={s.logoName}>INEE</Text>
           </View>
           <View style={s.companyRight}>
-            <Text style={s.companyName}>{INEE.name}</Text>
-            <Text style={s.companyLine}>{INEE.legalForm}  |  Capital : {INEE.capital}</Text>
             <Text style={s.companyLine}>{INEE.address}, {INEE.postalCity}</Text>
             <Text style={s.companyLine}>N° TVA : {INEE.vat}  |  RCS Lux. {INEE.rcs}</Text>
           </View>
@@ -331,7 +329,6 @@ export function IneeDocumentPdf({
         {/* ── Footer ── */}
         <View style={s.footer} fixed>
           <View style={s.footerRow}>
-            <Text style={s.footerCopper}>INEE Sàrl</Text>
             <Text style={s.footerText}>{INEE.address} — {INEE.postalCity}</Text>
             <Text style={s.footerText}>TVA : {INEE.vat}  |  {INEE.email}</Text>
             <Text
