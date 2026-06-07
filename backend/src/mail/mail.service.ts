@@ -3,6 +3,7 @@ import * as nodemailer from 'nodemailer';
 
 export interface SendMailParams {
   to: string | string[];
+  cc?: string | string[];
   subject: string;
   html: string;
   from?: string;
@@ -38,7 +39,7 @@ export class MailService {
       this.logger.log(`[MAIL MOCK] From: ${from} | To: ${[params.to].flat().join(', ')} | Subject: ${params.subject}`);
       return;
     }
-    const mailOptions: any = { from, to: params.to, subject: params.subject, html: params.html };
+    const mailOptions: any = { from, to: params.to, cc: params.cc, subject: params.subject, html: params.html };
     if (params.pdfBase64 && params.pdfFilename) {
       mailOptions.attachments = [{
         filename: params.pdfFilename,
@@ -49,10 +50,14 @@ export class MailService {
     await this.transporter.sendMail(mailOptions);
   }
 
-  /** Billing emails — sender is always invoices@inee.lu */
+  /** Billing emails — sender is always invoices@inee.lu, CC always invoices@inee.lu */
   async sendBilling(params: Omit<SendMailParams, 'from'>): Promise<void> {
+    const internalCc = process.env.BILLING_CC ?? 'invoices@inee.lu';
+    const existingCc = params.cc ? [params.cc].flat() : [];
+    const cc = [...new Set([...existingCc, internalCc])];
     return this.send({
       ...params,
+      cc,
       from: process.env.SMTP_FROM_INVOICING ?? 'INEE Facturation <invoices@inee.lu>',
     });
   }
