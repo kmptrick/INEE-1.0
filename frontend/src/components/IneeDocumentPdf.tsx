@@ -365,7 +365,7 @@ function CGVPage() {
     <Page size="A4" style={cgvStyles.page}>
       <View style={cgvStyles.hband}>
         <Text style={cgvStyles.htitle}>CONDITIONS GÉNÉRALES DE VENTE — INEE</Text>
-        <Text style={cgvStyles.hsub}>INEE S.à r.l. — 37, Rue du Baumbusch — L-8213 Mamer — Grand-Duché de Luxembourg — N° TVA : LU36332830</Text>
+        <Text style={cgvStyles.hsub}>37, Rue du Baumbusch — L-8213 Mamer — Grand-Duché de Luxembourg — N° TVA : LU36332830</Text>
       </View>
       <View style={cgvStyles.cols}>
 
@@ -431,7 +431,7 @@ function CGVPage() {
       </View>
 
       <View style={cgvStyles.footer}>
-        <Text style={cgvStyles.footT}>Dernière mise à jour : juin 2026 — INEE S.à r.l., 37, Rue du Baumbusch, L-8213 Mamer, Luxembourg — N° TVA : LU36332830</Text>
+        <Text style={cgvStyles.footT}>Dernière mise à jour : juin 2026 — INEE · 37, Rue du Baumbusch, L-8213 Mamer, Luxembourg — N° TVA : LU36332830</Text>
       </View>
     </Page>
   );
