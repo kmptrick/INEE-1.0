@@ -334,34 +334,102 @@
     },
     {
       "parameters": {
-        "resource": "draft",
-        "subject": "=RE: {{ $('Prepare Email').item.json.subject }}",
-        "bodyContent": "={{ $json.brouillon }}",
-        "toRecipients": "={{ $('Prepare Email').item.json.senderEmail }}",
-        "options": {}
+        "rules": { "values": [
+          { "conditions": { "options": { "caseSensitive": false, "typeValidation": "loose" }, "conditions": [ { "leftValue": "={{ $('Prepare Email').item.json.mailbox }}", "rightValue": "user1@inee.lu", "operator": { "type": "string", "operation": "equals" } } ], "combinator": "and" }, "renameOutput": true, "outputKey": "Boite1" },
+          { "conditions": { "options": { "caseSensitive": false, "typeValidation": "loose" }, "conditions": [ { "leftValue": "={{ $('Prepare Email').item.json.mailbox }}", "rightValue": "user2@inee.lu", "operator": { "type": "string", "operation": "equals" } } ], "combinator": "and" }, "renameOutput": true, "outputKey": "Boite2" },
+          { "conditions": { "options": { "caseSensitive": false, "typeValidation": "loose" }, "conditions": [ { "leftValue": "={{ $('Prepare Email').item.json.mailbox }}", "rightValue": "user3@inee.lu", "operator": { "type": "string", "operation": "equals" } } ], "combinator": "and" }, "renameOutput": true, "outputKey": "Boite3" },
+          { "conditions": { "options": { "caseSensitive": false, "typeValidation": "loose" }, "conditions": [ { "leftValue": "={{ $('Prepare Email').item.json.mailbox }}", "rightValue": "user4@inee.lu", "operator": { "type": "string", "operation": "equals" } } ], "combinator": "and" }, "renameOutput": true, "outputKey": "Boite4" },
+          { "conditions": { "options": { "caseSensitive": false, "typeValidation": "loose" }, "conditions": [ { "leftValue": "={{ $('Prepare Email').item.json.mailbox }}", "rightValue": "contact@inee.lu", "operator": { "type": "string", "operation": "equals" } } ], "combinator": "and" }, "renameOutput": true, "outputKey": "Boite5" },
+          { "conditions": { "options": { "caseSensitive": false, "typeValidation": "loose" }, "conditions": [ { "leftValue": "={{ $('Prepare Email').item.json.mailbox }}", "rightValue": "info@inee.lu", "operator": { "type": "string", "operation": "equals" } } ], "combinator": "and" }, "renameOutput": true, "outputKey": "Boite6" }
+        ] },
+        "options": { "fallbackOutput": "none" }
       },
-      "id": "draft-email",
-      "name": "Brouillon Outlook",
+      "id": "route-boite",
+      "name": "Route boite",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [1760, 700]
+    },
+    {
+      "parameters": { "resource": "draft", "subject": "=RE: {{ $('Prepare Email').item.json.subject }}", "bodyContent": "={{ $json.brouillon }}", "toRecipients": "={{ $('Prepare Email').item.json.senderEmail }}", "options": {} },
+      "id": "draft-1",
+      "name": "Brouillon boite 1",
       "type": "n8n-nodes-base.microsoftOutlook",
       "typeVersion": 2,
-      "position": [1800, 620],
-      "credentials": { "microsoftOutlookOAuth2Api": { "id": "REMPLACER", "name": "Outlook (compte pour brouillons)" } }
+      "position": [2000, 360],
+      "credentials": { "microsoftOutlookOAuth2Api": { "id": "REMPLACER", "name": "Outlook prive 1" } }
+    },
+    {
+      "parameters": { "resource": "draft", "subject": "=RE: {{ $('Prepare Email').item.json.subject }}", "bodyContent": "={{ $json.brouillon }}", "toRecipients": "={{ $('Prepare Email').item.json.senderEmail }}", "options": {} },
+      "id": "draft-2",
+      "name": "Brouillon boite 2",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [2000, 480],
+      "credentials": { "microsoftOutlookOAuth2Api": { "id": "REMPLACER", "name": "Outlook prive 2" } }
+    },
+    {
+      "parameters": { "resource": "draft", "subject": "=RE: {{ $('Prepare Email').item.json.subject }}", "bodyContent": "={{ $json.brouillon }}", "toRecipients": "={{ $('Prepare Email').item.json.senderEmail }}", "options": {} },
+      "id": "draft-3",
+      "name": "Brouillon boite 3",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [2000, 600],
+      "credentials": { "microsoftOutlookOAuth2Api": { "id": "REMPLACER", "name": "Outlook prive 3" } }
+    },
+    {
+      "parameters": { "resource": "draft", "subject": "=RE: {{ $('Prepare Email').item.json.subject }}", "bodyContent": "={{ $json.brouillon }}", "toRecipients": "={{ $('Prepare Email').item.json.senderEmail }}", "options": {} },
+      "id": "draft-4",
+      "name": "Brouillon boite 4",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [2000, 720],
+      "credentials": { "microsoftOutlookOAuth2Api": { "id": "REMPLACER", "name": "Outlook prive 4" } }
+    },
+    {
+      "parameters": { "resource": "draft", "subject": "=RE: {{ $('Prepare Email').item.json.subject }}", "bodyContent": "={{ $json.brouillon }}", "toRecipients": "={{ $('Prepare Email').item.json.senderEmail }}", "options": {} },
+      "id": "draft-5",
+      "name": "Brouillon boite 5",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [2000, 840],
+      "credentials": { "microsoftOutlookOAuth2Api": { "id": "REMPLACER", "name": "Outlook partage 1 (contact@)" } }
+    },
+    {
+      "parameters": { "resource": "draft", "subject": "=RE: {{ $('Prepare Email').item.json.subject }}", "bodyContent": "={{ $json.brouillon }}", "toRecipients": "={{ $('Prepare Email').item.json.senderEmail }}", "options": {} },
+      "id": "draft-6",
+      "name": "Brouillon boite 6",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [2000, 960],
+      "credentials": { "microsoftOutlookOAuth2Api": { "id": "REMPLACER", "name": "Outlook partage 2 (info@)" } }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Choisit le canal Teams prive selon la boite qui a recu l email.\n// >>> Remplace les REMPLACER par les vrais teamId/channelId de chaque personne.\nconst e = $('Prepare Email').item.json;\nconst p = $('Parse Email JSON').item.json;\nconst m = (e.mailbox || '').toLowerCase();\nconst table = {\n  'user1@inee.lu':   { teamId: 'REMPLACER', channelId: 'REMPLACER' },\n  'user2@inee.lu':   { teamId: 'REMPLACER', channelId: 'REMPLACER' },\n  'user3@inee.lu':   { teamId: 'REMPLACER', channelId: 'REMPLACER' },\n  'user4@inee.lu':   { teamId: 'REMPLACER', channelId: 'REMPLACER' },\n  'contact@inee.lu': { teamId: 'REMPLACER', channelId: 'REMPLACER' },\n  'info@inee.lu':    { teamId: 'REMPLACER', channelId: 'REMPLACER' }\n};\nconst dest = table[m] || { teamId: 'REMPLACER', channelId: 'REMPLACER' };\nreturn { json: { teamId: dest.teamId, channelId: dest.channelId, classification: p.classification, resume: p.resume, actions: p.actions, brouillon: p.brouillon, mailbox: e.mailbox, senderName: e.senderName, subject: e.subject } };"
+      },
+      "id": "map-canal",
+      "name": "Map canal",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2240, 660]
     },
     {
       "parameters": {
         "resource": "channelMessage",
         "operation": "create",
-        "teamId": "REMPLACER",
-        "channelId": "REMPLACER",
+        "teamId": "={{ $json.teamId }}",
+        "channelId": "={{ $json.channelId }}",
         "contentType": "text",
-        "message": "=[{{ $json.classification }}] Email recu sur {{ $('Prepare Email').item.json.mailbox }} — de {{ $('Prepare Email').item.json.senderName }}\nObjet: {{ $('Prepare Email').item.json.subject }}\n\nResume: {{ $json.resume }}\nActions: {{ $json.actions }}\n\n--- Brouillon prepare (dans Outlook) ---\n{{ $json.brouillon }}",
+        "message": "=[{{ $json.classification }}] Email recu sur {{ $json.mailbox }} — de {{ $json.senderName }}\nObjet: {{ $json.subject }}\n\nResume: {{ $json.resume }}\nActions: {{ $json.actions }}\n\n--- Brouillon prepare (dans ta boite Outlook) ---\n{{ $json.brouillon }}",
         "options": {}
       },
       "id": "notify-teams",
       "name": "Notifier Teams",
       "type": "n8n-nodes-base.microsoftTeams",
       "typeVersion": 2,
-      "position": [1800, 780],
+      "position": [2440, 660],
       "credentials": { "microsoftTeamsOAuth2Api": { "id": "REMPLACER", "name": "Microsoft Teams" } }
     }
   ],
@@ -404,12 +472,24 @@
         [{ "node": "Parse Email JSON", "type": "main", "index": 0 }]
       ]
     },
-    "Parse Email JSON": {
-      "main": [[
-        { "node": "Brouillon Outlook", "type": "main", "index": 0 },
-        { "node": "Notifier Teams", "type": "main", "index": 0 }
-      ]]
-    }
+    "Parse Email JSON": { "main": [[{ "node": "Route boite", "type": "main", "index": 0 }]] },
+    "Route boite": {
+      "main": [
+        [{ "node": "Brouillon boite 1", "type": "main", "index": 0 }],
+        [{ "node": "Brouillon boite 2", "type": "main", "index": 0 }],
+        [{ "node": "Brouillon boite 3", "type": "main", "index": 0 }],
+        [{ "node": "Brouillon boite 4", "type": "main", "index": 0 }],
+        [{ "node": "Brouillon boite 5", "type": "main", "index": 0 }],
+        [{ "node": "Brouillon boite 6", "type": "main", "index": 0 }]
+      ]
+    },
+    "Brouillon boite 1": { "main": [[{ "node": "Map canal", "type": "main", "index": 0 }]] },
+    "Brouillon boite 2": { "main": [[{ "node": "Map canal", "type": "main", "index": 0 }]] },
+    "Brouillon boite 3": { "main": [[{ "node": "Map canal", "type": "main", "index": 0 }]] },
+    "Brouillon boite 4": { "main": [[{ "node": "Map canal", "type": "main", "index": 0 }]] },
+    "Brouillon boite 5": { "main": [[{ "node": "Map canal", "type": "main", "index": 0 }]] },
+    "Brouillon boite 6": { "main": [[{ "node": "Map canal", "type": "main", "index": 0 }]] },
+    "Map canal": { "main": [[{ "node": "Notifier Teams", "type": "main", "index": 0 }]] }
   },
   "settings": {},
   "active": false
