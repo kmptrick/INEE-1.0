@@ -1,0 +1,297 @@
+{
+  "name": "INEE - Assistant (Teams + CRM + Email)",
+  "nodes": [
+    {
+      "parameters": { "event": "newChannelMessage" },
+      "id": "trg-teams",
+      "name": "Microsoft Teams Trigger",
+      "type": "n8n-nodes-base.microsoftTeamsTrigger",
+      "typeVersion": 1,
+      "position": [120, 120],
+      "credentials": { "microsoftTeamsOAuth2Api": { "id": "REMPLACER", "name": "Microsoft Teams" } }
+    },
+    {
+      "parameters": { "httpMethod": "POST", "path": "inee-assistant", "responseMode": "responseNode", "options": {} },
+      "id": "trg-crm",
+      "name": "Webhook CRM",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [120, 340]
+    },
+    {
+      "parameters": { "event": "messageReceived", "options": {} },
+      "id": "trg-email",
+      "name": "Microsoft Outlook Trigger",
+      "type": "n8n-nodes-base.microsoftOutlookTrigger",
+      "typeVersion": 1,
+      "position": [120, 560],
+      "credentials": { "microsoftOutlookOAuth2Api": { "id": "REMPLACER", "name": "Microsoft Outlook" } }
+    },
+
+    {
+      "parameters": { "method": "POST", "url": "https://app.inee.lu/api/auth/login", "sendBody": true, "specifyBody": "json", "jsonBody": "={\n  \"email\": \"assistant@inee.lu\",\n  \"password\": \"__MOT_DE_PASSE_BOT__\"\n}", "options": {} },
+      "id": "login-teams",
+      "name": "Login (Teams)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [340, 120]
+    },
+    {
+      "parameters": { "method": "POST", "url": "https://app.inee.lu/api/auth/login", "sendBody": true, "specifyBody": "json", "jsonBody": "={\n  \"email\": \"assistant@inee.lu\",\n  \"password\": \"__MOT_DE_PASSE_BOT__\"\n}", "options": {} },
+      "id": "login-crm",
+      "name": "Login (CRM)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [340, 340]
+    },
+    {
+      "parameters": { "method": "POST", "url": "https://app.inee.lu/api/auth/login", "sendBody": true, "specifyBody": "json", "jsonBody": "={\n  \"email\": \"assistant@inee.lu\",\n  \"password\": \"__MOT_DE_PASSE_BOT__\"\n}", "options": {} },
+      "id": "login-email",
+      "name": "Login (Email)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [340, 560]
+    },
+
+    {
+      "parameters": {
+        "assignments": { "assignments": [
+          { "id": "a1", "name": "chatInput", "type": "string", "value": "={{ $('Microsoft Teams Trigger').item.json.body.content }}" },
+          { "id": "a2", "name": "channel", "type": "string", "value": "teams" },
+          { "id": "a3", "name": "token", "type": "string", "value": "={{ $json.access_token }}" },
+          { "id": "a4", "name": "sessionKey", "type": "string", "value": "=teams-{{ $('Microsoft Teams Trigger').item.json.channelId }}" }
+        ] },
+        "options": {}
+      },
+      "id": "norm-teams",
+      "name": "Normalize Teams",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [560, 120]
+    },
+    {
+      "parameters": {
+        "assignments": { "assignments": [
+          { "id": "c1", "name": "chatInput", "type": "string", "value": "={{ $('Webhook CRM').item.json.body.message }}" },
+          { "id": "c2", "name": "channel", "type": "string", "value": "crm" },
+          { "id": "c3", "name": "token", "type": "string", "value": "={{ $json.access_token }}" },
+          { "id": "c4", "name": "sessionKey", "type": "string", "value": "=crm-{{ $('Webhook CRM').item.json.body.userId }}" }
+        ] },
+        "options": {}
+      },
+      "id": "norm-crm",
+      "name": "Normalize CRM",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [560, 340]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Prepare la branche EMAIL : nettoyage HTML + extraction des champs\nfunction stripHtml(html){\n  if(!html) return '';\n  return html.replace(/<style[\\s\\S]*?<\\/style>/gi,'').replace(/<script[\\s\\S]*?<\\/script>/gi,'').replace(/<[^>]+>/g,' ').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'\"').replace(/\\s{2,}/g,' ').trim();\n}\nconst t = $node[\"Microsoft Outlook Trigger\"].json;\nconst token = $input.item.json.access_token;\nconst rawBody = t.body && t.body.contentType === 'html' ? stripHtml(t.body.content||'') : (t.body && t.body.content ? t.body.content : (t.bodyPreview||''));\nconst body = rawBody.length > 3000 ? rawBody.substring(0,3000)+'... [tronque]' : rawBody;\nconst senderEmail = (t.from && t.from.emailAddress && t.from.emailAddress.address) || '';\nconst senderName = (t.from && t.from.emailAddress && t.from.emailAddress.name) || senderEmail || 'Inconnu';\nconst subject = t.subject || '(sans objet)';\nconst messageId = t.id || '';\nconst chatInput = `Expediteur: ${senderName} <${senderEmail}>\\nObjet: ${subject}\\n\\n${body || 'Email vide.'}`;\nreturn [{ json: { chatInput, channel:'email', token, sessionKey:'email-'+messageId, senderEmail, senderName, subject, messageId } }];"
+      },
+      "id": "prep-email",
+      "name": "Prepare Email",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [560, 560]
+    },
+
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "={{ $json.channel === 'email' ? 'Tu traites un EMAIL entrant chez INEE (services aux entreprises, Luxembourg). Etapes: 1) utilise search_company avec le nom/adresse de l expediteur pour savoir s il est deja client; 2) si client, regarde list_invoices pour son statut de factures; 3) classe l email en CHAUD, TIEDE ou FROID; 4) redige un brouillon de reponse en francais, signe Patrick KUETE - INEE. Reponds UNIQUEMENT par un objet JSON valide (aucun texte autour) avec les champs: classification, resume, actions, brouillon.' : 'Tu es l assistant interne d INEE (ERP/CRM, Luxembourg). Tu reponds en francais, concis et professionnel. Tu as des outils de CONSULTATION du CRM (lecture seule). Pour un client, utilise search_company; ne jamais inventer d identifiant. Si plusieurs clients correspondent, demande lequel. Si une info manque, dis-le. Ne modifie ni supprime jamais de donnee.' }}"
+        }
+      },
+      "id": "agent",
+      "name": "Assistant INEE",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [840, 300]
+    },
+    {
+      "parameters": { "model": "claude-sonnet-4-6", "options": {} },
+      "id": "model",
+      "name": "Claude",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.2,
+      "position": [720, 760],
+      "credentials": { "anthropicApi": { "id": "REMPLACER", "name": "Anthropic" } }
+    },
+    {
+      "parameters": { "sessionIdType": "customKey", "sessionKey": "={{ $json.sessionKey }}", "contextWindowLength": 10 },
+      "id": "memory",
+      "name": "Memoire",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [840, 760]
+    },
+    {
+      "parameters": {
+        "toolDescription": "Recherche un client/societe dans le CRM INEE par nom ou fragment.",
+        "method": "GET",
+        "url": "https://app.inee.lu/api/companies",
+        "sendQuery": true,
+        "parametersQuery": { "values": [ { "name": "search", "valueProvider": "modelRequired" } ] },
+        "sendHeaders": true,
+        "parametersHeaders": { "values": [ { "name": "Authorization", "value": "=Bearer {{ $json.token }}" } ] }
+      },
+      "id": "tool-company",
+      "name": "search_company",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [980, 760]
+    },
+    {
+      "parameters": {
+        "toolDescription": "Liste les factures INEE. Parametre optionnel status (DRAFT, SENT, PAID, OVERDUE).",
+        "method": "GET",
+        "url": "https://app.inee.lu/api/invoicing/invoices",
+        "sendQuery": true,
+        "parametersQuery": { "values": [ { "name": "status", "valueProvider": "modelOptional" } ] },
+        "sendHeaders": true,
+        "parametersHeaders": { "values": [ { "name": "Authorization", "value": "=Bearer {{ $json.token }}" } ] }
+      },
+      "id": "tool-invoices",
+      "name": "list_invoices",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [1120, 760]
+    },
+    {
+      "parameters": {
+        "toolDescription": "Renvoie les statistiques de facturation INEE. Aucun parametre.",
+        "method": "GET",
+        "url": "https://app.inee.lu/api/invoicing/stats",
+        "sendHeaders": true,
+        "parametersHeaders": { "values": [ { "name": "Authorization", "value": "=Bearer {{ $json.token }}" } ] }
+      },
+      "id": "tool-stats",
+      "name": "get_stats",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [1260, 760]
+    },
+
+    {
+      "parameters": {
+        "rules": { "values": [
+          { "conditions": { "options": { "caseSensitive": true, "typeValidation": "loose" }, "conditions": [ { "leftValue": "={{ $('Normalize Teams').isExecuted }}", "rightValue": "", "operator": { "type": "boolean", "operation": "true", "singleValue": true } } ], "combinator": "and" }, "renameOutput": true, "outputKey": "Teams" },
+          { "conditions": { "options": { "caseSensitive": true, "typeValidation": "loose" }, "conditions": [ { "leftValue": "={{ $('Normalize CRM').isExecuted }}", "rightValue": "", "operator": { "type": "boolean", "operation": "true", "singleValue": true } } ], "combinator": "and" }, "renameOutput": true, "outputKey": "CRM" },
+          { "conditions": { "options": { "caseSensitive": true, "typeValidation": "loose" }, "conditions": [ { "leftValue": "={{ $('Prepare Email').isExecuted }}", "rightValue": "", "operator": { "type": "boolean", "operation": "true", "singleValue": true } } ], "combinator": "and" }, "renameOutput": true, "outputKey": "Email" }
+        ] },
+        "options": {}
+      },
+      "id": "switch",
+      "name": "Route reponse",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [1120, 300]
+    },
+
+    {
+      "parameters": {
+        "resource": "channelMessage",
+        "operation": "create",
+        "teamId": "={{ $('Microsoft Teams Trigger').item.json.teamId }}",
+        "channelId": "={{ $('Microsoft Teams Trigger').item.json.channelId }}",
+        "contentType": "text",
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "id": "reply-teams",
+      "name": "Repondre Teams",
+      "type": "n8n-nodes-base.microsoftTeams",
+      "typeVersion": 2,
+      "position": [1400, 100],
+      "credentials": { "microsoftTeamsOAuth2Api": { "id": "REMPLACER", "name": "Microsoft Teams" } }
+    },
+    {
+      "parameters": { "respondWith": "json", "responseBody": "={{ { \"reply\": $json.output } }}", "options": {} },
+      "id": "reply-crm",
+      "name": "Repondre Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1400, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Parse le JSON renvoye par l agent pour la branche EMAIL\nlet raw = ($input.item.json.output) || '';\nraw = raw.replace(/```json/g,'').replace(/```/g,'').trim();\nlet p;\ntry { p = JSON.parse(raw); } catch(e){ p = { classification:'FROID', resume:'Erreur de parsing', actions:'Verifier manuellement', brouillon: raw }; }\nreturn [{ json: p }];"
+      },
+      "id": "parse-email",
+      "name": "Parse Email JSON",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1400, 520]
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "=RE: {{ $('Prepare Email').item.json.subject }}",
+        "bodyContent": "={{ $json.brouillon }}",
+        "toRecipients": "={{ $('Prepare Email').item.json.senderEmail }}",
+        "options": {}
+      },
+      "id": "draft-email",
+      "name": "Brouillon Outlook",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [1640, 440],
+      "credentials": { "microsoftOutlookOAuth2Api": { "id": "REMPLACER", "name": "Microsoft Outlook" } }
+    },
+    {
+      "parameters": {
+        "resource": "channelMessage",
+        "operation": "create",
+        "teamId": "REMPLACER",
+        "channelId": "REMPLACER",
+        "contentType": "text",
+        "message": "=[{{ $json.classification }}] Email de {{ $('Prepare Email').item.json.senderName }} — {{ $('Prepare Email').item.json.subject }}\n\nResume: {{ $json.resume }}\nActions: {{ $json.actions }}\n\n--- Brouillon prepare (dans Outlook) ---\n{{ $json.brouillon }}",
+        "options": {}
+      },
+      "id": "notify-teams",
+      "name": "Notifier Teams",
+      "type": "n8n-nodes-base.microsoftTeams",
+      "typeVersion": 2,
+      "position": [1640, 600],
+      "credentials": { "microsoftTeamsOAuth2Api": { "id": "REMPLACER", "name": "Microsoft Teams" } }
+    }
+  ],
+  "connections": {
+    "Microsoft Teams Trigger": { "main": [[{ "node": "Login (Teams)", "type": "main", "index": 0 }]] },
+    "Webhook CRM": { "main": [[{ "node": "Login (CRM)", "type": "main", "index": 0 }]] },
+    "Microsoft Outlook Trigger": { "main": [[{ "node": "Login (Email)", "type": "main", "index": 0 }]] },
+
+    "Login (Teams)": { "main": [[{ "node": "Normalize Teams", "type": "main", "index": 0 }]] },
+    "Login (CRM)": { "main": [[{ "node": "Normalize CRM", "type": "main", "index": 0 }]] },
+    "Login (Email)": { "main": [[{ "node": "Prepare Email", "type": "main", "index": 0 }]] },
+
+    "Normalize Teams": { "main": [[{ "node": "Assistant INEE", "type": "main", "index": 0 }]] },
+    "Normalize CRM": { "main": [[{ "node": "Assistant INEE", "type": "main", "index": 0 }]] },
+    "Prepare Email": { "main": [[{ "node": "Assistant INEE", "type": "main", "index": 0 }]] },
+
+    "Claude": { "ai_languageModel": [[{ "node": "Assistant INEE", "type": "ai_languageModel", "index": 0 }]] },
+    "Memoire": { "ai_memory": [[{ "node": "Assistant INEE", "type": "ai_memory", "index": 0 }]] },
+    "search_company": { "ai_tool": [[{ "node": "Assistant INEE", "type": "ai_tool", "index": 0 }]] },
+    "list_invoices": { "ai_tool": [[{ "node": "Assistant INEE", "type": "ai_tool", "index": 0 }]] },
+    "get_stats": { "ai_tool": [[{ "node": "Assistant INEE", "type": "ai_tool", "index": 0 }]] },
+
+    "Assistant INEE": { "main": [[{ "node": "Route reponse", "type": "main", "index": 0 }]] },
+    "Route reponse": {
+      "main": [
+        [{ "node": "Repondre Teams", "type": "main", "index": 0 }],
+        [{ "node": "Repondre Webhook", "type": "main", "index": 0 }],
+        [{ "node": "Parse Email JSON", "type": "main", "index": 0 }]
+      ]
+    },
+    "Parse Email JSON": {
+      "main": [[
+        { "node": "Brouillon Outlook", "type": "main", "index": 0 },
+        { "node": "Notifier Teams", "type": "main", "index": 0 }
+      ]]
+    }
+  },
+  "settings": {},
+  "active": false
+}
