@@ -5,10 +5,10 @@
 
 BEGIN;
 
+-- NB : pas de table "Subscription" en production (feature jamais migrée).
 UPDATE "Quote"        SET "number"    = REPLACE("number", '/', '-')    WHERE "number"    LIKE '%/%';
 UPDATE "Invoice"      SET "number"    = REPLACE("number", '/', '-')    WHERE "number"    LIKE '%/%';
 UPDATE "CreditNote"   SET "number"    = REPLACE("number", '/', '-')    WHERE "number"    LIKE '%/%';
-UPDATE "Subscription" SET "number"    = REPLACE("number", '/', '-')    WHERE "number"    LIKE '%/%';
 UPDATE "Commission"   SET "reference" = REPLACE("reference", '/', '-') WHERE "reference" LIKE '%/%';
 UPDATE "Deal"         SET "reference" = REPLACE("reference", '/', '-') WHERE "reference" LIKE '%/%';
 UPDATE "Project"      SET "reference" = REPLACE("reference", '/', '-') WHERE "reference" LIKE '%/%';
