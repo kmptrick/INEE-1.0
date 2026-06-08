@@ -23,8 +23,8 @@ Stack : **Next.js** (frontend) + **NestJS** (backend) + **PostgreSQL** (Prisma O
 | `users` | Gestion des utilisateurs |
 | `crm` | Contacts, sociétés, deals, pipeline |
 | `projects` | Projets, tâches, time entries |
-| `invoicing` | Devis (`Dev/YYYY-NNN`) + Factures (`Fact/YYYY-NNN`) |
-| `credit-notes` | Avoirs (`NC/YYYY-NNN`) |
+| `invoicing` | Devis (`Dev - YYYY - NNN`) + Factures (`Fact - YYYY - NNN`) |
+| `credit-notes` | Avoirs (`NC - YYYY - NNN`) |
 | `commissions` | Suivi des commissions courtiers |
 | `services` | Catalogue de prestations |
 | `calendar` | Événements calendrier |
