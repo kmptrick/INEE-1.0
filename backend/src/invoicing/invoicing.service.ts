@@ -17,14 +17,14 @@ export class InvoicingService {
   private async nextQuoteNumber(): Promise<string> {
     const year = new Date().getFullYear();
     const count = await this.prisma.quote.count();
-    return `Dev / ${year} - ${String(count + 1).padStart(3, '0')}`;
+    return `Dev - ${year} - ${String(count + 1).padStart(3, '0')}`;
   }
 
   private async nextInvoiceNumber(): Promise<string> {
     const year = new Date().getFullYear();
     // Compter uniquement les factures qui ont déjà un numéro (comptabilisées)
     const count = await (this.prisma as any).invoice.count({ where: { number: { not: null } } });
-    return `Fact / ${year} - ${String(count + 1).padStart(3, '0')}`;
+    return `Fact - ${year} - ${String(count + 1).padStart(3, '0')}`;
   }
 
   // ─── Calcul TVA ────────────────────────────────────────────────────────────

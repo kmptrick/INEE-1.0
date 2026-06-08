@@ -10,7 +10,7 @@ export class DealsService {
   private async nextReference(): Promise<string> {
     const year = new Date().getFullYear();
     const count = await this.prisma.deal.count();
-    return `Aff / ${year} - ${String(count + 1).padStart(3, '0')}`;
+    return `Aff - ${year} - ${String(count + 1).padStart(3, '0')}`;
   }
 
   findAll(status?: string) {

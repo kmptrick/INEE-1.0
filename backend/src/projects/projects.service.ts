@@ -19,7 +19,7 @@ export class ProjectsService {
   private async nextReference(): Promise<string> {
     const year = new Date().getFullYear();
     const count = await this.prisma.project.count();
-    return `Proj / ${year} - ${String(count + 1).padStart(3, '0')}`;
+    return `Proj - ${year} - ${String(count + 1).padStart(3, '0')}`;
   }
 
   findAll(status?: string) {

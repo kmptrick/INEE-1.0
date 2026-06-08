@@ -21,7 +21,7 @@ export class CreditNotesService {
   private async nextNumber(): Promise<string> {
     const year = new Date().getFullYear();
     const count = await (this.prisma as any).creditNote.count();
-    return `NC / ${year} - ${String(count + 1).padStart(3, '0')}`;
+    return `NC - ${year} - ${String(count + 1).padStart(3, '0')}`;
   }
 
   private calcTotals(lines: { quantity: number; unitPrice: number }[], vatRate = VAT_LU) {

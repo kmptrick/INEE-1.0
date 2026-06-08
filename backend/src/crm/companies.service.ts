@@ -16,7 +16,7 @@ export class CompaniesService {
 
   private async nextReference(): Promise<string> {
     const count = await this.prisma.company.count();
-    return `Cli / ${String(count + 1).padStart(3, '0')}`;
+    return `Cli - ${String(count + 1).padStart(3, '0')}`;
   }
 
   findAll(search?: string) {

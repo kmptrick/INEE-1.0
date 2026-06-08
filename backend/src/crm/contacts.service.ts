@@ -9,7 +9,7 @@ export class ContactsService {
 
   private async nextReference(): Promise<string> {
     const count = await this.prisma.contact.count();
-    return `Cont / ${String(count + 1).padStart(3, '0')}`;
+    return `Cont - ${String(count + 1).padStart(3, '0')}`;
   }
 
   findAll(search?: string, companyId?: string) {

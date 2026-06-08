@@ -18,7 +18,7 @@ export class SubscriptionsService {
   private async nextNumber(): Promise<string> {
     const year = new Date().getFullYear();
     const count = await (this.prisma as any).subscription.count();
-    return `Sosc / ${year} - ${String(count + 1).padStart(3, '0')}`;
+    return `Sosc - ${year} - ${String(count + 1).padStart(3, '0')}`;
   }
 
   // ─── Calculs ───────────────────────────────────────────────────────────────

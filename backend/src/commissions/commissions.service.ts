@@ -10,7 +10,7 @@ export class CommissionsService {
   private async generateReference(): Promise<string> {
     const year = new Date().getFullYear();
     const count = await this.prisma.commission.count();
-    return `Ref / ${year} - ${String(count + 1).padStart(3, '0')}`;
+    return `Ref - ${year} - ${String(count + 1).padStart(3, '0')}`;
   }
 
   private calcAmount(dealValue: number, rate: number): number {
