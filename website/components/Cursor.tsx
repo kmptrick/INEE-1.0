@@ -3,15 +3,6 @@
 import { useEffect, useState } from 'react'
 import { motion, useMotionValue, useSpring } from 'framer-motion'
 
-/**
- * Sophisticated dual-element cursor:
- * - Small 8px dot that follows the mouse instantly
- * - 40px ring that follows with spring lag (stiffness:120, damping:18)
- * - Ring morphs to elongated rectangle on [data-cursor] / a / button hover
- * - Ring hides on inputs / textareas
- * - mix-blend-mode: multiply on ring for color blending
- * - Hidden on coarse-pointer (mobile/touch) devices
- */
 export default function Cursor() {
   const [enabled, setEnabled] = useState(false)
   const [hoverState, setHoverState] = useState<'default' | 'link' | 'input'>('default')
@@ -19,8 +10,8 @@ export default function Cursor() {
   const dotX = useMotionValue(-100)
   const dotY = useMotionValue(-100)
 
-  const ringX = useSpring(dotX, { stiffness: 120, damping: 18 })
-  const ringY = useSpring(dotY, { stiffness: 120, damping: 18 })
+  const ringX = useSpring(dotX, { stiffness: 150, damping: 20 })
+  const ringY = useSpring(dotY, { stiffness: 150, damping: 20 })
 
   useEffect(() => {
     if (!window.matchMedia('(pointer: fine)').matches) return
@@ -48,37 +39,37 @@ export default function Cursor() {
 
   const ringAnimate = {
     default: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      background: 'rgba(200,128,58,0)',
+      width: 36,
+      height: 36,
+      borderRadius: 18,
       opacity: 1,
-      marginLeft: -20,
-      marginTop: -20,
+      marginLeft: -18,
+      marginTop: -18,
+      scale: 1,
     },
     link: {
-      width: 80,
-      height: 24,
-      borderRadius: 4,
-      background: 'rgba(200,128,58,0.15)',
-      opacity: 1,
-      marginLeft: -40,
-      marginTop: -12,
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      opacity: 0.85,
+      marginLeft: -28,
+      marginTop: -28,
+      scale: 1,
     },
     input: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      background: 'rgba(200,128,58,0)',
+      width: 36,
+      height: 36,
+      borderRadius: 18,
       opacity: 0,
-      marginLeft: -20,
-      marginTop: -20,
+      marginLeft: -18,
+      marginTop: -18,
+      scale: 0.5,
     },
   }
 
   return (
     <>
-      {/* Precise dot — instant tracking */}
+      {/* Dot central — suit instantanément */}
       <motion.div
         aria-hidden
         style={{
@@ -87,18 +78,19 @@ export default function Cursor() {
           left: 0,
           x: dotX,
           y: dotY,
-          width: 8,
-          height: 8,
-          marginLeft: -4,
-          marginTop: -4,
+          width: 10,
+          height: 10,
+          marginLeft: -5,
+          marginTop: -5,
           borderRadius: '50%',
           background: 'var(--copper)',
           pointerEvents: 'none',
           zIndex: 10001,
+          boxShadow: '0 0 0 2px rgba(255,255,255,0.8)',
         }}
       />
 
-      {/* Lagging ring */}
+      {/* Ring externe — suit avec lag */}
       <motion.div
         aria-hidden
         style={{
@@ -107,10 +99,11 @@ export default function Cursor() {
           left: 0,
           x: ringX,
           y: ringY,
-          border: '1.5px solid var(--copper)',
+          border: '2px solid var(--copper)',
+          background: 'rgba(200,128,58,0.08)',
           pointerEvents: 'none',
           zIndex: 10000,
-          mixBlendMode: 'multiply',
+          boxShadow: '0 0 12px rgba(200,128,58,0.25)',
         }}
         animate={ringAnimate[hoverState]}
         transition={{ type: 'spring', stiffness: 260, damping: 22 }}
