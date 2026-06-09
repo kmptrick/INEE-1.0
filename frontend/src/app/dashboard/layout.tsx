@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
+import ChatBot from '@/components/ChatBot';
 
 // Largeur sidebar en px (utilisé aussi par TableFooter)
 export const SIDEBAR_W = 240;
@@ -232,6 +233,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {children}
       </main>
 
+      <ChatBot />
     </div>
   );
 }
