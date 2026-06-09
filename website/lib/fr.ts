@@ -8,7 +8,7 @@ export const fr = {
       { label: 'Contact', href: '#contact' },
     ],
     cta: 'Prendre rendez-vous',
-    langSwitch: { label: 'EN', href: '/' },
+    langSwitch: { label: 'EN', href: '/en' },
   },
   hero: {
     label: 'Vous créez. On structure. C\'est notre expertise.',
@@ -26,6 +26,7 @@ export const fr = {
     titleEnd: 'pour votre entreprise',
     subtitle: 'De la comptabilité à la communication digitale, INEE vous accompagne sur l\'ensemble de vos besoins administratifs, fiscaux, juridiques et stratégiques au Luxembourg.',
     prestations: 'Nos prestations',
+    webDemoCaption: 'Un aperçu de ce que nous construisons pour vous',
     cta: 'Prendre rendez-vous',
     learnMore: 'En savoir plus →',
     categories: [

@@ -1,5 +1,8 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import SmoothScroll from '@/components/SmoothScroll'
+import Cursor from '@/components/Cursor'
+import ChatBot from '@/components/ChatBot'
 
 export const metadata: Metadata = {
   title: 'INEE — Services aux Entreprises | Luxembourg & Grande Région',
@@ -13,7 +16,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script defer src="https://stats.inee.lu/script.js" data-website-id="eb3067fa-ef36-43f0-ae06-ce07d6169f29" />
       </head>
-      <body>{children}</body>
+      <body>
+        <Cursor />
+        <SmoothScroll>{children}</SmoothScroll>
+        <ChatBot />
+      </body>
     </html>
   )
 }

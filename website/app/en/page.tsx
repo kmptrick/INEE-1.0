@@ -7,28 +7,28 @@ import Events from '@/components/Events'
 import Contact from '@/components/Contact'
 import Footer from '@/components/Footer'
 import ScrollParallax from '@/components/ScrollParallax'
-import { fr } from '@/lib/fr'
+import { en } from '@/lib/en'
 
-export default function HomeFr() {
+export default function HomeEN() {
   return (
     <>
-      <Nav content={fr.nav} />
+      <Nav content={en.nav} />
       <main>
-        <Hero content={fr.hero} />
+        <Hero content={en.hero} />
         <ScrollParallax>
-          <Services content={fr.services} />
+          <Services content={en.services} />
         </ScrollParallax>
         <ScrollParallax>
-          <Skills content={fr.skills} />
+          <Skills content={en.skills} />
         </ScrollParallax>
         <ScrollParallax>
-          <Events content={fr.events} />
+          <Events content={en.events} />
         </ScrollParallax>
         <ScrollParallax>
-          <Contact content={fr.contact} />
+          <Contact content={en.contact} />
         </ScrollParallax>
       </main>
-      <Footer content={fr.footer} />
+      <Footer content={en.footer} />
     </>
   )
 }

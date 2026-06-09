@@ -26,6 +26,7 @@ export const en = {
     titleEnd: '',
     subtitle: 'From accounting to digital communications, INEE supports you across all your administrative, tax, legal and strategic needs in Luxembourg and the Greater Region.',
     prestations: 'Our services',
+    webDemoCaption: 'A glimpse of what we build for you',
     cta: 'Book a meeting',
     learnMore: 'Learn more →',
     categories: [

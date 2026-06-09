@@ -1,25 +1,5 @@
-'use client'
-import Nav from '@/components/Nav'
-import Hero from '@/components/Hero'
-import Services from '@/components/Services'
-import Skills from '@/components/Skills'
-import Events from '@/components/Events'
-import Contact from '@/components/Contact'
-import Footer from '@/components/Footer'
-import { en } from '@/lib/en'
+import { redirect } from 'next/navigation'
 
-export default function Home() {
-  return (
-    <>
-      <Nav content={en.nav} />
-      <main>
-        <Hero content={en.hero} />
-        <Services content={en.services} />
-        <Skills content={en.skills} />
-        <Events content={en.events} />
-        <Contact content={en.contact} />
-      </main>
-      <Footer content={en.footer} />
-    </>
-  )
+export default function Root() {
+  redirect('/en')
 }

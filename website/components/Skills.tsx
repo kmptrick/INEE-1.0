@@ -157,7 +157,12 @@ export default function Skills({ content }: { content: SiteContent['skills'] }) 
           {/* Right column — chiffres clés */}
           <div ref={rightRef} className="reveal">
             <div
-              className="card"
+              className="card glow-card"
+              onMouseMove={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect()
+                e.currentTarget.style.setProperty('--mx', `${e.clientX - rect.left}px`)
+                e.currentTarget.style.setProperty('--my', `${e.clientY - rect.top}px`)
+              }}
               style={{ padding: "48px" }}
             >
               <h3

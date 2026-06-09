@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import type { SiteContent } from '@/lib/fr'
+import WebBuildDemo from './WebBuildDemo'
 
 const icons = [
   (
@@ -150,36 +151,66 @@ export default function Services({ content }: { content: SiteContent['services']
               <a href="#contact" className="btn-primary">{content.cta}</a>
             </div>
 
-            {/* Right — services list */}
-            <div style={{
-              background: 'var(--bg-cream)',
-              border: '1px solid var(--border-light)',
-              padding: '40px',
-              borderRadius: '2px',
-            }}>
-              <p style={{
-                fontFamily: "'Montserrat', sans-serif", fontSize: '10px', fontWeight: 600,
-                letterSpacing: '3px', textTransform: 'uppercase', color: 'var(--text-light)',
-                marginBottom: '24px',
-              }}>{content.prestations}</p>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                {cat.services.map((s, j) => (
-                  <li key={j} style={{
-                    display: 'flex', alignItems: 'center', gap: '16px',
-                    padding: '14px 0',
-                    borderBottom: j < cat.services.length - 1 ? '1px solid var(--border-light)' : 'none',
-                    fontSize: '15px', color: 'var(--text-dark)', lineHeight: 1.5,
-                  }}>
-                    <span style={{
-                      width: '6px', height: '6px', flexShrink: 0,
-                      background: 'var(--copper)', transform: 'rotate(45deg)',
-                      display: 'inline-block',
-                    }} />
-                    {s}
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {/* Right — services list, or live web-build demo for Communication & Marketing */}
+            {cat.num === '06' ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+                <WebBuildDemo caption={content.webDemoCaption} />
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                  {cat.services.map((s, j) => (
+                    <li key={j} style={{
+                      display: 'flex', alignItems: 'center', gap: '16px',
+                      padding: '8px 0',
+                      fontSize: '14px', color: 'var(--text-medium)', lineHeight: 1.5,
+                    }}>
+                      <span style={{
+                        width: '6px', height: '6px', flexShrink: 0,
+                        background: 'var(--copper)', transform: 'rotate(45deg)',
+                        display: 'inline-block',
+                      }} />
+                      {s}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <div
+                className="glow-card"
+                onMouseMove={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect()
+                  e.currentTarget.style.setProperty('--mx', `${e.clientX - rect.left}px`)
+                  e.currentTarget.style.setProperty('--my', `${e.clientY - rect.top}px`)
+                }}
+                style={{
+                  background: 'var(--bg-cream)',
+                  border: '1px solid var(--border-light)',
+                  padding: '40px',
+                  borderRadius: '2px',
+                }}
+              >
+                <p style={{
+                  fontFamily: "'Montserrat', sans-serif", fontSize: '10px', fontWeight: 600,
+                  letterSpacing: '3px', textTransform: 'uppercase', color: 'var(--text-light)',
+                  marginBottom: '24px',
+                }}>{content.prestations}</p>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                  {cat.services.map((s, j) => (
+                    <li key={j} style={{
+                      display: 'flex', alignItems: 'center', gap: '16px',
+                      padding: '14px 0',
+                      borderBottom: j < cat.services.length - 1 ? '1px solid var(--border-light)' : 'none',
+                      fontSize: '15px', color: 'var(--text-dark)', lineHeight: 1.5,
+                    }}>
+                      <span style={{
+                        width: '6px', height: '6px', flexShrink: 0,
+                        background: 'var(--copper)', transform: 'rotate(45deg)',
+                        display: 'inline-block',
+                      }} />
+                      {s}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         ))}
       </div>

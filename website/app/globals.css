@@ -20,7 +20,20 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
-html { scroll-behavior: smooth; font-size: 16px; }
+html { font-size: 16px; }
+
+/* Lenis smooth scroll */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+.lenis.lenis-stopped { overflow: hidden; }
+.lenis.lenis-smooth iframe { pointer-events: none; }
+
+/* Custom cursor — hide the native one on precise pointers */
+@media (pointer: fine) {
+  html { cursor: none; }
+  a, button, [data-cursor], input, textarea, select, label { cursor: none; }
+}
 
 body {
   background: var(--bg-cream);
@@ -102,6 +115,66 @@ section { padding: 112px 0; }
   border-color: var(--copper);
 }
 
+/* Cursor-following glow — apply alongside .card; set --mx/--my via onMouseMove */
+.glow-card {
+  position: relative;
+  overflow: hidden;
+}
+.glow-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  background: radial-gradient(220px circle at var(--mx, 50%) var(--my, 50%), rgba(200,128,58,0.16), transparent 70%);
+}
+.glow-card:hover::after {
+  opacity: 1;
+}
+
+/* Animated browser-window demo (web-creation showcase) */
+.browser-mock {
+  background: var(--bg-white);
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: var(--shadow-medium);
+}
+.browser-mock__bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 16px;
+  background: var(--bg-cream-dark);
+  border-bottom: 1px solid var(--border-light);
+}
+.browser-mock__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--border);
+}
+.browser-mock__dot:nth-child(1) { background: #E0A35C; }
+.browser-mock__dot:nth-child(2) { background: #D8C2A8; }
+.browser-mock__dot:nth-child(3) { background: #C9B79E; }
+
+@keyframes mock-grow-block {
+  from { transform: scaleX(0); opacity: 0; }
+  to { transform: scaleX(1); opacity: 1; }
+}
+@keyframes mock-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.mock-block {
+  transform-origin: left center;
+  animation: mock-grow-block 0.7s cubic-bezier(0.4,0,0.2,1) both;
+}
+.mock-fade {
+  animation: mock-fade-in 0.6s cubic-bezier(0.4,0,0.2,1) both;
+}
+
 .btn-primary {
   display: inline-flex;
   align-items: center;
@@ -149,6 +222,67 @@ section { padding: 112px 0; }
   color: var(--copper);
 }
 
+/* Glowing primary (for dark hero) with animated sheen */
+.btn-glow {
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(200,128,58,0.35);
+}
+.btn-glow::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,0.4), transparent);
+  transform: skewX(-20deg);
+  transition: left 0.6s ease;
+}
+.btn-glow:hover::before { left: 140%; }
+.btn-glow:hover {
+  box-shadow: 0 12px 40px rgba(200,128,58,0.55);
+}
+
+/* Ghost button on dark backgrounds */
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 32px;
+  background: rgba(245,236,224,0.04);
+  color: #F5ECE0;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  border: 1px solid rgba(245,236,224,0.25);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  backdrop-filter: blur(6px);
+}
+.btn-ghost:hover {
+  border-color: var(--copper-light);
+  color: var(--copper-light);
+  background: rgba(200,128,58,0.08);
+}
+
+/* Hero reveal — content is VISIBLE by default; it only animates once the
+   section gets the .hero-reveal class (added only when the tab is visible).
+   This guarantees the hero is never blank, even if rAF/animations are frozen. */
+.r-line-inner { transform: translateY(0); }
+.r-fade { opacity: 1; }
+.r-rule { transform: scaleX(1); transform-origin: left; }
+.hero-reveal .r-line-inner { animation: heroRise 1s cubic-bezier(0.16,1,0.3,1) both; }
+.hero-reveal .r-fade { animation: heroFade 0.9s ease both; }
+.hero-reveal .r-rule { animation: heroRule 0.9s cubic-bezier(0.16,1,0.3,1) both; }
+@keyframes heroRise { from { transform: translateY(115%); } to { transform: translateY(0); } }
+@keyframes heroFade { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes heroRule { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
 .reveal {
   opacity: 0;
   transform: translateY(28px);
@@ -183,3 +317,67 @@ section { padding: 112px 0; }
 }
 .input-field:focus { border-color: var(--copper); }
 .input-field::placeholder { color: var(--text-light); }
+
+/* ===== IMMERSIVE ADDITIONS ===== */
+
+/* Hide default cursor when custom cursor active */
+@media (pointer: fine) {
+  * { cursor: none !important; }
+}
+
+/* Scroll progress bar */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  background: var(--copper);
+  transform-origin: left;
+  z-index: 999;
+  pointer-events: none;
+}
+
+/* Text reveal char by char */
+.char-reveal {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+}
+.char-reveal span {
+  display: inline-block;
+  will-change: transform, opacity;
+}
+
+/* Glow card effect */
+.glow-card {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+}
+.glow-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(200,128,58,0.06), transparent 40%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+  z-index: 0;
+}
+.glow-card:hover::before { opacity: 1; }
+
+/* Section ambient glow */
+.section-glow {
+  position: relative;
+}
+.section-glow::before {
+  content: '';
+  position: absolute;
+  top: -200px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 600px;
+  height: 400px;
+  background: radial-gradient(ellipse, rgba(200,128,58,0.04) 0%, transparent 70%);
+  pointer-events: none;
+}

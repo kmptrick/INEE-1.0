@@ -48,11 +48,11 @@ export default function Nav({ content }: { content: SiteContent['nav'] }) {
           right: 0,
           zIndex: 100,
           height: 72,
-          background: 'rgba(250,246,241,0.95)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
+          background: scrolled ? 'rgba(250,246,241,0.95)' : 'rgba(12,6,2,0.0)',
+          backdropFilter: scrolled ? 'blur(12px)' : 'blur(2px)',
+          WebkitBackdropFilter: scrolled ? 'blur(12px)' : 'blur(2px)',
           borderBottom: scrolled ? '1px solid var(--border-light)' : '1px solid transparent',
-          transition: 'border-color 0.3s ease',
+          transition: 'background 0.4s ease, border-color 0.3s ease, backdrop-filter 0.4s ease',
         }}
       >
         <div
@@ -66,7 +66,7 @@ export default function Nav({ content }: { content: SiteContent['nav'] }) {
         >
           {/* Logo */}
           <a href="#" style={{ textDecoration: 'none' }}>
-            <LogoInline size={28} textSize={20} />
+            <LogoInline size={28} textSize={20} dark={!scrolled} />
           </a>
 
           {/* Center nav — desktop */}
@@ -79,7 +79,7 @@ export default function Nav({ content }: { content: SiteContent['nav'] }) {
             }}
           >
             {content.links.map((link) => (
-              <NavLink key={link.href} href={link.href} label={link.label} />
+              <NavLink key={link.href} href={link.href} label={link.label} light={!scrolled} />
             ))}
           </nav>
 
@@ -99,12 +99,12 @@ export default function Nav({ content }: { content: SiteContent['nav'] }) {
               style={{
                 fontFamily: "'Montserrat', sans-serif", fontSize: '11px', fontWeight: 600,
                 letterSpacing: '2px', textTransform: 'uppercase' as const,
-                color: 'var(--text-medium)', textDecoration: 'none',
-                padding: '8px 12px', border: '1px solid var(--border)',
+                color: scrolled ? 'var(--text-medium)' : 'rgba(245,236,224,0.85)', textDecoration: 'none',
+                padding: '8px 12px', border: `1px solid ${scrolled ? 'var(--border)' : 'rgba(245,236,224,0.3)'}`,
                 borderRadius: '2px', transition: 'all 0.2s',
               }}
               onMouseEnter={e => { e.currentTarget.style.color = 'var(--copper)'; e.currentTarget.style.borderColor = 'var(--copper)' }}
-              onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-medium)'; e.currentTarget.style.borderColor = 'var(--border)' }}
+              onMouseLeave={e => { e.currentTarget.style.color = scrolled ? 'var(--text-medium)' : 'rgba(245,236,224,0.85)'; e.currentTarget.style.borderColor = scrolled ? 'var(--border)' : 'rgba(245,236,224,0.3)' }}
             >
               {content.langSwitch.label}
             </a>
@@ -231,7 +231,8 @@ export default function Nav({ content }: { content: SiteContent['nav'] }) {
   )
 }
 
-function NavLink({ href, label }: { href: string; label: string }) {
+function NavLink({ href, label, light }: { href: string; label: string; light?: boolean }) {
+  const rest = light ? 'rgba(245,236,224,0.82)' : 'var(--text-medium)'
   return (
     <a
       href={href}
@@ -239,17 +240,17 @@ function NavLink({ href, label }: { href: string; label: string }) {
         fontFamily: "'Inter', sans-serif",
         fontSize: 13,
         fontWeight: 500,
-        color: 'var(--text-medium)',
+        color: rest,
         letterSpacing: '0.5px',
         textDecoration: 'none',
         transition: 'color 0.2s ease',
         whiteSpace: 'nowrap',
       }}
       onMouseEnter={(e) => {
-        ;(e.currentTarget as HTMLAnchorElement).style.color = 'var(--copper)'
+        ;(e.currentTarget as HTMLAnchorElement).style.color = 'var(--copper-light)'
       }}
       onMouseLeave={(e) => {
-        ;(e.currentTarget as HTMLAnchorElement).style.color = 'var(--text-medium)'
+        ;(e.currentTarget as HTMLAnchorElement).style.color = rest
       }}
     >
       {label}
