@@ -89,7 +89,7 @@ export default function Skills({ content }: { content: SiteContent['skills'] }) 
             className="section-title"
             style={{ marginTop: "16px" }}
           >
-            {content.title}<em>{content.titleAccent}</em>{content.titleEnd}
+            {content.title} <em>{content.titleAccent}</em>{content.titleEnd}
           </h2>
         </div>
 

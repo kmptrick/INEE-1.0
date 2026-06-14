@@ -19,7 +19,7 @@ export default function TermsAndConditions() {
         {[
           {
             title: 'Article 1 — Service provider identification',
-            content: `INEE S.à r.l.-S.\n37, Rue du Baumbusch — L-8213 Mamer\nGrand Duchy of Luxembourg\nVAT: LU36332830\nEmail: contact@inee.lu\nTel: +352 691 845 660`,
+            content: `INEE S.à r.l.-S.\n37, Rue du Baumbusch — L-8213 Mamer\nGrand Duchy of Luxembourg\nVAT: LU36332830\nEmail: contact@inee.lu\nTel: +352 661 185 049`,
           },
           {
             title: 'Article 2 — Scope of application',

@@ -28,7 +28,7 @@ export default function Events({ content }: { content: SiteContent['events'] }) 
       <div className="container">
         <p className="section-label">{content.label}</p>
         <h2 className="section-title">
-          {content.title}<em>{content.titleAccent}</em>
+          {content.title} <em>{content.titleAccent}</em>
         </h2>
 
         <div

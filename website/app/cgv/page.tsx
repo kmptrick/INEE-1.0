@@ -18,7 +18,7 @@ export default function CGV() {
         {[
           {
             title: '1. Identification du prestataire',
-            content: `INEE S.à r.l.-S.\n37, Rue du Baumbusch — 8213 Mamer, Grand-Duché de Luxembourg\nN° TVA : LU36332830\nEmail : contact@inee.lu\nTéléphone : +352 691 845 660`,
+            content: `INEE S.à r.l.-S.\n37, Rue du Baumbusch — 8213 Mamer, Grand-Duché de Luxembourg\nN° TVA : LU36332830\nEmail : contact@inee.lu\nTéléphone : +352 661 185 049`,
           },
           {
             title: '2. Champ d\'application',

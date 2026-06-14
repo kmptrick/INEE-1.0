@@ -19,7 +19,7 @@ export default function LegalNotice() {
         {[
           {
             title: '1. Publisher',
-            content: `INEE S.à r.l.-S.\n37, Rue du Baumbusch\nL-8213 Mamer\nGrand Duchy of Luxembourg\nVAT: LU36332830\nEmail: contact@inee.lu\nTel: +352 691 845 660`,
+            content: `INEE S.à r.l.-S.\n37, Rue du Baumbusch\nL-8213 Mamer\nGrand Duchy of Luxembourg\nVAT: LU36332830\nEmail: contact@inee.lu\nTel: +352 661 185 049`,
           },
           {
             title: '2. Publication director',
