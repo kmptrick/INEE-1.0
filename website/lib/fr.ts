@@ -142,7 +142,7 @@ export const fr = {
       addressValue: '37, Rue du Baumbusch\n8213 Mamer — Luxembourg',
       emailLabel: 'Email — Écrire un message',
       emailValue: 'contact@inee.lu',
-      phoneLabel: 'Téléphone — Appeler',
+      phoneLabel: 'Téléphone & WhatsApp',
       phoneValue: '+352 661 185 049',
       vatLabel: 'N° TVA',
       vatValue: 'LU36332830',
