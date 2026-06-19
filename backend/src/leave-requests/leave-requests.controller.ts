@@ -38,6 +38,11 @@ export class LeaveRequestsController {
   @Patch(':id/reject')
   reject(@Param('id') id: string) { return this.service.updateStatus(id, 'REJECTED'); }
 
+  @Patch(':id/cancel')
+  cancel(@Param('id') id: string, @CurrentUser() user: { sub: string; role: string }) {
+    return this.service.cancel(id, user.sub, user.role);
+  }
+
   @Delete(':id')
   remove(@Param('id') id: string, @CurrentUser() user: { sub: string; role: string }) {
     return this.service.remove(id, user.sub, user.role);

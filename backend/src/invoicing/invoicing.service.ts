@@ -427,7 +427,7 @@ export class InvoicingService {
         </div>
       </div>
     </div>`;
-    await this.mail.send({ from: senderEmail, to: recipients, subject, html, pdfBase64, pdfFilename: pdfBase64 ? `${quote.number}.pdf` : undefined });
+    await this.mail.sendBilling({ to: recipients, subject, html, pdfBase64, pdfFilename: pdfBase64 ? `${quote.number}.pdf` : undefined });
     await this.audit.log({ entityType: 'Quote', entityId: id, userId, action: `Devis envoyé par email (${lang})`, details: `De : ${senderEmail} · À : ${recipients.join(', ')}` });
     return this.prisma.quote.update({ where: { id }, data: { status: 'SENT' }, include: { company: true, lines: true } });
   }

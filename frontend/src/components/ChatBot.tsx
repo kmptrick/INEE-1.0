@@ -16,8 +16,12 @@ export default function ChatBot() {
   const [msgs, setMsgs] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [listening, setListening] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const recognitionRef = useRef<any>(null);
+  const manualStopRef = useRef(false);
+  const finalRef = useRef('');
 
   useEffect(() => {
     if (open) {
@@ -62,6 +66,57 @@ export default function ChatBot() {
       e.preventDefault();
       send();
     }
+  }
+
+  function toggleMic() {
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) {
+      alert("La reconnaissance vocale n'est pas supportée par ce navigateur. Utilisez Chrome ou Edge.");
+      return;
+    }
+    if (listening) {
+      // Arrêt demandé par l'utilisateur
+      manualStopRef.current = true;
+      recognitionRef.current?.stop();
+      setListening(false);
+      inputRef.current?.focus();
+      return;
+    }
+    manualStopRef.current = false;
+    finalRef.current = '';
+    setInput('');
+    const rec = new SR();
+    rec.lang = 'fr-FR';
+    rec.interimResults = true;
+    rec.continuous = true;
+    rec.onresult = (e: any) => {
+      let interim = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript;
+        if (e.results[i].isFinal) finalRef.current += t + ' ';
+        else interim += t;
+      }
+      setInput((finalRef.current + interim).trim());
+    };
+    rec.onerror = (ev: any) => {
+      // Erreurs fatales : on coupe vraiment. Les autres (no-speech...) seront relancées par onend.
+      if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') {
+        manualStopRef.current = true;
+        setListening(false);
+      }
+    };
+    rec.onend = () => {
+      // Relance automatique tant que l'utilisateur n'a pas cliqué pour arrêter
+      if (!manualStopRef.current) {
+        try { rec.start(); } catch { /* déjà relancé */ }
+      } else {
+        setListening(false);
+        inputRef.current?.focus();
+      }
+    };
+    recognitionRef.current = rec;
+    rec.start();
+    setListening(true);
   }
 
   return (
@@ -176,7 +231,7 @@ export default function ChatBot() {
                     wordBreak: 'break-word',
                   }}
                 >
-                  {m.text}
+                  {m.role === 'assistant' ? <span dangerouslySetInnerHTML={{ __html: m.text }} /> : m.text}
                 </div>
               </div>
             ))}
@@ -233,6 +288,27 @@ export default function ChatBot() {
                 overflow: 'auto',
               }}
             />
+            <button
+              onClick={toggleMic}
+              title={listening ? 'Arrêter la dictée' : 'Dicter au micro'}
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 10,
+                background: listening ? 'linear-gradient(135deg, #E05252, #C83A3A)' : 'rgba(255,255,255,0.06)',
+                border: listening ? 'none' : '1px solid #3A2010',
+                color: listening ? '#fff' : '#C8803A',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 16,
+                flexShrink: 0,
+                transition: 'all 0.15s',
+              }}
+            >
+              {listening ? '■' : '🎤'}
+            </button>
             <button
               onClick={send}
               disabled={!input.trim() || loading}

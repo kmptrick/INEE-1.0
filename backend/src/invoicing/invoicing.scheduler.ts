@@ -13,10 +13,13 @@ const fmtDate = (d: Date | string | null | undefined, lang = 'fr') =>
 // Délais de rappel en jours après l'échéance
 const REMINDER_DELAYS = [1, 15, 29]; // Rappel 1, 2, 3
 
-// Taux d'intérêt légal luxembourgeois B2B (8% par an)
-const INTEREST_RATE_ANNUAL = 0.08;
-function calcInterest(principal: number, daysOverdue: number): number {
-  return Math.round(principal * INTEREST_RATE_ANNUAL * (daysOverdue / 365) * 100) / 100;
+// Intérêts de retard B2B — Loi luxembourgeoise du 18 avril 2004 (Dir. 2011/7/UE)
+const INTEREST_RATE_ANNUAL = 0.1115; // Taux BCE référence (3,15%) + 8pp = 11,15% / an
+const RECOVERY_FLAT_FEE = 40;        // Forfait de recouvrement fixe : 40 €
+
+function calcInterest(principal: number, daysOverdue: number): { variable: number; fixed: number; total: number } {
+  const variable = Math.round(principal * INTEREST_RATE_ANNUAL * (daysOverdue / 365) * 100) / 100;
+  return { variable, fixed: RECOVERY_FLAT_FEE, total: Math.round((variable + RECOVERY_FLAT_FEE) * 100) / 100 };
 }
 
 @Injectable()
@@ -96,8 +99,11 @@ export class InvoicingScheduler {
 
         const invoiceLang = invoice.lang ?? 'fr';
         const subject = this.buildSubject(nextLevel, invoice.number, invoiceLang);
-        const interest = invoice.waivedInterest ? 0 : calcInterest(invoice.total, daysOverdue);
-        const html = this.buildHtml(nextLevel, invoice, invoiceLang, daysOverdue, interest);
+        // Intérêts uniquement à partir du 2ème rappel (J+15)
+        const interestData = (!invoice.waivedInterest && nextLevel >= 2)
+          ? calcInterest(invoice.total, daysOverdue)
+          : { variable: 0, fixed: 0, total: 0 };
+        const html = this.buildHtml(nextLevel, invoice, invoiceLang, daysOverdue, interestData);
 
         await this.mail.sendBilling({ to: recipients, subject, html });
 
@@ -140,7 +146,7 @@ export class InvoicingScheduler {
     return subjects[level]?.[lang] ?? `Rappel facture N° ${number}`;
   }
 
-  private buildHtml(level: number, invoice: any, lang = 'fr', daysOverdue = 0, interest = 0): string {
+  private buildHtml(level: number, invoice: any, lang = 'fr', daysOverdue = 0, interest = { variable: 0, fixed: 0, total: 0 }): string {
     const linesHtml = (invoice.lines ?? []).map((l: any) =>
       `<tr>
         <td style="padding:6px 10px;border-bottom:1px solid #eee">${l.description}</td>
@@ -201,15 +207,27 @@ export class InvoicingScheduler {
       <p style="margin:8px 0 0;font-size:16px;font-weight:bold;color:${headerColor}">Total TTC : ${fmt(invoice.total)}</p>
     </div>
 
-    ${interest > 0 ? `
+    ${interest.total > 0 ? `
     <div style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:4px;padding:12px 16px;font-size:13px;margin-bottom:16px">
-      <strong style="color:#C2410C">${lang === 'en' ? '⚠ Late payment interest (Art. L.115-2 Luxembourg)' : '⚠ Intérêts de retard (Art. L.115-2 du Code de commerce LU)'}</strong><br>
-      <span style="color:#7C2D12">
-        ${lang === 'en'
-          ? `${daysOverdue} days overdue · Rate: 8% p.a. · Interest: <strong>${fmt(interest)}</strong> · Total due incl. interest: <strong>${fmt(invoice.total + interest)}</strong>`
-          : `${daysOverdue} jours de retard · Taux : 8% / an · Intérêts : <strong>${fmt(interest)}</strong> · Total dû avec intérêts : <strong>${fmt(invoice.total + interest)}</strong>`
-        }
-      </span>
+      <strong style="color:#C2410C">${lang === 'en' ? '⚠ Late payment interest — Luxembourg Law of 18 April 2004' : '⚠ Intérêts de retard — Loi luxembourgeoise du 18 avril 2004'}</strong>
+      <table style="width:100%;margin-top:8px;font-size:12px;color:#7C2D12">
+        <tr>
+          <td>${lang === 'en' ? 'Days overdue' : 'Jours de retard'}</td>
+          <td style="text-align:right"><strong>${daysOverdue} ${lang === 'en' ? 'days' : 'jours'}</strong></td>
+        </tr>
+        <tr>
+          <td>${lang === 'en' ? 'Variable interest (ECB rate + 8pp = 11.15%/yr)' : 'Intérêts variables (taux BCE + 8pp = 11,15%/an)'}</td>
+          <td style="text-align:right"><strong>${fmt(interest.variable)}</strong></td>
+        </tr>
+        <tr>
+          <td>${lang === 'en' ? 'Fixed recovery fee (Art. L.115-2)' : 'Forfait de recouvrement fixe (Art. L.115-2)'}</td>
+          <td style="text-align:right"><strong>${fmt(interest.fixed)}</strong></td>
+        </tr>
+        <tr style="border-top:1px solid #FED7AA">
+          <td style="padding-top:6px"><strong>${lang === 'en' ? 'Total due incl. interest' : 'Total dû intérêts inclus'}</strong></td>
+          <td style="text-align:right;padding-top:6px"><strong style="font-size:14px">${fmt(invoice.total + interest.total)}</strong></td>
+        </tr>
+      </table>
     </div>` : ''}
 
     <div style="background:#F0FDF4;border-radius:4px;padding:12px 16px;font-size:13px;margin-bottom:16px">

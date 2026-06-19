@@ -37,6 +37,13 @@ export class LeaveRequestsService {
     return (this.prisma as any).leaveRequest.update({ where: { id }, data: { status } });
   }
 
+  async cancel(id: string, requesterId: string, requesterRole: string) {
+    const req = await (this.prisma as any).leaveRequest.findUnique({ where: { id } });
+    if (!req) throw new NotFoundException('Demande introuvable');
+    if (req.userId !== requesterId && requesterRole !== 'ADMIN') throw new ForbiddenException('Non autorisé');
+    return (this.prisma as any).leaveRequest.update({ where: { id }, data: { status: 'CANCELLED' } });
+  }
+
   async remove(id: string, requesterId: string, requesterRole: string) {
     const req = await (this.prisma as any).leaveRequest.findUnique({ where: { id } });
     if (!req) throw new NotFoundException('Demande introuvable');
