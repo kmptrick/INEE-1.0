@@ -18,7 +18,19 @@ const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || '';
 const ANTHROPIC_VERSION = '2023-06-01';
 const MAX_CONTEXT_CHARS = 180000;  // garde-fou sur le texte injecté
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+// Connexion : on privilégie des variables séparées (mot de passe transmis tel quel,
+// sans analyse d'URL — évite les soucis avec les caractères spéciaux comme « ! »).
+const pool = new Pool(
+  process.env.PGPASSWORD
+    ? {
+        host: process.env.PGHOST || 'inee-postgres',
+        port: Number(process.env.PGPORT) || 5432,
+        user: process.env.PGUSER || 'inee_user',
+        password: String(process.env.PGPASSWORD),
+        database: process.env.PGDATABASE || 'claude_db',
+      }
+    : { connectionString: process.env.DATABASE_URL }
+);
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '15mb' }));
@@ -420,10 +432,14 @@ app.post('/api/conversations/:id/chat', auth, async (req, res) => {
   let full = '';
   try {
     const body = { model, max_tokens: 4096, stream: true, messages };
-    if (system) body.system = system;
+    // Prompt caching : le bloc système (instructions projet + pièces jointes,
+    // souvent très volumineux) est mis en cache → facturé à 10% du prix sur
+    // les tours suivants de la conversation (fenêtre de 5 min). Gros gain quand
+    // des documents sont attachés à un projet.
+    if (system) body.system = [{ type: 'text', text: system, cache_control: { type: 'ephemeral', ttl: '1h' } }];
     const upstream = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': ANTHROPIC_VERSION },
+      headers: { 'content-type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': ANTHROPIC_VERSION, 'anthropic-beta': 'extended-cache-ttl-2025-04-11' },
       body: JSON.stringify(body)
     });
     if (!upstream.ok) {

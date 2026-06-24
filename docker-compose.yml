@@ -24,7 +24,11 @@ services:
     ports:
       - "3008:3007"
     environment:
-      DATABASE_URL: postgresql://inee_user:IneeSecure2026!@inee-postgres:5432/claude_db
+      PGHOST: inee-postgres
+      PGPORT: "5432"
+      PGUSER: inee_user
+      PGPASSWORD: "IneeSecure2026!"
+      PGDATABASE: claude_db
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: 180d
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
