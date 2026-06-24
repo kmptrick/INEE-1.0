@@ -16,34 +16,24 @@
 <style>
   :root{
     --bg:#262624; --bg2:#1f1d1a; --panel:#30302e; --panel2:#3a3a38;
-    --text:#f5f4ef; --muted:#a3a097; --accent:#d97757; --accent2:#c45f3f;
-    --user:#3a3a38; --border:#403f3c; --danger:#e06b5a;
+    --text:#f5f4ef; --muted:#a3a097; --accent:#d97757; --border:#403f3c; --danger:#e06b5a;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{height:100%; margin:0;}
-  body{
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    background:var(--bg); color:var(--text);
-    display:flex; flex-direction:column; height:100dvh; overflow:hidden;
-    font-size:16px; line-height:1.5;
-  }
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--text); display:flex; flex-direction:column; height:100dvh; overflow:hidden; font-size:16px; line-height:1.5;}
   button{font-family:inherit; cursor:pointer; border:none; background:none; color:inherit;}
+  input,textarea,select{font-family:inherit;}
 
-  header{
-    display:flex; align-items:center; gap:10px; padding:10px 14px;
-    padding-top:calc(10px + env(safe-area-inset-top));
-    background:var(--bg2); border-bottom:1px solid var(--border); flex:none; z-index:20;
-  }
+  header{display:flex; align-items:center; gap:10px; padding:10px 14px; padding-top:calc(10px + env(safe-area-inset-top));
+    background:var(--bg2); border-bottom:1px solid var(--border); flex:none; z-index:20;}
   .icon-btn{width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:20px; color:var(--muted);}
   .icon-btn:active{background:var(--panel);}
   header .title{flex:1; font-weight:600; font-size:16px; display:flex; align-items:center; gap:8px; min-width:0;}
   header .title .tt{white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-  .logo{width:26px;height:26px;border-radius:7px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;color:#fff;font-size:18px;line-height:1;flex:none;}
-  select.model{
-    background:var(--panel); color:var(--text); border:1px solid var(--border);
-    border-radius:9px; padding:7px 8px; font-size:13px; max-width:120px;
-  }
-  .proj-badge{font-size:11px;color:var(--accent);background:rgba(217,119,87,.13);border:1px solid rgba(217,119,87,.3);padding:2px 8px;border-radius:20px;white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis;}
+  .logo{width:26px;height:26px;border-radius:7px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;color:#fff;font-size:18px;flex:none;}
+  select.model{background:var(--panel); color:var(--text); border:1px solid var(--border); border-radius:9px; padding:7px 8px; font-size:13px; max-width:118px;}
+  .proj-badge{font-size:11px;color:var(--accent);background:rgba(217,119,87,.13);border:1px solid rgba(217,119,87,.3);padding:2px 8px;border-radius:20px;white-space:nowrap;max-width:110px;overflow:hidden;text-overflow:ellipsis;}
 
   #messages{flex:1; overflow-y:auto; padding:16px 12px 8px; -webkit-overflow-scrolling:touch;}
   .msg{margin:0 auto 18px; max-width:760px; display:flex; gap:10px;}
@@ -58,8 +48,6 @@
   .content code{font-family:"SF Mono",Menlo,Consolas,monospace; font-size:0.9em;}
   .content :not(pre)>code{background:var(--panel); padding:2px 5px; border-radius:5px;}
   .content ul,.content ol{margin:6px 0 10px; padding-left:22px;}
-  .content li{margin:3px 0;}
-  .content h1,.content h2,.content h3{margin:14px 0 8px; line-height:1.3;}
   .content table{border-collapse:collapse; width:100%; margin:10px 0; font-size:14px; display:block; overflow-x:auto;}
   .content th,.content td{border:1px solid var(--border); padding:6px 9px; text-align:left;}
   .content blockquote{border-left:3px solid var(--accent); margin:10px 0; padding-left:12px; color:var(--muted);}
@@ -81,13 +69,18 @@
   .suggestion:active{border-color:var(--accent);}
 
   #composer{flex:none; padding:8px 12px calc(10px + env(safe-area-inset-bottom)); background:var(--bg); border-top:1px solid var(--border);}
-  .input-wrap{max-width:760px; margin:0 auto; display:flex; align-items:flex-end; gap:8px; background:var(--panel); border:1px solid var(--border); border-radius:22px; padding:6px 6px 6px 16px;}
+  .att-bar{max-width:760px;margin:0 auto 6px;display:flex;gap:6px;flex-wrap:wrap;}
+  .att{font-size:12px;color:var(--text);background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:4px 9px;display:flex;align-items:center;gap:6px;}
+  .att .x{color:var(--muted);cursor:pointer;}
+  .input-wrap{max-width:760px; margin:0 auto; display:flex; align-items:flex-end; gap:6px; background:var(--panel); border:1px solid var(--border); border-radius:22px; padding:6px 6px 6px 8px;}
   .input-wrap:focus-within{border-color:var(--accent);}
-  #input{flex:1; background:none; border:none; color:var(--text); font-size:16px; resize:none; outline:none; max-height:160px; padding:8px 0; line-height:1.4; font-family:inherit;}
-  #send{width:40px;height:40px;border-radius:50%;background:var(--accent);color:#fff;font-size:18px;display:flex;align-items:center;justify-content:center;flex:none;transition:opacity .15s;}
-  #send:disabled{opacity:.4;}
+  #attachBtn{width:36px;height:36px;border-radius:50%;font-size:18px;color:var(--muted);flex:none;}
+  #attachBtn:active{background:var(--panel2);}
+  #input{flex:1; background:none; border:none; color:var(--text); font-size:16px; resize:none; outline:none; max-height:160px; padding:8px 0; line-height:1.4;}
+  #send{width:40px;height:40px;border-radius:50%;background:var(--accent);color:#fff;font-size:18px;display:flex;align-items:center;justify-content:center;flex:none;}
   #send.stop{background:var(--panel2);}
   .hint{text-align:center; font-size:11px; color:var(--muted); margin-top:6px;}
+  .readonly-note{max-width:760px;margin:0 auto;text-align:center;font-size:13px;color:var(--muted);padding:10px;}
 
   .overlay{position:fixed; inset:0; background:rgba(0,0,0,.5); opacity:0; pointer-events:none; transition:opacity .2s; z-index:40;}
   .overlay.open{opacity:1; pointer-events:auto;}
@@ -98,57 +91,86 @@
   .side-h{display:flex;align-items:center;justify-content:space-between;padding:14px 10px 6px;}
   .side-h h3{margin:0; font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px;}
   .side-h .add{font-size:20px;color:var(--accent);width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:8px;}
-  .side-h .add:active{background:var(--panel);}
   .row{display:flex; align-items:center; gap:9px; padding:10px 11px; border-radius:10px; font-size:14.5px; color:var(--text);}
   .row.active{background:var(--panel);}
   .row:active{background:var(--panel);}
-  .row .ic{flex:none;}
   .row .label{flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-  .row .del{color:var(--muted); font-size:15px; padding:4px 6px; opacity:.7;}
-  .row .edit{color:var(--muted); font-size:14px; padding:4px 6px; opacity:.7;}
+  .row .del,.row .edit{color:var(--muted); font-size:14px; padding:4px 6px; opacity:.7;}
   .row .count{font-size:11px;color:var(--muted);background:var(--panel2);border-radius:10px;padding:1px 7px;}
   .empty{padding:10px 12px;color:var(--muted);font-size:13.5px;}
   .side-foot{border-top:1px solid var(--border); padding:8px 14px calc(8px + env(safe-area-inset-bottom));}
   .side-foot button{display:flex; align-items:center; gap:10px; width:100%; padding:11px 8px; color:var(--muted); font-size:14.5px; border-radius:8px;}
   .side-foot button:active{background:var(--panel);}
+  .side-user{padding:10px 12px;font-size:13px;color:var(--muted);border-top:1px solid var(--border);}
+  .side-user b{color:var(--text);}
 
   .modal-bg{position:fixed; inset:0; background:rgba(0,0,0,.6); display:none; align-items:center; justify-content:center; z-index:60; padding:18px;}
   .modal-bg.open{display:flex;}
-  .modal{background:var(--panel); border:1px solid var(--border); border-radius:18px; padding:22px; width:100%; max-width:440px; max-height:90dvh; overflow-y:auto;}
+  .modal{background:var(--panel); border:1px solid var(--border); border-radius:18px; padding:22px; width:100%; max-width:460px; max-height:90dvh; overflow-y:auto;}
   .modal h2{margin:0 0 6px; font-size:20px;}
   .modal p{color:var(--muted); font-size:14px; margin:0 0 14px; line-height:1.5;}
   .modal label{display:block; font-size:13px; color:var(--muted); margin:14px 0 6px;}
-  .modal input,.modal textarea,.modal select{width:100%; background:var(--bg2); border:1px solid var(--border); border-radius:10px; padding:12px; color:var(--text); font-size:15px; font-family:inherit;}
+  .modal input,.modal textarea,.modal select{width:100%; background:var(--bg2); border:1px solid var(--border); border-radius:10px; padding:12px; color:var(--text); font-size:15px;}
   .modal textarea{resize:vertical;}
-  .modal .row-btn{margin-top:20px; display:flex; gap:10px;}
+  .row-btn{margin-top:20px; display:flex; gap:10px;}
   .btn-primary{flex:1; background:var(--accent); color:#fff; padding:13px; border-radius:11px; font-weight:600; font-size:15px;}
   .btn-ghost{flex:1; background:var(--panel2); color:var(--text); padding:13px; border-radius:11px; font-size:15px;}
-  .modal a{color:var(--accent);}
   .err{color:var(--danger); font-size:13px; margin-top:10px; display:none;}
-  .toast{position:fixed; bottom:calc(90px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%) translateY(20px); background:var(--panel2); color:var(--text); padding:11px 18px; border-radius:12px; font-size:14px; opacity:0; transition:.25s; z-index:80; border:1px solid var(--border);}
+  .toast{position:fixed; bottom:calc(90px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%) translateY(20px); background:var(--panel2); color:var(--text); padding:11px 18px; border-radius:12px; font-size:14px; opacity:0; transition:.25s; z-index:90; border:1px solid var(--border);}
   .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  /* Login */
+  #loginScreen{position:fixed;inset:0;background:var(--bg);z-index:100;display:flex;align-items:center;justify-content:center;padding:24px;}
+  .login-box{width:100%;max-width:360px;text-align:center;}
+  .login-box .big-logo{width:64px;height:64px;border-radius:16px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;color:#fff;font-size:40px;margin:0 auto 18px;}
+  .login-box h1{font-size:24px;margin:0 0 4px;font-weight:600;}
+  .login-box p{color:var(--muted);margin:0 0 24px;font-size:14px;}
+  .login-box input{width:100%;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px;color:var(--text);font-size:16px;margin-bottom:12px;}
+  .login-box button{width:100%;background:var(--accent);color:#fff;padding:14px;border-radius:12px;font-weight:600;font-size:16px;}
+  /* lists in admin/project */
+  .item{display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:9px 11px;margin-bottom:8px;font-size:14px;}
+  .item .grow{flex:1;min-width:0;}
+  .item .grow small{color:var(--muted);display:block;font-size:12px;}
+  .item .act{color:var(--muted);padding:4px 6px;}
+  .tag{font-size:11px;padding:1px 7px;border-radius:10px;background:var(--panel2);color:var(--muted);}
+  .tag.admin{background:rgba(217,119,87,.2);color:var(--accent);}
 </style>
 </head>
 <body>
 
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="big-logo">∗</div>
+    <h1>Claude</h1>
+    <p>Connecte-toi pour accéder à ton espace</p>
+    <input type="email" id="loginEmail" placeholder="Email" autocomplete="username" autocapitalize="off">
+    <input type="password" id="loginPass" placeholder="Mot de passe" autocomplete="current-password">
+    <button id="loginBtn">Se connecter</button>
+    <div class="err" id="loginErr" style="margin-top:14px"></div>
+  </div>
+</div>
+
 <header>
-  <button class="icon-btn" id="menuBtn" aria-label="Menu">☰</button>
+  <button class="icon-btn" id="menuBtn">☰</button>
   <div class="title"><span class="logo">∗</span><span class="tt" id="headerTitle">Claude</span></div>
   <span class="proj-badge" id="projBadge" style="display:none"></span>
-  <select class="model" id="modelSelect" title="Modèle">
+  <select class="model" id="modelSelect">
     <option value="claude-sonnet-4-6">Sonnet 4.6</option>
     <option value="claude-opus-4-8">Opus 4.8</option>
     <option value="claude-haiku-4-5-20251001">Haiku 4.5</option>
   </select>
-  <button class="icon-btn" id="newBtn" aria-label="Nouveau">✏️</button>
+  <button class="icon-btn" id="newBtn">✏️</button>
 </header>
 
 <div id="messages"></div>
 
 <div id="composer">
+  <div class="att-bar" id="attBar"></div>
   <div class="input-wrap">
+    <button id="attachBtn" title="Joindre">📎</button>
     <textarea id="input" rows="1" placeholder="Écris à Claude…"></textarea>
-    <button id="send" aria-label="Envoyer">↑</button>
+    <button id="send">↑</button>
   </div>
   <div class="hint">Claude peut faire des erreurs. Vérifie les infos importantes.</div>
 </div>
@@ -163,478 +185,518 @@
     <div class="side-h"><h3 id="convoHead">💬 Conversations</h3></div>
     <div id="convoList"></div>
   </div>
+  <div class="side-user" id="sideUser"></div>
   <div class="side-foot">
-    <button id="settingsBtn">⚙️ Réglages / Clé API</button>
+    <button id="adminBtn" style="display:none">🛡️ Administration</button>
+    <button id="pwdBtn">🔑 Changer mon mot de passe</button>
     <button id="installBtn">📲 Installer sur l'écran d'accueil</button>
+    <button id="logoutBtn">🚪 Se déconnecter</button>
   </div>
 </nav>
-
-<!-- Settings modal -->
-<div class="modal-bg" id="settingsModal">
-  <div class="modal">
-    <h2>Réglages</h2>
-    <p>Ta clé API Anthropic est stockée <strong>uniquement sur cet appareil</strong> et n'est envoyée qu'à l'API de Claude.</p>
-    <label>Clé API (commence par <code>sk-ant-</code>)</label>
-    <input type="password" id="apiKeyInput" placeholder="sk-ant-..." autocomplete="off" autocapitalize="off" spellcheck="false">
-    <label>Instructions globales (optionnel)</label>
-    <textarea id="systemInput" rows="3" placeholder="Ex : Réponds toujours en français, de façon concise."></textarea>
-    <label>Modèle par défaut</label>
-    <select id="defaultModel">
-      <option value="claude-sonnet-4-6">Sonnet 4.6 (équilibré)</option>
-      <option value="claude-opus-4-8">Opus 4.8 (le plus puissant)</option>
-      <option value="claude-haiku-4-5-20251001">Haiku 4.5 (rapide)</option>
-    </select>
-    <div class="err" id="settingsErr"></div>
-    <div class="row-btn">
-      <button class="btn-ghost" id="settingsCancel">Annuler</button>
-      <button class="btn-primary" id="settingsSave">Enregistrer</button>
-    </div>
-    <p style="margin-top:16px;font-size:12.5px">Pas de clé ? Crée-en une gratuitement sur <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a>.</p>
-  </div>
-</div>
 
 <!-- Project modal -->
 <div class="modal-bg" id="projectModal">
   <div class="modal">
     <h2 id="projModalTitle">Nouveau projet</h2>
-    <p>Un projet regroupe des conversations et donne à Claude un contexte permanent : des instructions et une base de connaissances utilisées dans toutes les discussions du projet.</p>
+    <p>Un projet donne à Claude un contexte permanent : des instructions et une base de connaissances (fichiers, liens, notes) utilisées dans toutes ses conversations.</p>
     <label>Nom du projet</label>
-    <input type="text" id="projName" placeholder="Ex : Mon entreprise, Thèse, Cuisine…">
+    <input type="text" id="projName" placeholder="Ex : Mon entreprise, Thèse…">
     <label>Instructions du projet</label>
-    <textarea id="projInstr" rows="3" placeholder="Ex : Tu es mon assistant juridique. Réponds de façon formelle et cite les sources."></textarea>
-    <label>Base de connaissances (textes de référence)</label>
-    <textarea id="projKnow" rows="5" placeholder="Colle ici des notes, faits, documents… Claude s'en servira automatiquement dans ce projet."></textarea>
+    <textarea id="projInstr" rows="3" placeholder="Ex : Tu es mon assistant juridique. Réponds de façon formelle."></textarea>
+    <div id="projKnowWrap" style="display:none">
+      <label>Base de connaissances</label>
+      <div id="projAttList"></div>
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+        <button class="btn-ghost" id="projAddFile" style="flex:1">📄 Fichier</button>
+        <button class="btn-ghost" id="projAddLink" style="flex:1">🔗 Lien</button>
+        <button class="btn-ghost" id="projAddText" style="flex:1">📝 Texte</button>
+      </div>
+    </div>
     <div class="err" id="projErr"></div>
     <div class="row-btn">
-      <button class="btn-ghost" id="projCancel">Annuler</button>
+      <button class="btn-ghost" id="projCancel">Fermer</button>
       <button class="btn-primary" id="projSave">Enregistrer</button>
     </div>
   </div>
 </div>
 
-<!-- Install help modal -->
+<!-- Admin modal -->
+<div class="modal-bg" id="adminModal">
+  <div class="modal">
+    <h2>🛡️ Administration</h2>
+    <p>Gère les comptes. Tu peux aussi consulter les conversations de chaque utilisateur.</p>
+    <div id="adminUsers"></div>
+    <button class="btn-primary" id="adminAddUser" style="margin-top:8px">＋ Créer un compte</button>
+    <div class="row-btn"><button class="btn-ghost" id="adminClose">Fermer</button></div>
+  </div>
+</div>
+
+<!-- Create/edit user modal -->
+<div class="modal-bg" id="userModal">
+  <div class="modal">
+    <h2 id="userModalTitle">Créer un compte</h2>
+    <label>Email</label>
+    <input type="email" id="uEmail" autocapitalize="off" placeholder="personne@exemple.com">
+    <label>Nom</label>
+    <input type="text" id="uName" placeholder="Nom affiché">
+    <label id="uPassLabel">Mot de passe</label>
+    <input type="text" id="uPass" placeholder="min. 6 caractères">
+    <label>Rôle</label>
+    <select id="uRole"><option value="user">Utilisateur</option><option value="admin">Administrateur</option></select>
+    <div class="err" id="userErr"></div>
+    <div class="row-btn">
+      <button class="btn-ghost" id="userCancel">Annuler</button>
+      <button class="btn-primary" id="userSave">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Password modal -->
+<div class="modal-bg" id="pwdModal">
+  <div class="modal">
+    <h2>Changer mon mot de passe</h2>
+    <label>Mot de passe actuel</label>
+    <input type="password" id="pwCur">
+    <label>Nouveau mot de passe</label>
+    <input type="password" id="pwNew" placeholder="min. 6 caractères">
+    <div class="err" id="pwdErr"></div>
+    <div class="row-btn">
+      <button class="btn-ghost" id="pwdCancel">Annuler</button>
+      <button class="btn-primary" id="pwdSave">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Install help -->
 <div class="modal-bg" id="installModal">
   <div class="modal">
     <h2>Installer l'appli 📲</h2>
-    <p><strong>Sur iPhone (Safari) :</strong><br>Appuie sur le bouton Partager <span style="font-size:16px">⬆️</span> en bas, puis « Sur l'écran d'accueil ».</p>
-    <p><strong>Sur Android (Chrome) :</strong><br>Menu ⋮ en haut à droite, puis « Ajouter à l'écran d'accueil » / « Installer l'application ».</p>
-    <p>L'appli s'ouvrira alors en plein écran, comme une vraie application.</p>
+    <p><strong>iPhone (Safari) :</strong> bouton Partager ⬆️ → « Sur l'écran d'accueil ».</p>
+    <p><strong>Android (Chrome) :</strong> menu ⋮ → « Ajouter à l'écran d'accueil ».</p>
     <div class="row-btn"><button class="btn-primary" id="installClose">Compris</button></div>
   </div>
 </div>
 
+<input type="file" id="fileInput" style="display:none">
 <div class="toast" id="toast"></div>
 
 <script>
-// ============ State & storage ============
-const LS_KEY='claude_api_key', LS_SYS='claude_system', LS_MODEL='claude_model',
-      LS_CONVOS='claude_convos', LS_CUR='claude_current',
-      LS_PROJECTS='claude_projects', LS_CURPROJ='claude_curproj';
-let apiKey = localStorage.getItem(LS_KEY) || '';
-let systemPrompt = localStorage.getItem(LS_SYS) || '';
-let convos = JSON.parse(localStorage.getItem(LS_CONVOS) || '[]');
-let projects = JSON.parse(localStorage.getItem(LS_PROJECTS) || '[]');
-let currentId = localStorage.getItem(LS_CUR) || null;
-let activeProjectId = localStorage.getItem(LS_CURPROJ) || null;   // sidebar filter / context
-let editingProjectId = null;
-let streaming = false, abortCtrl = null, deferredPrompt = null;
-
 const $ = id => document.getElementById(id);
-const messagesEl=$('messages'), inputEl=$('input'), sendBtn=$('send');
-marked.setOptions({breaks:true, gfm:true});
+marked.setOptions({ breaks:true, gfm:true });
+const API = '/api';
 
-function save(){
-  localStorage.setItem(LS_CONVOS, JSON.stringify(convos));
-  localStorage.setItem(LS_PROJECTS, JSON.stringify(projects));
-  localStorage.setItem(LS_CUR, currentId||'');
-  localStorage.setItem(LS_CURPROJ, activeProjectId||'');
-}
-function curConvo(){ return convos.find(c=>c.id===currentId); }
-function getProject(id){ return projects.find(p=>p.id===id); }
-function activeProject(){ return getProject(activeProjectId); }
+// ---------- state ----------
+let token = localStorage.getItem('claude_token') || '';
+let me = null;
+let projects = [], convos = [], curConv = null, curMessages = [];
+let activeProjectId = null, readOnly = false;
+let streaming = false, abortCtrl = null, deferredPrompt = null;
+let fileTarget = null; // {ownerType, ownerId, cb}
 
-function newConvo(){
-  const c={id:'c'+Date.now(), title:'Nouvelle conversation', messages:[], ts:Date.now(), projectId:activeProjectId||null};
-  convos.unshift(c); currentId=c.id; save(); refreshAll(); closeSidebar();
+// ---------- api ----------
+async function api(method, path, body){
+  const opt = { method, headers:{ 'Authorization':'Bearer '+token } };
+  if(body){ opt.headers['Content-Type']='application/json'; opt.body=JSON.stringify(body); }
+  const r = await fetch(API+path, opt);
+  if(r.status===401){ logout(); throw new Error('Session expirée'); }
+  const data = await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(data.error || ('Erreur '+r.status));
+  return data;
 }
-function deleteConvo(id){
-  convos=convos.filter(c=>c.id!==id);
-  if(currentId===id) currentId=convos.find(c=>(c.projectId||null)===(activeProjectId||null))?.id || null;
-  save(); refreshAll();
-}
-
-// ============ Projects ============
-function openProjectModal(id){
-  editingProjectId=id||null;
-  const p=id?getProject(id):null;
-  $('projModalTitle').textContent=p?'Modifier le projet':'Nouveau projet';
-  $('projName').value=p?p.name:'';
-  $('projInstr').value=p?p.instructions:'';
-  $('projKnow').value=p?p.knowledge:'';
-  $('projErr').style.display='none';
-  $('projectModal').classList.add('open');
-  closeSidebar();
-}
-$('projSave').onclick=()=>{
-  const name=$('projName').value.trim();
-  if(!name){ const e=$('projErr'); e.textContent='Donne un nom au projet.'; e.style.display='block'; return; }
-  if(editingProjectId){
-    const p=getProject(editingProjectId);
-    p.name=name; p.instructions=$('projInstr').value.trim(); p.knowledge=$('projKnow').value.trim();
-  }else{
-    const p={id:'p'+Date.now(), name, instructions:$('projInstr').value.trim(), knowledge:$('projKnow').value.trim(), ts:Date.now()};
-    projects.unshift(p); activeProjectId=p.id; currentId=null;
-  }
-  save(); $('projectModal').classList.remove('open'); refreshAll(); toast('Projet enregistré ✓');
-}
-function deleteProject(id){
-  const cnt=convos.filter(c=>c.projectId===id).length;
-  if(!confirm('Supprimer ce projet'+(cnt?' et ses '+cnt+' conversation(s)':'')+' ?')) return;
-  projects=projects.filter(p=>p.id!==id);
-  convos=convos.filter(c=>c.projectId!==id);
-  if(activeProjectId===id) activeProjectId=null;
-  if(!curConvo()) currentId=null;
-  save(); refreshAll();
-}
-function selectProject(id){
-  activeProjectId=id; currentId=null; save(); refreshAll(); closeSidebar();
+async function apiUpload(path, formData){
+  const r = await fetch(API+path, { method:'POST', headers:{ 'Authorization':'Bearer '+token }, body:formData });
+  if(r.status===401){ logout(); throw new Error('Session expirée'); }
+  const data = await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(data.error || ('Erreur '+r.status));
+  return data;
 }
 
-// ============ Rendering ============
-function refreshAll(){ renderSidebar(); renderHeader(); renderMessages(); }
+// ---------- auth / session ----------
+async function boot(){
+  if(!token){ showLogin(); return; }
+  try{ const d = await api('GET','/auth/me'); me = d.user; startApp(); }
+  catch(e){ showLogin(); }
+}
+function showLogin(){ $('loginScreen').style.display='flex'; }
+function hideLogin(){ $('loginScreen').style.display='none'; }
+$('loginBtn').onclick = doLogin;
+$('loginPass').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+async function doLogin(){
+  const email=$('loginEmail').value.trim(), password=$('loginPass').value;
+  const err=$('loginErr'); err.style.display='none';
+  try{
+    const r = await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.error||'Échec');
+    token = d.token; me = d.user; localStorage.setItem('claude_token', token);  // session persistante
+    startApp();
+  }catch(e){ err.textContent=e.message; err.style.display='block'; }
+}
+function logout(){ token=''; me=null; localStorage.removeItem('claude_token'); location.reload(); }
+$('logoutBtn').onclick = ()=>{ if(confirm('Se déconnecter ?')) logout(); };
 
+async function startApp(){
+  hideLogin();
+  $('sideUser').innerHTML = `Connecté : <b>${escapeHtml(me.name||me.email)}</b><br>${escapeHtml(me.email)} ${me.role==='admin'?'<span class="tag admin">admin</span>':''}`;
+  $('adminBtn').style.display = me.role==='admin' ? 'flex' : 'none';
+  const sm = localStorage.getItem('claude_model'); if(sm) $('modelSelect').value=sm;
+  await loadProjects();
+  await loadConvos();
+  renderSidebar(); renderHeader(); renderMessages();
+}
+
+// ---------- data ----------
+async function loadProjects(){ projects = await api('GET','/projects'); }
+async function loadConvos(){
+  const q = activeProjectId ? ('?projectId='+activeProjectId) : '?projectId=none';
+  convos = await api('GET','/conversations'+q);
+}
+function activeProject(){ return projects.find(p=>p.id===activeProjectId); }
+
+async function openConversation(id){
+  const d = await api('GET','/conversations/'+id);
+  curConv = d; curMessages = d.messages || [];
+  readOnly = (d.user_id !== me.id);
+  renderMessages(); renderComposer(); closeSidebar();
+}
+function newConvoLocal(){ curConv=null; curMessages=[]; readOnly=false; renderMessages(); renderComposer(); closeSidebar(); }
+$('newBtn').onclick=newConvoLocal; $('sideNew').onclick=newConvoLocal;
+
+async function ensureConversation(){
+  if(curConv && !readOnly) return curConv;
+  const c = await api('POST','/conversations',{ projectId: activeProjectId||null });
+  curConv = { ...c, messages:[] }; curMessages=[]; readOnly=false;
+  await loadConvos(); renderSidebar();
+  return curConv;
+}
+
+// ---------- render ----------
+function escapeHtml(s){ return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function renderHeader(){
-  const p=activeProject();
-  const badge=$('projBadge');
-  if(p){ badge.style.display='block'; badge.textContent='📁 '+p.name; $('headerTitle').textContent='Claude'; }
-  else { badge.style.display='none'; $('headerTitle').textContent='Claude'; }
+  const p=activeProject(); const b=$('projBadge');
+  if(p){ b.style.display='block'; b.textContent='📁 '+p.name; } else b.style.display='none';
 }
-
 function renderSidebar(){
-  // projects
   const pl=$('projectList'); pl.innerHTML='';
-  const allRow=document.createElement('div');
-  allRow.className='row'+(!activeProjectId?' active':'');
-  allRow.innerHTML=`<span class="ic">🗂</span><span class="label">Toutes les conversations</span>`;
-  allRow.onclick=()=>selectProject(null);
-  pl.appendChild(allRow);
-  if(projects.length===0){ const e=document.createElement('div'); e.className='empty'; e.textContent='Aucun projet. Touche ＋ pour en créer un.'; pl.appendChild(e); }
+  const all=document.createElement('div'); all.className='row'+(!activeProjectId?' active':'');
+  all.innerHTML='<span>🗂</span><span class="label">Toutes les conversations</span>';
+  all.onclick=()=>selectProject(null); pl.appendChild(all);
+  if(!projects.length){ const e=document.createElement('div'); e.className='empty'; e.textContent='Aucun projet. Touche ＋.'; pl.appendChild(e); }
   projects.forEach(p=>{
-    const cnt=convos.filter(c=>c.projectId===p.id).length;
-    const r=document.createElement('div');
-    r.className='row'+(activeProjectId===p.id?' active':'');
-    r.innerHTML=`<span class="ic">📁</span><span class="label"></span><span class="count">${cnt}</span><span class="edit">✏️</span><span class="del">🗑</span>`;
+    const r=document.createElement('div'); r.className='row'+(activeProjectId===p.id?' active':'');
+    r.innerHTML='<span>📁</span><span class="label"></span><span class="count">'+p.conversations+'</span><span class="edit">✏️</span><span class="del">🗑</span>';
     r.querySelector('.label').textContent=p.name;
-    r.querySelector('.ic').onclick=r.querySelector('.label').onclick=()=>selectProject(p.id);
-    r.querySelector('.edit').onclick=(e)=>{e.stopPropagation(); openProjectModal(p.id);};
-    r.querySelector('.del').onclick=(e)=>{e.stopPropagation(); deleteProject(p.id);};
+    r.querySelector('.label').onclick=()=>selectProject(p.id);
+    r.querySelector('span:first-child').onclick=()=>selectProject(p.id);
+    r.querySelector('.edit').onclick=e=>{e.stopPropagation(); openProjectModal(p);};
+    r.querySelector('.del').onclick=async e=>{e.stopPropagation(); if(confirm('Supprimer le projet « '+p.name+' » et ses conversations ?')){ await api('DELETE','/projects/'+p.id); if(activeProjectId===p.id) activeProjectId=null; await loadProjects(); await loadConvos(); renderSidebar(); renderHeader(); renderMessages(); }};
     pl.appendChild(r);
   });
-
-  // conversations (filtered by active project)
   $('convoHead').textContent = activeProjectId ? '💬 Conversations du projet' : '💬 Conversations';
   const cl=$('convoList'); cl.innerHTML='';
-  const list=convos.filter(c=>(c.projectId||null)===(activeProjectId||null));
-  if(list.length===0){ const e=document.createElement('div'); e.className='empty'; e.textContent='Aucune conversation ici.'; cl.appendChild(e); return; }
-  list.forEach(c=>{
-    const r=document.createElement('div');
-    r.className='row'+(c.id===currentId?' active':'');
-    r.innerHTML=`<span class="ic" style="color:var(--muted)">💬</span><span class="label"></span><span class="del">🗑</span>`;
+  if(!convos.length){ const e=document.createElement('div'); e.className='empty'; e.textContent='Aucune conversation ici.'; cl.appendChild(e); return; }
+  convos.forEach(c=>{
+    const r=document.createElement('div'); r.className='row'+(curConv&&curConv.id===c.id?' active':'');
+    r.innerHTML='<span style="color:var(--muted)">💬</span><span class="label"></span><span class="del">🗑</span>';
     r.querySelector('.label').textContent=c.title;
-    r.querySelector('.ic').onclick=r.querySelector('.label').onclick=()=>{ currentId=c.id; save(); renderSidebar(); renderMessages(); closeSidebar(); };
-    r.querySelector('.del').onclick=(e)=>{ e.stopPropagation(); if(confirm('Supprimer cette conversation ?')) deleteConvo(c.id); };
+    r.querySelector('.label').onclick=()=>openConversation(c.id);
+    r.querySelector('span:first-child').onclick=()=>openConversation(c.id);
+    r.querySelector('.del').onclick=async e=>{e.stopPropagation(); if(confirm('Supprimer cette conversation ?')){ await api('DELETE','/conversations/'+c.id); if(curConv&&curConv.id===c.id) newConvoLocal(); await loadConvos(); renderSidebar(); }};
     cl.appendChild(r);
   });
 }
+function selectProject(id){ activeProjectId=id; curConv=null; curMessages=[]; loadConvos().then(()=>{ renderSidebar(); renderHeader(); renderMessages(); renderComposer(); closeSidebar(); }); }
 
 function renderMessages(){
-  const c=curConvo();
-  messagesEl.innerHTML='';
-  if(!c || c.messages.length===0){ renderWelcome(); return; }
-  c.messages.forEach(m=>messagesEl.appendChild(buildMsgEl(m)));
+  const m=$('messages'); m.innerHTML='';
+  if(!curConv || !curMessages.length){ renderWelcome(); return; }
+  curMessages.forEach(x=>m.appendChild(buildMsgEl(x)));
   scrollDown();
 }
-
 function renderWelcome(){
-  const p=activeProject();
-  const w=document.createElement('div'); w.className='welcome';
+  const p=activeProject(); const w=document.createElement('div'); w.className='welcome';
   let ctx='';
-  if(p){
-    ctx=`<div class="proj-context">📁 Projet <b>${escapeHtml(p.name)}</b> actif.<br>
-      ${p.instructions?'Instructions et ':''}${p.knowledge?'base de connaissances ':''}${(p.instructions||p.knowledge)?'pris en compte automatiquement.':'Ajoute des instructions/connaissances via ✏️ dans le menu.'}</div>`;
-  }
-  w.innerHTML=`<div class="big-logo">∗</div>
-    <h2>${p?'Projet : '+escapeHtml(p.name):'Bonjour 👋'}</h2>
-    <p>${apiKey?'Pose-moi une question pour commencer.':'Ajoute ta clé API dans les réglages pour commencer.'}</p>
-    ${ctx}
+  if(p) ctx=`<div class="proj-context">📁 Projet <b>${escapeHtml(p.name)}</b> actif. Instructions et documents pris en compte automatiquement.</div>`;
+  w.innerHTML=`<div class="big-logo">∗</div><h2>${p?'Projet : '+escapeHtml(p.name):'Bonjour 👋'}</h2>
+    <p>Pose une question, ou joins un fichier/lien avec 📎 pour cibler la réponse.</p>${ctx}
     <div class="suggestions">
-      <div class="suggestion" data-s="Explique-moi un concept compliqué simplement.">💡 Explique-moi un concept simplement</div>
+      <div class="suggestion" data-s="Explique-moi un concept compliqué simplement.">💡 Explique un concept simplement</div>
       <div class="suggestion" data-s="Rédige un email professionnel pour demander un rendez-vous.">✉️ Rédige un email professionnel</div>
-      <div class="suggestion" data-s="Génère un document de synthèse (markdown) que je pourrai télécharger.">📄 Génère un document à télécharger</div>
-      <div class="suggestion" data-s="Aide-moi à brainstormer des idées pour un projet.">🧠 Brainstorm des idées</div>
+      <div class="suggestion" data-s="Génère un document de synthèse que je pourrai télécharger.">📄 Génère un document</div>
     </div>`;
-  w.querySelectorAll('.suggestion').forEach(s=>s.onclick=()=>{ inputEl.value=s.dataset.s; autoGrow(); inputEl.focus(); });
-  messagesEl.appendChild(w);
+  w.querySelectorAll('.suggestion').forEach(s=>s.onclick=()=>{ $('input').value=s.dataset.s; autoGrow(); $('input').focus(); });
+  $('messages').appendChild(w);
 }
-
-function escapeHtml(s){ return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function renderComposer(){
+  if(readOnly){ $('composer').style.display='none'; }
+  else { $('composer').style.display='block'; renderAttBar(); }
+}
+async function renderAttBar(){
+  const bar=$('attBar'); bar.innerHTML='';
+  if(!curConv){ return; }
+  try{
+    const atts = await api('GET','/attachments?ownerType=conversation&ownerId='+curConv.id);
+    atts.forEach(a=>{
+      const el=document.createElement('div'); el.className='att';
+      el.innerHTML=(a.source==='link'?'🔗 ':a.source==='text'?'📝 ':'📄 ')+'<span>'+escapeHtml(a.name.slice(0,28))+'</span><span class="x">✕</span>';
+      el.querySelector('.x').onclick=async()=>{ await api('DELETE','/attachments/'+a.id); renderAttBar(); };
+      bar.appendChild(el);
+    });
+  }catch(e){}
+}
 
 function buildMsgEl(m){
   const el=document.createElement('div'); el.className='msg '+m.role;
-  const av=m.role==='user'?'<div class="avatar">🧑</div>':'<div class="avatar">∗</div>';
-  el.innerHTML=`${av}<div class="bubble"><div class="role">${m.role==='user'?'Toi':'Claude'}</div><div class="content"></div></div>`;
-  const content=el.querySelector('.content');
-  if(m.role==='assistant'){ content.innerHTML=marked.parse(m.text||''); if(m.text) addAssistantTools(el,m.text); }
-  else content.textContent=m.text;
+  el.innerHTML=`<div class="avatar">${m.role==='user'?'🧑':'∗'}</div><div class="bubble"><div class="role">${m.role==='user'?'Toi':'Claude'}</div><div class="content"></div></div>`;
+  const c=el.querySelector('.content');
+  if(m.role==='assistant'){ c.innerHTML=marked.parse(m.content||''); if(m.content) addAssistantTools(el,m.content); }
+  else c.textContent=m.content;
   return el;
 }
-
 function addAssistantTools(el,text){
-  const bubble=el.querySelector('.bubble');
-  if(bubble.querySelector('.msg-tools')) return;
-  const tools=document.createElement('div'); tools.className='msg-tools';
-  const mk=(label,fn)=>{ const b=document.createElement('button'); b.className='chip'; b.innerHTML=label; b.onclick=fn; return b; };
-  tools.appendChild(mk('📋 Copier',()=>{ navigator.clipboard.writeText(text); toast('Copié ✓'); }));
-  tools.appendChild(mk('📝 Word',()=>exportWord(text)));
-  tools.appendChild(mk('📊 Excel',()=>exportExcel(text)));
-  tools.appendChild(mk('📑 PPT',()=>exportPPT(text)));
-  tools.appendChild(mk('⬇️ .md',()=>downloadDoc(text)));
-  bubble.appendChild(tools);
+  const b=el.querySelector('.bubble'); if(b.querySelector('.msg-tools')) return;
+  const t=document.createElement('div'); t.className='msg-tools';
+  const mk=(l,f)=>{ const x=document.createElement('button'); x.className='chip'; x.innerHTML=l; x.onclick=f; return x; };
+  t.appendChild(mk('📋 Copier',()=>{navigator.clipboard.writeText(text);toast('Copié ✓');}));
+  t.appendChild(mk('📝 Word',()=>exportWord(text)));
+  t.appendChild(mk('📊 Excel',()=>exportExcel(text)));
+  t.appendChild(mk('📑 PPT',()=>exportPPT(text)));
+  t.appendChild(mk('⬇️ .md',()=>downloadDoc(text)));
+  b.appendChild(t);
 }
+function scrollDown(){ $('messages').scrollTop=$('messages').scrollHeight; }
 
-function docName(text){
-  let name='document-claude';
-  const h=text.match(/^#{1,3}\s+(.+)$/m)||text.match(/^([^\n]{3,60})/);
-  if(h){ name=h[1].trim().replace(/[*_`#]/g,'').replace(/[^\w\sà-ÿ-]/gi,'').replace(/\s+/g,'-').slice(0,50)||name; }
-  return name;
-}
-function triggerDownload(blob, filename){
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename;
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(()=>URL.revokeObjectURL(a.href),1500);
-}
-function downloadDoc(text){
-  triggerDownload(new Blob([text],{type:'text/markdown;charset=utf-8'}), docName(text)+'.md'); toast('.md téléchargé ✓');
-}
-
-// ----- Word (.doc HTML, ouvre nativement dans Word) -----
-function exportWord(text){
-  const inner=marked.parse(text);
-  const html='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">'+
-    '<head><meta charset="utf-8"><title>Document</title>'+
-    '<style>body{font-family:Calibri,Arial,sans-serif;font-size:11pt;line-height:1.5;color:#222;}'+
-    'h1{font-size:20pt;}h2{font-size:16pt;}h3{font-size:13pt;}'+
-    'table{border-collapse:collapse;}td,th{border:1px solid #999;padding:5px 8px;}'+
-    'code{font-family:Consolas,monospace;background:#f3f3f3;}pre{background:#f3f3f3;padding:8px;border:1px solid #ddd;}'+
-    'blockquote{border-left:3px solid #d97757;margin-left:0;padding-left:12px;color:#555;}</style></head>'+
-    '<body>'+inner+'</body></html>';
-  triggerDownload(new Blob(['﻿'+html],{type:'application/msword;charset=utf-8'}), docName(text)+'.doc');
-  toast('Word téléchargé ✓');
-}
-
-// ----- Parse GFM tables -----
-function splitRow(line){
-  let s=line.trim().replace(/^\|/,'').replace(/\|$/,'');
-  return s.split('|').map(c=>c.trim().replace(/\\\|/g,'|').replace(/[*`]/g,''));
-}
-function parseTables(text){
-  const lines=text.split('\n'); const tables=[]; let i=0;
-  while(i<lines.length){
-    if(/^\s*\|.*\|\s*$/.test(lines[i]) && i+1<lines.length && /^\s*\|?[\s:|-]+\|?\s*$/.test(lines[i+1]) && lines[i+1].includes('-')){
-      const rows=[splitRow(lines[i])]; i+=2;
-      while(i<lines.length && /^\s*\|.*\|\s*$/.test(lines[i])){ rows.push(splitRow(lines[i])); i++; }
-      tables.push(rows);
-    } else i++;
-  }
-  return tables;
-}
-
-// ----- Excel (.xlsx) -----
-function exportExcel(text){
-  if(typeof XLSX==='undefined'){ toast('Excel se charge encore… réessaie'); return; }
-  const tables=parseTables(text);
-  const wb=XLSX.utils.book_new();
-  if(tables.length){
-    tables.forEach((rows,idx)=>{
-      const ws=XLSX.utils.aoa_to_sheet(rows);
-      ws['!cols']=rows[0].map((_,ci)=>({wch:Math.min(50,Math.max(10,...rows.map(r=>(r[ci]||'').length+2)))}));
-      XLSX.utils.book_append_sheet(wb, ws, 'Tableau'+(idx+1));
-    });
-  } else {
-    const rows=text.split('\n').map(l=>[l.replace(/[*`#>]/g,'').trim()]);
-    const ws=XLSX.utils.aoa_to_sheet([['Contenu'],...rows]); ws['!cols']=[{wch:80}];
-    XLSX.utils.book_append_sheet(wb, ws, 'Contenu');
-  }
-  const out=XLSX.write(wb,{bookType:'xlsx',type:'array'});
-  triggerDownload(new Blob([out],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}), docName(text)+'.xlsx');
-  toast('Excel téléchargé ✓');
-}
-
-// ----- PowerPoint (.pptx) -----
-function stripMd(s){ return s.replace(/^#{1,6}\s*/,'').replace(/^[-*+]\s+/,'').replace(/^\d+\.\s+/,'').replace(/[*_`#>]/g,'').trim(); }
-function exportPPT(text){
-  if(typeof PptxGenJS==='undefined'){ toast('PowerPoint se charge encore… réessaie'); return; }
-  const pptx=new PptxGenJS(); pptx.layout='LAYOUT_WIDE';
-  const ACCENT='D97757', DARK='1F1D1A';
-  const sections=[]; let cur=null;
-  text.split('\n').forEach(l=>{
-    const h=l.match(/^(#{1,3})\s+(.+)/);
-    if(h){ if(cur) sections.push(cur); cur={title:stripMd(h[2]), bullets:[]}; }
-    else if(l.trim()){ if(!cur) cur={title:'', bullets:[]}; cur.bullets.push(stripMd(l)); }
-  });
-  if(cur) sections.push(cur);
-
-  const titleText=(sections[0] && sections[0].title) ? sections[0].title : (curConvo()?.title || 'Présentation');
-  let s0=pptx.addSlide(); s0.background={color:DARK};
-  s0.addText(titleText,{x:0.6,y:2.2,w:12,h:1.5,fontSize:36,bold:true,color:'FFFFFF',align:'center'});
-  s0.addText('Généré avec Claude',{x:0.6,y:3.7,w:12,h:0.5,fontSize:16,color:ACCENT,align:'center'});
-
-  sections.filter(sec=>sec.title || sec.bullets.length).forEach(sec=>{
-    const chunks=[]; for(let i=0;i<Math.max(1,sec.bullets.length);i+=7) chunks.push(sec.bullets.slice(i,i+7));
-    chunks.forEach((ch,ci)=>{
-      const sl=pptx.addSlide(); sl.background={color:'FFFFFF'};
-      sl.addText((sec.title||'Suite')+(chunks.length>1?' ('+(ci+1)+')':''),{x:0.5,y:0.4,w:12,h:0.9,fontSize:26,bold:true,color:DARK});
-      sl.addShape(pptx.ShapeType.line,{x:0.5,y:1.35,w:12,h:0,line:{color:ACCENT,width:2}});
-      if(ch.length) sl.addText(ch.map(b=>({text:b,options:{bullet:true,color:DARK,fontSize:16,paraSpaceAfter:8}})),{x:0.6,y:1.6,w:12,h:5});
-    });
-  });
-  pptx.writeFile({fileName:docName(text)+'.pptx'});
-  toast('PowerPoint téléchargé ✓');
-}
-function scrollDown(){ messagesEl.scrollTop=messagesEl.scrollHeight; }
-
-// ============ Build system prompt (global + project) ============
-function buildSystem(convo){
-  const parts=[];
-  if(systemPrompt) parts.push(systemPrompt);
-  const p=convo.projectId?getProject(convo.projectId):null;
-  if(p){
-    if(p.instructions) parts.push('# Instructions du projet « '+p.name+' »\n'+p.instructions);
-    if(p.knowledge) parts.push('# Base de connaissances du projet « '+p.name+' »\nUtilise ces informations de référence quand elles sont pertinentes :\n'+p.knowledge);
-  }
-  return parts.join('\n\n');
-}
-
-// ============ Sending ============
+// ---------- send (streaming) ----------
 async function send(){
-  if(streaming){ stopStream(); return; }
-  const text=inputEl.value.trim(); if(!text) return;
-  if(!apiKey){ openSettings(); toast('Ajoute ta clé API d\'abord'); return; }
-  if(!curConvo()) newConvo();
-  const c=curConvo();
-  c.messages.push({role:'user', text});
-  if(c.messages.filter(m=>m.role==='user').length===1) c.title=text.slice(0,40);
-  inputEl.value=''; autoGrow();
-  if(messagesEl.querySelector('.welcome')) messagesEl.innerHTML='';
-  messagesEl.appendChild(buildMsgEl(c.messages[c.messages.length-1]));
-  save(); renderSidebar(); scrollDown();
+  if(streaming){ if(abortCtrl) abortCtrl.abort(); return; }
+  const text=$('input').value.trim(); if(!text) return;
+  $('input').value=''; autoGrow();
+  try{ await ensureConversation(); }catch(e){ toast(e.message); return; }
 
-  const aMsg={role:'assistant', text:''}; c.messages.push(aMsg);
-  const aEl=buildMsgEl(aMsg); messagesEl.appendChild(aEl);
-  const contentEl=aEl.querySelector('.content');
-  contentEl.innerHTML='<span class="cursor"></span>'; scrollDown();
+  if($('messages').querySelector('.welcome')) $('messages').innerHTML='';
+  const um={role:'user',content:text}; curMessages.push(um); $('messages').appendChild(buildMsgEl(um)); scrollDown();
+  const am={role:'assistant',content:''}; curMessages.push(am);
+  const aEl=buildMsgEl(am); $('messages').appendChild(aEl);
+  const cEl=aEl.querySelector('.content'); cEl.innerHTML='<span class="cursor"></span>'; scrollDown();
   setStreaming(true); abortCtrl=new AbortController();
 
   try{
-    const body={
-      model:$('modelSelect').value, max_tokens:4096, stream:true,
-      messages:c.messages.slice(0,-1).map(m=>({role:m.role, content:m.text}))
-    };
-    const sys=buildSystem(c); if(sys) body.system=sys;
-
-    const res=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'content-type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify(body), signal:abortCtrl.signal
-    });
-    if(!res.ok){
-      let detail=''; try{ const j=await res.json(); detail=j.error?.message||JSON.stringify(j); }catch(e){ detail=res.statusText; }
-      throw new Error('('+res.status+') '+detail);
-    }
-    const reader=res.body.getReader(), decoder=new TextDecoder(); let buf='';
+    const r=await fetch(API+'/conversations/'+curConv.id+'/chat',{
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body:JSON.stringify({content:text, model:$('modelSelect').value}), signal:abortCtrl.signal });
+    if(!r.ok){ const d=await r.json().catch(()=>({})); throw new Error(d.error||('Erreur '+r.status)); }
+    const reader=r.body.getReader(), dec=new TextDecoder(); let buf='';
     while(true){
       const {done,value}=await reader.read(); if(done) break;
-      buf+=decoder.decode(value,{stream:true});
-      let lines=buf.split('\n'); buf=lines.pop();
+      buf+=dec.decode(value,{stream:true});
+      const lines=buf.split('\n'); buf=lines.pop();
       for(const line of lines){
-        const t=line.trim(); if(!t.startsWith('data:')) continue;
-        const data=t.slice(5).trim(); if(data==='[DONE]') continue;
+        const tt=line.trim(); if(!tt.startsWith('data:')) continue;
+        const data=tt.slice(5).trim(); if(!data) continue;
         try{
           const ev=JSON.parse(data);
-          if(ev.type==='content_block_delta' && ev.delta?.type==='text_delta'){
-            aMsg.text+=ev.delta.text;
-            contentEl.innerHTML=marked.parse(aMsg.text)+'<span class="cursor"></span>'; scrollDown();
-          } else if(ev.type==='error'){ throw new Error(ev.error?.message||'Erreur de streaming'); }
-        }catch(e){ if(e.message && !e.message.includes('JSON')) throw e; }
+          if(ev.type==='delta'){ am.content+=ev.text; cEl.innerHTML=marked.parse(am.content)+'<span class="cursor"></span>'; scrollDown(); }
+          else if(ev.type==='error'){ throw new Error(ev.error); }
+        }catch(e){ if(e.message && !/JSON/.test(e.message)) throw e; }
       }
     }
-    contentEl.innerHTML=marked.parse(aMsg.text||'*(réponse vide)*');
-    addAssistantTools(aEl,aMsg.text); save();
+    cEl.innerHTML=marked.parse(am.content||'*(réponse vide)*'); addAssistantTools(aEl,am.content);
+    if(curConv && curMessages.filter(x=>x.role==='user').length===1){ await loadConvos(); renderSidebar(); }
   }catch(err){
-    if(err.name==='AbortError'){
-      contentEl.innerHTML=marked.parse(aMsg.text||'')+'<div style="color:var(--muted);font-size:13px;margin-top:6px">⏹ Arrêté</div>';
-      if(aMsg.text) addAssistantTools(aEl,aMsg.text);
-    }else{
-      aMsg.text='⚠️ **Erreur :** '+err.message;
-      contentEl.innerHTML=marked.parse(aMsg.text)+'<div style="color:var(--muted);font-size:13px;margin-top:8px">Vérifie ta clé API et ta connexion dans les ⚙️ Réglages.</div>';
-    }
-    save();
+    if(err.name==='AbortError'){ cEl.innerHTML=marked.parse(am.content||'')+'<div style="color:var(--muted);font-size:13px">⏹ Arrêté</div>'; if(am.content) addAssistantTools(aEl,am.content); }
+    else { am.content='⚠️ **Erreur :** '+err.message; cEl.innerHTML=marked.parse(am.content); }
   }finally{ setStreaming(false); abortCtrl=null; }
 }
+function setStreaming(on){ streaming=on; $('send').innerHTML=on?'■':'↑'; $('send').classList.toggle('stop',on); }
+$('send').onclick=send;
+function autoGrow(){ const i=$('input'); i.style.height='auto'; i.style.height=Math.min(i.scrollHeight,160)+'px'; }
+$('input').addEventListener('input',autoGrow);
+$('input').addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey&&window.innerWidth>820){e.preventDefault();send();} });
 
-function stopStream(){ if(abortCtrl) abortCtrl.abort(); }
-function setStreaming(on){ streaming=on; sendBtn.innerHTML=on?'■':'↑'; sendBtn.classList.toggle('stop',on); }
-
-// ============ UI wiring ============
-function autoGrow(){ inputEl.style.height='auto'; inputEl.style.height=Math.min(inputEl.scrollHeight,160)+'px'; }
-inputEl.addEventListener('input', autoGrow);
-inputEl.addEventListener('keydown', e=>{ if(e.key==='Enter' && !e.shiftKey && window.innerWidth>820){ e.preventDefault(); send(); } });
-sendBtn.onclick=send;
-$('newBtn').onclick=newConvo; $('sideNew').onclick=newConvo;
-$('addProject').onclick=()=>openProjectModal(null);
-$('menuBtn').onclick=openSidebar; $('overlay').onclick=closeSidebar;
-function openSidebar(){ renderSidebar(); $('sidebar').classList.add('open'); $('overlay').classList.add('open'); }
-function closeSidebar(){ $('sidebar').classList.remove('open'); $('overlay').classList.remove('open'); }
-$('modelSelect').onchange=()=>localStorage.setItem(LS_MODEL,$('modelSelect').value);
-
-function openSettings(){
-  $('apiKeyInput').value=apiKey; $('systemInput').value=systemPrompt; $('defaultModel').value=$('modelSelect').value;
-  $('settingsErr').style.display='none'; $('settingsModal').classList.add('open'); closeSidebar();
-}
-$('settingsBtn').onclick=openSettings;
-$('settingsCancel').onclick=()=>$('settingsModal').classList.remove('open');
-$('settingsSave').onclick=()=>{
-  const k=$('apiKeyInput').value.trim();
-  if(k && !k.startsWith('sk-ant-')){ const e=$('settingsErr'); e.textContent='La clé doit commencer par "sk-ant-".'; e.style.display='block'; return; }
-  apiKey=k; systemPrompt=$('systemInput').value.trim();
-  localStorage.setItem(LS_KEY,apiKey); localStorage.setItem(LS_SYS,systemPrompt);
-  const m=$('defaultModel').value; $('modelSelect').value=m; localStorage.setItem(LS_MODEL,m);
-  $('settingsModal').classList.remove('open'); toast('Réglages enregistrés ✓');
-  if(!curConvo()||!curConvo().messages.length) renderMessages();
+// ---------- attachments (composer 📎) ----------
+$('attachBtn').onclick=async()=>{
+  try{ await ensureConversation(); }catch(e){ toast(e.message); return; }
+  const choice=prompt('Joindre :\n1 = Fichier (PDF/Word/txt)\n2 = Lien (URL)\nTape 1 ou 2');
+  if(choice==='1'){ openFilePicker('conversation', curConv.id, renderAttBar); }
+  else if(choice==='2'){ const url=prompt('Colle l\'URL :'); if(url) addLink('conversation',curConv.id,url,renderAttBar); }
 };
+function openFilePicker(ownerType, ownerId, cb){ fileTarget={ownerType,ownerId,cb}; $('fileInput').value=''; $('fileInput').click(); }
+$('fileInput').onchange=async()=>{
+  const f=$('fileInput').files[0]; if(!f||!fileTarget) return;
+  toast('Lecture du fichier…');
+  const fd=new FormData(); fd.append('file',f); fd.append('ownerType',fileTarget.ownerType); fd.append('ownerId',fileTarget.ownerId);
+  try{ const r=await apiUpload('/attachments/file',fd); toast('Ajouté : '+r.name+' ('+r.chars+' car.)'); fileTarget.cb&&fileTarget.cb(); }
+  catch(e){ toast(e.message); }
+};
+async function addLink(ownerType,ownerId,url,cb){
+  toast('Récupération du lien…');
+  try{ const r=await api('POST','/attachments/link',{ownerType,ownerId,url}); toast('Ajouté : '+r.name+' ('+r.chars+' car.)'); cb&&cb(); }
+  catch(e){ toast(e.message); }
+}
+async function addText(ownerType,ownerId,cb){
+  const text=prompt('Colle ton texte de référence :'); if(!text) return;
+  const name=prompt('Nom de cette note :','Note')||'Note';
+  try{ const r=await api('POST','/attachments/text',{ownerType,ownerId,name,text}); toast('Ajouté ('+r.chars+' car.)'); cb&&cb(); }
+  catch(e){ toast(e.message); }
+}
+
+// ---------- projects modal ----------
+let editingProject=null;
+$('addProject').onclick=()=>openProjectModal(null);
+function openProjectModal(p){
+  editingProject=p;
+  $('projModalTitle').textContent=p?'Modifier le projet':'Nouveau projet';
+  $('projName').value=p?p.name:''; $('projInstr').value=p?(p.instructions||''):'';
+  $('projErr').style.display='none';
+  $('projKnowWrap').style.display = p?'block':'none';
+  if(p) renderProjectAtts(p.id);
+  $('projectModal').classList.add('open'); closeSidebar();
+}
+async function renderProjectAtts(pid){
+  const list=$('projAttList'); list.innerHTML='<div class="empty">Chargement…</div>';
+  try{
+    const atts=await api('GET','/attachments?ownerType=project&ownerId='+pid);
+    list.innerHTML = atts.length?'':'<div class="empty">Aucun document.</div>';
+    atts.forEach(a=>{
+      const el=document.createElement('div'); el.className='item';
+      el.innerHTML=`<span>${a.source==='link'?'🔗':a.source==='text'?'📝':'📄'}</span><div class="grow"><div>${escapeHtml(a.name)}</div><small>${a.chars} caractères</small></div><span class="act">🗑</span>`;
+      el.querySelector('.act').onclick=async()=>{ await api('DELETE','/attachments/'+a.id); renderProjectAtts(pid); };
+      list.appendChild(el);
+    });
+  }catch(e){ list.innerHTML='<div class="empty">Erreur</div>'; }
+}
+$('projAddFile').onclick=()=>{ if(editingProject) openFilePicker('project',editingProject.id,()=>renderProjectAtts(editingProject.id)); };
+$('projAddLink').onclick=()=>{ if(editingProject){ const u=prompt('URL :'); if(u) addLink('project',editingProject.id,u,()=>renderProjectAtts(editingProject.id)); } };
+$('projAddText').onclick=()=>{ if(editingProject) addText('project',editingProject.id,()=>renderProjectAtts(editingProject.id)); };
 $('projCancel').onclick=()=>$('projectModal').classList.remove('open');
+$('projSave').onclick=async()=>{
+  const name=$('projName').value.trim(); const instructions=$('projInstr').value;
+  if(!name){ $('projErr').textContent='Nom requis.'; $('projErr').style.display='block'; return; }
+  try{
+    if(editingProject){ await api('PATCH','/projects/'+editingProject.id,{name,instructions}); }
+    else { const p=await api('POST','/projects',{name,instructions}); activeProjectId=p.id; }
+    await loadProjects(); await loadConvos(); renderSidebar(); renderHeader();
+    if(!editingProject){ $('projectModal').classList.remove('open'); renderMessages(); }
+    else { editingProject={...editingProject,name,instructions}; toast('Projet enregistré ✓'); }
+  }catch(e){ $('projErr').textContent=e.message; $('projErr').style.display='block'; }
+};
 
-$('installBtn').onclick=async()=>{ closeSidebar(); if(deferredPrompt){ deferredPrompt.prompt(); deferredPrompt=null; } else $('installModal').classList.add('open'); };
+// ---------- admin ----------
+$('adminBtn').onclick=openAdmin;
+$('adminClose').onclick=()=>$('adminModal').classList.remove('open');
+async function openAdmin(){
+  closeSidebar(); $('adminModal').classList.add('open');
+  const box=$('adminUsers'); box.innerHTML='<div class="empty">Chargement…</div>';
+  try{
+    const users=await api('GET','/admin/users');
+    box.innerHTML='';
+    users.forEach(u=>{
+      const el=document.createElement('div'); el.className='item';
+      el.innerHTML=`<div class="grow"><div>${escapeHtml(u.name||u.email)} ${u.role==='admin'?'<span class="tag admin">admin</span>':''}</div><small>${escapeHtml(u.email)} · ${u.conversations} conv.</small></div>
+        <span class="act" title="Voir">👁️</span><span class="act" title="Modifier">✏️</span><span class="act" title="Supprimer">🗑</span>`;
+      const acts=el.querySelectorAll('.act');
+      acts[0].onclick=()=>viewUserConvos(u);
+      acts[1].onclick=()=>openUserModal(u);
+      acts[2].onclick=async()=>{ if(confirm('Supprimer le compte '+u.email+' ?')){ try{ await api('DELETE','/admin/users/'+u.id); openAdmin(); }catch(e){ toast(e.message); } } };
+      box.appendChild(el);
+    });
+  }catch(e){ box.innerHTML='<div class="empty">'+e.message+'</div>'; }
+}
+async function viewUserConvos(u){
+  const box=$('adminUsers'); box.innerHTML='<div class="empty">Chargement…</div>';
+  try{
+    const list=await api('GET','/admin/users/'+u.id+'/conversations');
+    const back=document.createElement('button'); back.className='btn-ghost'; back.textContent='← Retour'; back.style.marginBottom='10px'; back.onclick=openAdmin;
+    box.innerHTML=''; box.appendChild(back);
+    const h=document.createElement('p'); h.textContent='Conversations de '+(u.name||u.email); box.appendChild(h);
+    if(!list.length){ const e=document.createElement('div'); e.className='empty'; e.textContent='Aucune conversation.'; box.appendChild(e); }
+    list.forEach(c=>{
+      const el=document.createElement('div'); el.className='item';
+      el.innerHTML=`<div class="grow"><div>${escapeHtml(c.title)}</div><small>${new Date(c.updated_at).toLocaleString('fr-FR')}</small></div><span class="act">👁️</span>`;
+      el.querySelector('.act').onclick=()=>{ $('adminModal').classList.remove('open'); openConversation(c.id); };
+      box.appendChild(el);
+    });
+  }catch(e){ box.innerHTML='<div class="empty">'+e.message+'</div>'; }
+}
+
+let editingUser=null;
+$('adminAddUser').onclick=()=>openUserModal(null);
+function openUserModal(u){
+  editingUser=u;
+  $('userModalTitle').textContent=u?'Modifier le compte':'Créer un compte';
+  $('uEmail').value=u?u.email:''; $('uEmail').disabled=!!u;
+  $('uName').value=u?(u.name||''):''; $('uPass').value='';
+  $('uPassLabel').textContent=u?'Nouveau mot de passe (laisser vide pour ne pas changer)':'Mot de passe';
+  $('uRole').value=u?u.role:'user'; $('userErr').style.display='none';
+  $('userModal').classList.add('open');
+}
+$('userCancel').onclick=()=>$('userModal').classList.remove('open');
+$('userSave').onclick=async()=>{
+  const email=$('uEmail').value.trim(), name=$('uName').value.trim(), password=$('uPass').value, role=$('uRole').value;
+  const err=$('userErr'); err.style.display='none';
+  try{
+    if(editingUser){ const body={name,role}; if(password) body.password=password; await api('PATCH','/admin/users/'+editingUser.id,body); }
+    else { await api('POST','/admin/users',{email,name,password,role}); }
+    $('userModal').classList.remove('open'); openAdmin();
+  }catch(e){ err.textContent=e.message; err.style.display='block'; }
+};
+
+// ---------- password ----------
+$('pwdBtn').onclick=()=>{ closeSidebar(); $('pwCur').value='';$('pwNew').value='';$('pwdErr').style.display='none'; $('pwdModal').classList.add('open'); };
+$('pwdCancel').onclick=()=>$('pwdModal').classList.remove('open');
+$('pwdSave').onclick=async()=>{
+  try{ await api('POST','/auth/password',{current:$('pwCur').value,next:$('pwNew').value}); $('pwdModal').classList.remove('open'); toast('Mot de passe changé ✓'); }
+  catch(e){ $('pwdErr').textContent=e.message; $('pwdErr').style.display='block'; }
+};
+
+// ---------- misc UI ----------
+$('menuBtn').onclick=()=>{ renderSidebar(); $('sidebar').classList.add('open'); $('overlay').classList.add('open'); };
+$('overlay').onclick=closeSidebar;
+function closeSidebar(){ $('sidebar').classList.remove('open'); $('overlay').classList.remove('open'); }
+$('modelSelect').onchange=()=>localStorage.setItem('claude_model',$('modelSelect').value);
+$('installBtn').onclick=()=>{ closeSidebar(); if(deferredPrompt){ deferredPrompt.prompt(); deferredPrompt=null; } else $('installModal').classList.add('open'); };
 $('installClose').onclick=()=>$('installModal').classList.remove('open');
-window.addEventListener('beforeinstallprompt', e=>{ e.preventDefault(); deferredPrompt=e; });
+window.addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); deferredPrompt=e; });
+let toastT; function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2200); }
 
-let toastT;
-function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),1800); }
+// ---------- Office exports (client) ----------
+function docName(text){ let n='document-claude'; const h=text.match(/^#{1,3}\s+(.+)$/m)||text.match(/^([^\n]{3,60})/); if(h){ n=h[1].trim().replace(/[*_`#]/g,'').replace(/[^\w\sà-ÿ-]/gi,'').replace(/\s+/g,'-').slice(0,50)||n; } return n; }
+function dl(blob,fn){ const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=fn; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1500); }
+function downloadDoc(t){ dl(new Blob([t],{type:'text/markdown;charset=utf-8'}),docName(t)+'.md'); toast('.md téléchargé ✓'); }
+function exportWord(text){
+  const inner=marked.parse(text);
+  const html='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><style>body{font-family:Calibri,Arial,sans-serif;font-size:11pt;line-height:1.5;}h1{font-size:20pt}h2{font-size:16pt}h3{font-size:13pt}table{border-collapse:collapse}td,th{border:1px solid #999;padding:5px 8px}blockquote{border-left:3px solid #d97757;padding-left:12px;color:#555}</style></head><body>'+inner+'</body></html>';
+  dl(new Blob(['﻿'+html],{type:'application/msword;charset=utf-8'}),docName(text)+'.doc'); toast('Word téléchargé ✓');
+}
+function splitRow(l){ let s=l.trim().replace(/^\|/,'').replace(/\|$/,''); return s.split('|').map(c=>c.trim().replace(/\\\|/g,'|').replace(/[*`]/g,'')); }
+function parseTables(text){ const L=text.split('\n'),T=[]; let i=0; while(i<L.length){ if(/^\s*\|.*\|\s*$/.test(L[i])&&i+1<L.length&&/^\s*\|?[\s:|-]+\|?\s*$/.test(L[i+1])&&L[i+1].includes('-')){ const r=[splitRow(L[i])]; i+=2; while(i<L.length&&/^\s*\|.*\|\s*$/.test(L[i])){ r.push(splitRow(L[i])); i++; } T.push(r); } else i++; } return T; }
+function exportExcel(text){
+  if(typeof XLSX==='undefined'){ toast('Excel charge encore…'); return; }
+  const tables=parseTables(text), wb=XLSX.utils.book_new();
+  if(tables.length){ tables.forEach((rows,idx)=>{ const ws=XLSX.utils.aoa_to_sheet(rows); ws['!cols']=rows[0].map((_,ci)=>({wch:Math.min(50,Math.max(10,...rows.map(r=>(r[ci]||'').length+2)))})); XLSX.utils.book_append_sheet(wb,ws,'Tableau'+(idx+1)); }); }
+  else { const rows=text.split('\n').map(l=>[l.replace(/[*`#>]/g,'').trim()]); const ws=XLSX.utils.aoa_to_sheet([['Contenu'],...rows]); ws['!cols']=[{wch:80}]; XLSX.utils.book_append_sheet(wb,ws,'Contenu'); }
+  dl(new Blob([XLSX.write(wb,{bookType:'xlsx',type:'array'})],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),docName(text)+'.xlsx'); toast('Excel téléchargé ✓');
+}
+function stripMd(s){ return s.replace(/^#{1,6}\s*/,'').replace(/^[-*+]\s+/,'').replace(/^\d+\.\s+/,'').replace(/[*_`#>]/g,'').trim(); }
+function exportPPT(text){
+  if(typeof PptxGenJS==='undefined'){ toast('PowerPoint charge encore…'); return; }
+  const pptx=new PptxGenJS(); pptx.layout='LAYOUT_WIDE'; const A='D97757',D='1F1D1A';
+  const secs=[]; let cur=null;
+  text.split('\n').forEach(l=>{ const h=l.match(/^(#{1,3})\s+(.+)/); if(h){ if(cur)secs.push(cur); cur={title:stripMd(h[2]),bullets:[]}; } else if(l.trim()){ if(!cur)cur={title:'',bullets:[]}; cur.bullets.push(stripMd(l)); } });
+  if(cur)secs.push(cur);
+  const title=(secs[0]&&secs[0].title)?secs[0].title:(curConv&&curConv.title)||'Présentation';
+  let s0=pptx.addSlide(); s0.background={color:D}; s0.addText(title,{x:0.6,y:2.2,w:12,h:1.5,fontSize:36,bold:true,color:'FFFFFF',align:'center'}); s0.addText('Généré avec Claude',{x:0.6,y:3.7,w:12,h:0.5,fontSize:16,color:A,align:'center'});
+  secs.filter(s=>s.title||s.bullets.length).forEach(sec=>{ const ch=[]; for(let i=0;i<Math.max(1,sec.bullets.length);i+=7) ch.push(sec.bullets.slice(i,i+7)); ch.forEach((c,ci)=>{ const sl=pptx.addSlide(); sl.background={color:'FFFFFF'}; sl.addText((sec.title||'Suite')+(ch.length>1?' ('+(ci+1)+')':''),{x:0.5,y:0.4,w:12,h:0.9,fontSize:26,bold:true,color:D}); sl.addShape(pptx.ShapeType.line,{x:0.5,y:1.35,w:12,h:0,line:{color:A,width:2}}); if(c.length) sl.addText(c.map(b=>({text:b,options:{bullet:true,color:D,fontSize:16,paraSpaceAfter:8}})),{x:0.6,y:1.6,w:12,h:5}); }); });
+  pptx.writeFile({fileName:docName(text)+'.pptx'}); toast('PowerPoint téléchargé ✓');
+}
 
 // PWA manifest
-(function(){
-  const mf={name:"Claude",short_name:"Claude",display:"standalone",background_color:"#262624",theme_color:"#1f1d1a",start_url:".",
-    icons:[{src:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%23d97757'/%3E%3Ctext x='256' y='360' font-size='320' font-family='Georgia,serif' text-anchor='middle' fill='%23fff'%3E%2A%3C/text%3E%3C/svg%3E",sizes:"512x512",type:"image/svg+xml"}]};
-  const blob=new Blob([JSON.stringify(mf)],{type:'application/json'});
-  const l=document.createElement('link'); l.rel='manifest'; l.href=URL.createObjectURL(blob); document.head.appendChild(l);
-})();
+(function(){ const mf={name:"Claude",short_name:"Claude",display:"standalone",background_color:"#262624",theme_color:"#1f1d1a",start_url:".",icons:[{src:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%23d97757'/%3E%3Ctext x='256' y='360' font-size='320' font-family='Georgia,serif' text-anchor='middle' fill='%23fff'%3E%2A%3C/text%3E%3C/svg%3E",sizes:"512x512",type:"image/svg+xml"}]};
+  const l=document.createElement('link'); l.rel='manifest'; l.href=URL.createObjectURL(new Blob([JSON.stringify(mf)],{type:'application/json'})); document.head.appendChild(l); })();
 
-// ============ Init ============
-const savedModel=localStorage.getItem(LS_MODEL); if(savedModel) $('modelSelect').value=savedModel;
-// migrate old convos without projectId
-convos.forEach(c=>{ if(c.projectId===undefined) c.projectId=null; });
-refreshAll();
-if(!apiKey){ setTimeout(openSettings,400); }
+// go
+renderComposer();
+boot();
 </script>
 </body>
 </html>

@@ -17,6 +17,27 @@ services:
     networks:
       - inee-network
 
+  claude-backend:
+    build: ./claude-backend
+    container_name: claude-backend
+    restart: unless-stopped
+    ports:
+      - "3007:3007"
+    environment:
+      DATABASE_URL: postgresql://inee_user:IneeSecure2026!@inee-postgres:5432/claude_db
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: 180d
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      ADMIN_EMAIL: ${CLAUDE_ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${CLAUDE_ADMIN_PASSWORD}
+      ADMIN_NAME: ${CLAUDE_ADMIN_NAME:-Admin}
+      PORT: 3007
+      NODE_ENV: production
+    depends_on:
+      - postgres
+    networks:
+      - inee-network
+
   postgres:
     image: postgres:16
     container_name: inee-postgres
