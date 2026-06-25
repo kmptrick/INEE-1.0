@@ -1,7 +1,11 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { NextRequest } from 'next/server'
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const client = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+  // Active le cache longue durée (1h) au lieu de 5 min par défaut.
+  defaultHeaders: { 'anthropic-beta': 'extended-cache-ttl-2025-04-11' },
+})
 
 const SYSTEM_PROMPT = `Tu es l'assistant virtuel d'INEE, un cabinet de services aux entreprises basé à Mamer, Luxembourg. INEE accompagne des clients partout dans le monde — entreprises, entrepreneurs et particuliers internationaux inclus. Tu aides les visiteurs du site à comprendre les services d'INEE et à prendre rendez-vous.
 
@@ -67,7 +71,11 @@ export async function POST(req: NextRequest) {
   const stream = await client.messages.stream({
     model: 'claude-haiku-4-5-20251001',
     max_tokens: 600,
-    system: SYSTEM_PROMPT,
+    // Prompt caching : le SYSTEM_PROMPT (gros bloc fixe) est mis en cache
+    // → facturé à 10% du prix sur les appels suivants (fenêtre de 5 min).
+    system: [
+      { type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral', ttl: '1h' } },
+    ],
     messages,
   })
 
