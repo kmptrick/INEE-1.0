@@ -7,6 +7,8 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
+const nodemailer = require('nodemailer');
+const crypto = require('crypto');
 const { Pool } = require('pg');
 const fs = require('fs');
 const path = require('path');
@@ -17,6 +19,19 @@ const JWT_EXPIRES = process.env.JWT_EXPIRES_IN || '180d';      // session longue
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || '';
 const ANTHROPIC_VERSION = '2023-06-01';
 const MAX_CONTEXT_CHARS = 180000;  // garde-fou sur le texte injecté
+const PUBLIC_URL = (process.env.CLAUDE_PUBLIC_URL || 'https://claude.inee.lu').replace(/\/$/, '');
+
+// Transport email (SMTP Office 365 INEE) — utilisé pour « mot de passe oublié »
+let mailer = null;
+if (process.env.SMTP_HOST && process.env.SMTP_USER) {
+  mailer = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT) || 587,
+    secure: false,
+    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+  });
+}
+const MAIL_FROM = process.env.SMTP_FROM || process.env.SMTP_USER;
 
 // Connexion : on privilégie des variables séparées (mot de passe transmis tel quel,
 // sans analyse d'URL — évite les soucis avec les caractères spéciaux comme « ! »).
@@ -117,6 +132,46 @@ app.post('/api/auth/password', auth, async (req, res) => {
   if (!ok) return res.status(400).json({ error: 'Mot de passe actuel incorrect' });
   const hash = await bcrypt.hash(next, 10);
   await pool.query('UPDATE users SET password_hash=$1 WHERE id=$2', [hash, req.user.id]);
+  res.json({ ok: true });
+});
+
+// --- Mot de passe oublié : demande d'un lien de réinitialisation par email ---
+app.post('/api/auth/forgot', async (req, res) => {
+  const email = (req.body.email || '').toLowerCase().trim();
+  // Réponse identique que le compte existe ou non (pas de fuite d'information)
+  res.json({ ok: true });
+  if (!email) return;
+  try {
+    const { rows } = await pool.query('SELECT * FROM users WHERE email=$1', [email]);
+    if (!rows.length || !mailer) return;
+    const token = crypto.randomBytes(32).toString('hex');
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 heure
+    await pool.query('UPDATE users SET reset_token_hash=$1, reset_expires=$2 WHERE id=$3', [tokenHash, expires, rows[0].id]);
+    const link = PUBLIC_URL + '/?reset=' + token;
+    await mailer.sendMail({
+      from: MAIL_FROM,
+      to: email,
+      subject: 'Réinitialisation de votre mot de passe — Claude',
+      text: 'Bonjour,\n\nVous avez demandé à réinitialiser votre mot de passe.\nCliquez sur ce lien (valable 1 heure) :\n' + link + '\n\nSi vous n\'êtes pas à l\'origine de cette demande, ignorez cet email.',
+      html: '<p>Bonjour,</p><p>Vous avez demandé à réinitialiser votre mot de passe.</p>' +
+            '<p><a href="' + link + '" style="background:#d97757;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;display:inline-block">Choisir un nouveau mot de passe</a></p>' +
+            '<p style="color:#888;font-size:13px">Lien valable 1 heure. Si vous n\'êtes pas à l\'origine de cette demande, ignorez cet email.</p>',
+    });
+  } catch (e) {
+    console.error('[forgot] erreur envoi:', e.message);
+  }
+});
+
+// --- Réinitialisation effective via le token reçu par email ---
+app.post('/api/auth/reset', async (req, res) => {
+  const { token, password } = req.body;
+  if (!token || !password || password.length < 6) return res.status(400).json({ error: 'Lien ou mot de passe invalide (min. 6 caractères)' });
+  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+  const { rows } = await pool.query('SELECT * FROM users WHERE reset_token_hash=$1 AND reset_expires > now()', [tokenHash]);
+  if (!rows.length) return res.status(400).json({ error: 'Lien invalide ou expiré. Refais une demande.' });
+  const hash = await bcrypt.hash(password, 10);
+  await pool.query('UPDATE users SET password_hash=$1, reset_token_hash=NULL, reset_expires=NULL WHERE id=$2', [hash, rows[0].id]);
   res.json({ ok: true });
 });
 

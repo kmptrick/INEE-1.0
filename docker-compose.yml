@@ -27,7 +27,7 @@ services:
       PGHOST: inee-postgres
       PGPORT: "5432"
       PGUSER: inee_user
-      PGPASSWORD: "IneeSecure2026!"
+      PGPASSWORD: ${CLAUDE_DB_PASSWORD}
       PGDATABASE: claude_db
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: 180d
@@ -35,6 +35,12 @@ services:
       ADMIN_EMAIL: ${CLAUDE_ADMIN_EMAIL}
       ADMIN_PASSWORD: ${CLAUDE_ADMIN_PASSWORD}
       ADMIN_NAME: ${CLAUDE_ADMIN_NAME:-Admin}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      SMTP_FROM: ${SMTP_FROM}
+      CLAUDE_PUBLIC_URL: https://claude.inee.lu
       PORT: 3007
       NODE_ENV: production
     depends_on:

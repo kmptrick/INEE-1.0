@@ -50,6 +50,10 @@ CREATE TABLE IF NOT EXISTS attachments (
   created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Réinitialisation de mot de passe (colonnes ajoutées si absentes)
+ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token_hash TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_expires    TIMESTAMPTZ;
+
 CREATE INDEX IF NOT EXISTS idx_conv_user    ON conversations(user_id);
 CREATE INDEX IF NOT EXISTS idx_msg_conv     ON messages(conversation_id);
 CREATE INDEX IF NOT EXISTS idx_proj_user    ON projects(user_id);

@@ -9,7 +9,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Claude">
 <title>Claude</title>
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23d97757'/%3E%3Ctext x='90' y='128' font-size='110' font-family='Georgia,serif' text-anchor='middle' fill='%23fff'%3E%2A%3C/text%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="manifest" href="/manifest.webmanifest">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pptxgenjs/3.12.0/pptxgen.bundle.js"></script>
@@ -147,7 +148,21 @@
     <input type="email" id="loginEmail" placeholder="Email" autocomplete="username" autocapitalize="off">
     <input type="password" id="loginPass" placeholder="Mot de passe" autocomplete="current-password">
     <button id="loginBtn">Se connecter</button>
+    <button id="forgotBtn" style="background:none;color:var(--muted);width:auto;margin:14px auto 0;padding:6px;font-size:13px;text-decoration:underline">Mot de passe oublié ?</button>
     <div class="err" id="loginErr" style="margin-top:14px"></div>
+  </div>
+</div>
+
+<!-- RESET (depuis le lien reçu par email) -->
+<div id="resetScreen" style="position:fixed;inset:0;background:var(--bg);z-index:101;display:none;align-items:center;justify-content:center;padding:24px">
+  <div class="login-box">
+    <div class="big-logo">∗</div>
+    <h1>Nouveau mot de passe</h1>
+    <p>Choisis un nouveau mot de passe pour ton compte.</p>
+    <input type="password" id="resetPass" placeholder="Nouveau mot de passe (min. 6)">
+    <button id="resetBtn">Enregistrer</button>
+    <button id="resetCancelBtn" style="background:none;color:var(--muted);width:auto;margin:14px auto 0;padding:6px;font-size:13px;text-decoration:underline">Retour à la connexion</button>
+    <div class="err" id="resetErr" style="margin-top:14px"></div>
   </div>
 </div>
 
@@ -271,6 +286,7 @@
 <div class="modal-bg" id="installModal">
   <div class="modal">
     <h2>Installer l'appli 📲</h2>
+    <p><strong>Ordinateur (Chrome / Edge) :</strong> clique sur l'icône d'installation (un écran avec une flèche, ⊕) à droite de la barre d'adresse, ou menu ⋮ → « Installer Claude ». L'appli s'ouvre alors dans sa propre fenêtre, comme un logiciel.</p>
     <p><strong>iPhone (Safari) :</strong> bouton Partager ⬆️ → « Sur l'écran d'accueil ».</p>
     <p><strong>Android (Chrome) :</strong> menu ⋮ → « Ajouter à l'écran d'accueil ».</p>
     <div class="row-btn"><button class="btn-primary" id="installClose">Compris</button></div>
@@ -312,11 +328,35 @@ async function apiUpload(path, formData){
 }
 
 // ---------- auth / session ----------
+let resetToken=null;
 async function boot(){
+  const rt = new URLSearchParams(location.search).get('reset');
+  if(rt){ resetToken=rt; showReset(); return; }
   if(!token){ showLogin(); return; }
   try{ const d = await api('GET','/auth/me'); me = d.user; startApp(); }
   catch(e){ showLogin(); }
 }
+function showReset(){ $('resetScreen').style.display='flex'; $('loginScreen').style.display='none'; }
+function clearResetParam(){ history.replaceState({},'',location.pathname); }
+$('forgotBtn').onclick = async ()=>{
+  const email = ($('loginEmail').value || prompt('Ton email :') || '').trim();
+  if(!email){ return; }
+  try{
+    await fetch(API+'/auth/forgot',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
+  }catch(e){}
+  const err=$('loginErr'); err.style.color='var(--muted)'; err.textContent='Si un compte existe pour '+email+', un email de réinitialisation vient d\'être envoyé.'; err.style.display='block';
+};
+$('resetCancelBtn').onclick = ()=>{ clearResetParam(); $('resetScreen').style.display='none'; showLogin(); };
+$('resetBtn').onclick = async ()=>{
+  const password=$('resetPass').value; const err=$('resetErr'); err.style.display='none';
+  if(!password || password.length<6){ err.textContent='Mot de passe trop court (min. 6).'; err.style.display='block'; return; }
+  try{
+    const r=await fetch(API+'/auth/reset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:resetToken,password})});
+    const d=await r.json(); if(!r.ok) throw new Error(d.error||'Échec');
+    clearResetParam(); $('resetScreen').style.display='none'; showLogin();
+    const le=$('loginErr'); le.style.color='var(--muted)'; le.textContent='Mot de passe modifié ✓ Connecte-toi avec le nouveau.'; le.style.display='block';
+  }catch(e){ err.textContent=e.message; err.style.display='block'; }
+};
 function showLogin(){ $('loginScreen').style.display='flex'; }
 function hideLogin(){ $('loginScreen').style.display='none'; }
 $('loginBtn').onclick = doLogin;
@@ -690,9 +730,8 @@ function exportPPT(text){
   pptx.writeFile({fileName:docName(text)+'.pptx'}); toast('PowerPoint téléchargé ✓');
 }
 
-// PWA manifest
-(function(){ const mf={name:"Claude",short_name:"Claude",display:"standalone",background_color:"#262624",theme_color:"#1f1d1a",start_url:".",icons:[{src:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%23d97757'/%3E%3Ctext x='256' y='360' font-size='320' font-family='Georgia,serif' text-anchor='middle' fill='%23fff'%3E%2A%3C/text%3E%3C/svg%3E",sizes:"512x512",type:"image/svg+xml"}]};
-  const l=document.createElement('link'); l.rel='manifest'; l.href=URL.createObjectURL(new Blob([JSON.stringify(mf)],{type:'application/json'})); document.head.appendChild(l); })();
+// Service worker — rend l'appli installable sur PC et mobile
+if('serviceWorker' in navigator){ window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{})); }
 
 // go
 renderComposer();
