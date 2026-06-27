@@ -20,15 +20,25 @@ Documentation fiscale comparative pour **France, Belgique, Luxembourg et Allemag
   - [`01-france.md`](docs/fiscalite/01-france.md) · [`02-belgique.md`](docs/fiscalite/02-belgique.md) · [`03-luxembourg.md`](docs/fiscalite/03-luxembourg.md) · [`04-allemagne.md`](docs/fiscalite/04-allemagne.md)
   - [`05-exemples-calculs.md`](docs/fiscalite/05-exemples-calculs.md) — calculs pas à pas servant de cas de test (fixtures) pour le moteur
 - 🗂️ **Données structurées (JSON)** : [`data/fiscalite/`](data/fiscalite/) — barèmes, taux et seuils exploitables par le code (voir le [README des données](data/fiscalite/README.md)).
-- ⚙️ **Moteur de calcul** : [`engine/`](engine/) — calculs d'impôts fonctionnels (Python, sans dépendance) alimentés par les JSON, avec [tests](tests/) reproduisant les exemples chiffrés. Voir le [README du moteur](engine/README.md).
+- ⚙️ **Moteur de calcul** : calculs d'impôts fonctionnels alimentés par les JSON, avec tests reproduisant les exemples chiffrés. Deux implémentations équivalentes (mêmes entrées/sorties, mêmes montants) :
+  - **TypeScript / Node.js** : [`src/`](src/) — voir le [README TypeScript](src/README.md)
+  - **Python** (référence, sans dépendance) : [`engine/`](engine/) — voir le [README Python](engine/README.md)
 
 ### Lancer les calculs
 
+**TypeScript / Node.js**
 ```bash
-python3 calc.py fr-ir 60000 --parts 3 --couple   # IR France (quotient familial)
-python3 calc.py lu-irpp 100000 --classe 2         # IRPP Luxembourg (splitting)
-python3 calc.py de-gmbh 100000 --hebesatz 4.9     # Imposition GmbH (Allemagne)
-python3 -m unittest discover -s tests             # Suite de tests (15 cas)
+npm install && npm run build
+node dist/calc.js fr-ir 60000 --parts 3 --couple   # IR France (quotient familial)
+node dist/calc.js lu-irpp 100000 --classe 2         # IRPP Luxembourg (splitting)
+node dist/calc.js de-gmbh 100000 --hebesatz 4.9     # Imposition GmbH (Allemagne)
+npm test                                            # Suite de tests (15 cas)
+```
+
+**Python**
+```bash
+python3 calc.py fr-ir 60000 --parts 3 --couple
+python3 -m unittest discover -s tests
 ```
 
 Couverture : personnes physiques, indépendants/professions libérales, sociétés par forme juridique, TVA et conformité déclarative. Chaque chiffre est sourcé (administrations fiscales officielles).

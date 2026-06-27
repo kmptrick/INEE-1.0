@@ -1,0 +1,19 @@
+{
+  "name": "inee-fiscalite",
+  "version": "0.1.0",
+  "description": "Moteur de calcul fiscal INEE2.0 (TypeScript) — FR/BE/LU/DE",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "tsc && node --test \"dist/**/*.test.js\"",
+    "calc": "node dist/calc.js"
+  },
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@types/node": "^22.20.0",
+    "typescript": "^5.9.3"
+  }
+}
