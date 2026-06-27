@@ -29,7 +29,8 @@
       "freigrenze_couple": 39900,
       "freigrenze_individuel_2026": 20350,
       "freigrenze_couple_2026": 40700,
-      "note": "toujours du pour societes de capitaux et sur Abgeltungsteuer"
+      "milderung_taux": 0.119,
+      "note": "toujours du pour societes de capitaux et sur Abgeltungsteuer ; zone d'attenuation (Milderungszone) a 11,9%"
     },
     "kirchensteuer": { "baviere_bw": 0.08, "autres_laender": 0.09 },
     "abgeltungsteuer": {

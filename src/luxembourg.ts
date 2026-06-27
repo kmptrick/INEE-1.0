@@ -32,6 +32,55 @@ export function irpp(revenuImposable: number, classe: "1" | "1a" | "2" = "1") {
   };
 }
 
+/**
+ * Crédit d'impôt salarié (CIS) — barème 2025 sur le salaire brut annuel.
+ * Vaut aussi pour le crédit d'impôt indépendant (CII), même barème sur le bénéfice.
+ */
+export function creditImpotSalarie(salaireBrut: number): number {
+  if (salaireBrut < 936) return 0;
+  if (salaireBrut <= 11265) return round2(300 + (salaireBrut - 936) * 0.029);
+  if (salaireBrut <= 40000) return D().personnes_physiques.credits_impot.cis_plafond; // 600
+  if (salaireBrut < 80000) return round2(Math.max(0, 600 - (salaireBrut - 40000) * 0.015));
+  return 0;
+}
+
+/** Crédit d'impôt monoparental (CIM) — barème 2025. */
+export function creditImpotMonoparental(revenuImposable: number): number {
+  const c = D().personnes_physiques.credits_impot;
+  if (revenuImposable < 60000) return c.cim_max; // 3504
+  if (revenuImposable <= 105000) return round2(c.cim_max - (revenuImposable - 60000) * 0.0612);
+  return c.cim_min; // 750
+}
+
+/** Crédit d'impôt pensionné (CIP) — forfaitaire. */
+export function creditImpotPensionne(): number {
+  return D().personnes_physiques.credits_impot.cip; // 300
+}
+
+/**
+ * Cotisations sociales d'un indépendant (CCSS). Assiette principale (pension +
+ * maladie) bornée entre le SSM et 5×SSM ; dépendance sur le revenu après
+ * abattement d'1/4 du SSM, sans plafond.
+ */
+export function cotisationsIndependant(revenuProfessionnel: number) {
+  const c = D().independants.cotisations_ccss;
+  const minA = c.assiette_min_mois * 12;
+  const maxA = c.assiette_max_mois * 12;
+  const assiette = Math.min(Math.max(revenuProfessionnel, minA), maxA);
+
+  const pension = assiette * c.pension;
+  const maladie = assiette * (c.maladie_soins + c.maladie_especes);
+  const dependance = Math.max(0, revenuProfessionnel - 0.25 * minA) * c.dependance;
+
+  return {
+    assiette: round2(assiette),
+    pension: round2(pension),
+    maladie: round2(maladie),
+    dependance: round2(dependance),
+    total: round2(pension + maladie + dependance),
+  };
+}
+
 /** Retenue à la source sur dividendes (15 %). Hors exonération de 50 % au barème. */
 export function retenueDividendes(montant: number) {
   const t = D().personnes_physiques.capitaux_mobiliers.retenue_dividendes;

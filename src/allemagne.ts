@@ -41,11 +41,18 @@ export function splitting(zveCouple: number): number {
   return 2 * einkommensteuer(zveCouple / 2);
 }
 
-/** Solidaritätszuschlag (5,5 %) au-delà de la franchise (sans zone d'atténuation). */
+/**
+ * Solidaritätszuschlag (5,5 %) avec **zone d'atténuation** (Milderungszone).
+ * 0 sous la franchise ; au-delà, le Soli croît à 11,9 % de la part dépassant
+ * la franchise, plafonné à 5,5 % de l'impôt (taux plein).
+ */
 export function solidaritaetszuschlag(impot: number, couple = false): number {
   const s = D().personnes_physiques.solidaritaetszuschlag;
   const freigrenze = couple ? s.freigrenze_couple : s.freigrenze_individuel;
-  return impot <= freigrenze ? 0 : round2(impot * s.taux);
+  if (impot <= freigrenze) return 0;
+  const plein = impot * s.taux; // 5,5 %
+  const milderung = (s.milderung_taux ?? 0.119) * (impot - freigrenze);
+  return round2(Math.min(plein, milderung));
 }
 
 /** Impôt forfaitaire 25 % sur les revenus du capital (Abgeltungsteuer). */
@@ -64,6 +71,64 @@ export function abgeltungsteuer(montant: number, couple = false, tauxKirchensteu
     kirchensteuer: round2(kirche),
     impot_total: round2(total),
     net: round2(montant - total),
+  };
+}
+
+/** Lien de parenté → (classe fiscale, abattement) pour les droits de succession. */
+const LIENS_DE = {
+  conjoint: { classe: "classe_I", abattement: 500000 },
+  enfant: { classe: "classe_I", abattement: 400000 },
+  petit_enfant: { classe: "classe_I", abattement: 200000 },
+  parent_succession: { classe: "classe_I", abattement: 100000 },
+  frere_soeur: { classe: "classe_II", abattement: 20000 },
+  neveu_niece: { classe: "classe_II", abattement: 20000 },
+  autre: { classe: "classe_III", abattement: 20000 },
+} as const;
+
+export type LienDE = keyof typeof LIENS_DE;
+
+/**
+ * Droits de succession (Erbschaftsteuer). ⚠️ Le taux s'applique à **toute**
+ * l'acquisition imposable (taux unique de la tranche atteinte, pas marginal).
+ */
+export function erbschaftsteuer(montant: number, lien: LienDE = "enfant") {
+  const cfg = LIENS_DE[lien];
+  const bareme = D().personnes_physiques.erbschaft_schenkungsteuer.bareme as Array<Record<string, number | null>>;
+  const imposable = Math.max(0, montant - cfg.abattement);
+
+  let taux = 0;
+  for (const b of bareme) {
+    const max = b.max === null ? Infinity : (b.max as number);
+    if (imposable <= max) {
+      taux = b[cfg.classe] as number;
+      break;
+    }
+  }
+  return {
+    base_imposable: round2(imposable),
+    classe: cfg.classe,
+    taux,
+    impot: round2(imposable * taux),
+  };
+}
+
+/**
+ * Cotisations sociales d'un indépendant (estimation). En Allemagne, la retraite
+ * et la maladie sont en grande partie facultatives/privées pour les indépendants ;
+ * ce calcul donne une borne haute « régime légal » plafonnée par les BBG.
+ */
+export function cotisationsIndependant(revenuAnnuel: number) {
+  const c = D().independants.cotisations_sociales;
+  const baseKV = Math.min(revenuAnnuel, c.bbg_maladie_an);
+  const baseRente = Math.min(revenuAnnuel, c.bbg_retraite_an);
+  const kv = baseKV * (c.krankenversicherung_general + c.zusatzbeitrag_moyen);
+  const pflege = baseKV * c.pflegeversicherung;
+  const rente = baseRente * c.rentenversicherung;
+  return {
+    krankenversicherung: round2(kv),
+    pflegeversicherung: round2(pflege),
+    rentenversicherung: round2(rente),
+    total: round2(kv + pflege + rente),
   };
 }
 

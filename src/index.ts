@@ -22,6 +22,7 @@ export type {
   CapitalProfil,
   SocieteProfil,
   IndependantProfil,
+  SuccessionProfil,
   CalculInput,
   CalculResult,
 } from "./api.js";

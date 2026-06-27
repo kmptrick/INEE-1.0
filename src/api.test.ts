@@ -60,6 +60,16 @@ test("API indépendant FR & BE", () => {
   near(calcule({ pays: "BE", profil: { type: "independant", revenuNet: 50000 } }).impot, 10250);
 });
 
-test("API cas non implémenté lève une erreur", () => {
-  assert.throws(() => calcule({ pays: "LU", profil: { type: "independant", revenuNet: 50000 } }));
+test("API succession FR & DE", () => {
+  near(calcule({ pays: "FR", profil: { type: "succession", partNette: 250000 } }).impot, 28194.35, 1);
+  near(calcule({ pays: "DE", profil: { type: "succession", partNette: 500000, lien: "enfant" } }).impot, 11000);
+});
+
+test("API indépendant LU & DE (désormais implémentés)", () => {
+  near(calcule({ pays: "LU", profil: { type: "independant", revenuNet: 60000 } }).impot, 13986.44, 1);
+  near(calcule({ pays: "DE", profil: { type: "independant", revenuNet: 60000 } }).impot, 23580);
+});
+
+test("API succession LU lève une erreur (non implémenté)", () => {
+  assert.throws(() => calcule({ pays: "LU", profil: { type: "succession", partNette: 100000 } }));
 });

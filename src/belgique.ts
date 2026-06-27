@@ -28,6 +28,37 @@ export function ipp(revenuImposable: number, tauxCommunal = 0) {
   };
 }
 
+export type RegionBE = "flandre" | "wallonie" | "bruxelles";
+
+/**
+ * Droits de succession en **ligne directe** (barème régional marginal).
+ * Abattement par défaut (ligne directe) : Wallonie 12 500 € (25 000 € si part
+ * < 125 000 €), Bruxelles 15 000 €, Flandre 0 € (régime simplifié).
+ */
+export function droitsSuccessionLigneDirecte(
+  partNette: number,
+  region: RegionBE = "wallonie",
+  abattement?: number,
+) {
+  const sd = D().personnes_physiques.succession_ligne_directe;
+  const brackets = sd[region] as Bracket[];
+
+  let ab = abattement;
+  if (ab === undefined) {
+    if (region === "wallonie") ab = partNette < 125000 ? 25000 : 12500;
+    else if (region === "bruxelles") ab = 15000;
+    else ab = 0;
+  }
+
+  const taxable = Math.max(0, partNette - ab);
+  return {
+    region,
+    base_taxable: round2(taxable),
+    abattement: ab,
+    impot: round2(taxFromBrackets(taxable, brackets)),
+  };
+}
+
 /** Cotisations sociales INASTI (titre principal), par paliers. */
 export function cotisationsIndependant(revenuNet: number) {
   const paliers = D().independants.cotisations_inasti.paliers as Bracket[];

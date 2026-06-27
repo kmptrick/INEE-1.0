@@ -90,13 +90,35 @@ src/
   fixtures.test.ts  15 tests = exemples de docs/fiscalite/05-exemples-calculs.md
 ```
 
+## Calculs complémentaires (implémentés)
+
+Au-delà des calculs principaux :
+
+- **Allemagne** : Soli avec **zone d'atténuation** (Milderungszone à 11,9 %) ;
+  **Erbschaftsteuer** (`erbschaftsteuer`, taux unique de tranche + abattement par
+  lien) ; **cotisations indépendant** (`cotisationsIndependant`, estimation
+  plafonnée par les BBG).
+- **Luxembourg** : crédits d'impôt **CIS/CII** (`creditImpotSalarie`), **CIM**
+  (`creditImpotMonoparental`), **CIP** (`creditImpotPensionne`) ; **cotisations
+  indépendant CCSS** (`cotisationsIndependant`).
+- **France** : droits de **succession/donation en ligne directe**
+  (`droitsLigneDirecte`).
+- **Belgique** : droits de **succession en ligne directe par région**
+  (`droitsSuccessionLigneDirecte`) ; **précompte mobilier** (`precompteMobilier`).
+
+Le profil **`succession`** de l'API unifiée couvre FR / BE / DE.
+
 ## Notes
 
 - **API identique** à la version Python (mêmes entrées/sorties, mêmes montants) :
   les deux moteurs se valident mutuellement sur les mêmes fixtures.
 - Fonctions **pures**, typées (`strict: true`). `import.meta.dirname` (Node ≥ 20)
   localise automatiquement `/data/fiscalite`.
-- Mêmes **limites connues** que la version Python (voir
-  [`/engine/README.md`](../engine/README.md)) : calculs principaux, certains cas
-  particuliers/crédits non encore implémentés, à verrouiller sur les textes
-  officiels avant production.
+- La version **Python** (`/engine`) reste la référence des calculs *principaux*
+  mais n'a pas reçu les calculs complémentaires ni l'API unifiée (spécifiques à
+  cette implémentation TypeScript). Sync possible sur demande.
+- **Limites restantes** (encore à faire) : cotisation spéciale sécurité sociale
+  belge, droits de succession luxembourgeois (système de majoration progressive),
+  abattements/cas particuliers fins (handicap, pactes Dutreil, etc.). Cotisations
+  indépendant LU/DE = **estimations** (modèle documenté dans le code). À
+  **verrouiller sur les textes officiels** avant production.

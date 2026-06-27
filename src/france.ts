@@ -81,6 +81,17 @@ export function impotSocietes(benefice: number, tauxReduitEligible = true) {
   return { impot: round2(impot), taux_effectif: benefice ? round4(impot / benefice) : 0 };
 }
 
+/**
+ * Droits de succession/donation en **ligne directe** (barème progressif marginal).
+ * Abattement par défaut : 100 000 € (parent → enfant).
+ */
+export function droitsLigneDirecte(montant: number, abattement = 100000) {
+  const sd = D().personnes_physiques.succession_donation;
+  const taxable = Math.max(0, montant - abattement);
+  const impot = taxFromBrackets(taxable, sd.bareme_ligne_directe as Bracket[]);
+  return { base_taxable: round2(taxable), abattement, impot: round2(impot) };
+}
+
 export type ActiviteMicro = "vente_bic" | "services_bic" | "bnc_hors_cipav" | "liberal_cipav";
 
 /** Cotisations sociales et (option) versement libératoire d'un micro-entrepreneur. */
