@@ -1,0 +1,65 @@
+{
+  "_meta": {
+    "description": "Seuils d'audit legal, destinataires et delais de depot des comptes annuels par pays.",
+    "monnaie": "EUR",
+    "situation": "2025-2026"
+  },
+  "LU": {
+    "audit": {
+      "auditeur": "Reviseur d'entreprises agree",
+      "obligatoire_si": "entreprise moyenne (art. 47 LRCS) ou grande",
+      "dispense": "petites entreprises (art. 35 LRCS)"
+    },
+    "depot": {
+      "destinataire": "RCS Luxembourg ; publication RESA",
+      "format_electronique": "eCDF (liasse structuree alignee sur le PCN)",
+      "delai": "7 mois apres la cloture (ASBL/fondations: 1 mois apres approbation)"
+    }
+  },
+  "BE": {
+    "audit": {
+      "auditeur": "Commissaire (reviseur IRE)",
+      "obligatoire_si": "societe/ASBL GRANDE - depasser 2 des 3 : bilan 6000000, CA 11250000, effectif 50 ETP",
+      "seuils": { "bilan_total": 6000000, "ca_net": 11250000, "effectif": 50 },
+      "toujours_obligatoire_si": "groupe a comptes consolides, entite d'interet public, petite societe cotee"
+    },
+    "depot": {
+      "destinataire": "Banque Nationale de Belgique - Centrale des bilans (greffe pour micro-entites sans personnalite morale)",
+      "format_electronique": "XBRL (schemas micro / abrege / complet)",
+      "delai": "30 jours apres approbation par l'AG, au plus tard 7 mois apres la cloture"
+    }
+  },
+  "FR": {
+    "audit": {
+      "auditeur": "Commissaire aux comptes (CAC)",
+      "obligatoire_si": "depasser 2 des 3 : CA 10000000, bilan 5000000, effectif 50",
+      "seuils": { "ca_net": 10000000, "bilan_total": 5000000, "effectif": 50 },
+      "base_legale": "Loi PACTE relevee de +25% par decret n. 2024-152 du 28/02/2024",
+      "seuils_filiale_groupe": { "ca_net": 5000000, "bilan_total": 2500000, "effectif": 25 }
+    },
+    "depot": {
+      "destinataire": "Guichet unique INPI -> RNE + greffe du tribunal de commerce",
+      "format_electronique": "EDI / EFI",
+      "delai": "AG d'approbation sous 6 mois ; depot sous 1 mois apres approbation (2 mois si depot en ligne)",
+      "confidentialite": "compte de resultat confidentiel possible (petites) ; comptes confidentiels (micro)"
+    }
+  },
+  "DE": {
+    "audit": {
+      "auditeur": "Wirtschaftspruefer",
+      "obligatoire_si": "Kapitalgesellschaft mittelgross ou gross (sec. 316 HGB)",
+      "dispense": "kleine Kapitalgesellschaften (sec. 267 I) et Kleinstgesellschaften"
+    },
+    "depot": {
+      "destinataire": "Bundesanzeiger (transmission) -> Unternehmensregister (publication)",
+      "format_electronique": "E-Bilanz XBRL pour la transmission fiscale au Finanzamt (sec. 5b EStG)",
+      "delai": "12 mois apres la cloture (microsocietes : option de Hinterlegung au lieu de publication)"
+    }
+  },
+  "etats_financiers_par_taille": {
+    "micro": "Bilan super-abrege + compte de resultat abrege ; annexe quasi supprimee",
+    "petite": "Bilan + compte de resultat abreges + annexe abregee ; dispense rapport de gestion",
+    "moyenne": "Schema complet (avec amenagements) + annexe + rapport de gestion",
+    "grande": "Schema complet + annexe complete + rapport de gestion + audit + consolidation si groupe"
+  }
+}

@@ -1,0 +1,101 @@
+{
+  "_meta": {
+    "description": "Structure des plans comptables nationaux (classes). Codification decimale : 1er chiffre = classe, 2 chiffres = rubrique, 3+ = compte/sous-compte.",
+    "situation": "2025-2026"
+  },
+  "FR": {
+    "nom": "Plan Comptable General (PCG)",
+    "base_legale": "Reglement ANC 2014-03 refondu par ANC 2022-06 (applicable aux exercices ouverts a compter du 2025-01-01)",
+    "nb_classes": 8,
+    "classes": {
+      "1": "Comptes de capitaux",
+      "2": "Comptes d'immobilisations",
+      "3": "Comptes de stocks et en-cours",
+      "4": "Comptes de tiers",
+      "5": "Comptes financiers",
+      "6": "Comptes de charges",
+      "7": "Comptes de produits",
+      "8": "Comptes speciaux"
+    },
+    "bilan": ["1", "2", "3", "4", "5"],
+    "resultat": ["6", "7"],
+    "versions_a_gerer": ["PCG < 2025", "PCG >= 2025 (ANC 2022-06)"],
+    "changements_2025": "Nouveau modele bilan/compte de resultat, renumerotation de certains comptes, suppression compte 79 (transferts de charges) et des charges a repartir.",
+    "systemes_presentation": ["abrege", "de base", "developpe"]
+  },
+  "BE": {
+    "nom": "Plan Comptable Minimum Normalise (PCMN)",
+    "base_legale": "A.R. du 21 octobre 2018 (execution art. III.84 CDE)",
+    "nb_classes": 7,
+    "classes": {
+      "0": "Droits et engagements hors bilan (facultatif)",
+      "1": "Fonds propres, provisions et dettes a plus d'un an",
+      "2": "Frais d'etablissement, actifs immobilises et creances a plus d'un an",
+      "3": "Stocks et commandes en cours d'execution",
+      "4": "Creances et dettes a un an au plus",
+      "5": "Placements de tresorerie et valeurs disponibles",
+      "6": "Charges",
+      "7": "Produits"
+    },
+    "bilan": ["1", "2", "3", "4", "5"],
+    "resultat": ["6", "7"]
+  },
+  "LU": {
+    "nom": "Plan Comptable Normalise (PCN)",
+    "base_legale": "Loi du 19/12/2002 ; reglement grand-ducal du 12 septembre 2019",
+    "aligne_sur": "collecte standardisee eCDF",
+    "classes": {
+      "1": "Capitaux propres, provisions et dettes financieres",
+      "2": "Frais d'etablissement et actif immobilise",
+      "3": "Stocks",
+      "4": "Comptes de tiers",
+      "5": "Comptes financiers",
+      "6": "Comptes de charges",
+      "7": "Comptes de produits",
+      "8": "Comptes de resultats / hors-bilan"
+    },
+    "bilan": ["1", "2", "3", "4", "5"],
+    "resultat": ["6", "7"],
+    "dispense": "Personnes physiques commercantes et SENC/SCS si CA HT < 100000 EUR ; SCSp ; entites CSSF ; IFRS."
+  },
+  "DE": {
+    "nom": "Pas de plan legal unique - structure imposee par HGB sec. 266 (bilan) et 275 (resultat)",
+    "standards_pratiques": {
+      "SKR03": {
+        "nom": "DATEV SKR 03",
+        "logique": "oriente processus / cycle d'exploitation (Prozessgliederung)",
+        "classes": {
+          "0": "Anlage- und Kapitalkonten (immobilisations et capitaux)",
+          "1": "Finanz- und Privatkonten",
+          "2": "Abgrenzungskonten",
+          "3": "Wareneingangs- und Bestandskonten",
+          "4": "Betriebliche Aufwendungen",
+          "8": "Erloeskonten (produits)",
+          "9": "Vortrags-, Kapital- und statistische Konten"
+        }
+      },
+      "SKR04": {
+        "nom": "DATEV SKR 04",
+        "logique": "oriente structure du bilan et du compte de resultat (Abschlussgliederung)",
+        "classes": {
+          "0": "Anlagevermoegen",
+          "1": "Umlaufvermoegen",
+          "2": "Eigenkapital",
+          "3": "Fremdkapital (Verbindlichkeiten, Rueckstellungen)",
+          "4": "Betriebliche Ertraege (Umsatzerloese)",
+          "5": "Betriebliche Aufwendungen (Material/Wareneinsatz)",
+          "6": "Sonstige betriebliche Aufwendungen",
+          "7": "Weitere Ertraege/Aufwendungen",
+          "9": "Vortrags- und statistische Konten"
+        }
+      }
+    },
+    "note": "Les libelles des comptes sont identiques entre SKR03 et SKR04 ; seules la logique de classes et la numerotation different. INEE 2.0 doit proposer les deux au choix."
+  },
+  "livres_obligatoires": {
+    "FR": ["livre-journal", "grand-livre", "livre d'inventaire (inventaire annuel)"],
+    "BE": ["livre-journal centralisateur", "journaux auxiliaires", "livre d'inventaire", "en simplifie: journaux financier/achats/ventes"],
+    "LU": ["livre-journal", "grand-livre", "livre d'inventaire"],
+    "DE": ["Grundbuch (journal)", "Hauptbuch (grand-livre)", "Nebenbuecher", "Inventar annuel", "principes GoB/GoBD"]
+  }
+}

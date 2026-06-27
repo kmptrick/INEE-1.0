@@ -1,0 +1,71 @@
+{
+  "_meta": {
+    "description": "Seuils de taille des entreprises par pays (2 des 3 critères, appréciés sur 2 exercices consécutifs).",
+    "monnaie": "EUR",
+    "situation": "2025-2026",
+    "base_directive": "Directive deleguee UE 2023/2775 du 17 octobre 2023",
+    "avertissement": "Valeurs a reconfirmer sur source officielle avant production. Montants integrant les relevements 2024.",
+    "criteres": ["bilan_total_max", "ca_net_max", "effectif_max"],
+    "regle_classification": "Une entite change de categorie si elle franchit (a la hausse ou a la baisse) plus d'un des 3 criteres pendant 2 exercices consecutifs."
+  },
+  "LU": {
+    "base_legale": "Art. 35 / 47 LRCS - loi du 19/12/2002 ; reglement grand-ducal du 25/10/2024",
+    "date_effet": "2024-01-01",
+    "categories": {
+      "micro":   { "bilan_total_max": 450000,   "ca_net_max": 900000,   "effectif_max": 10 },
+      "petite":  { "bilan_total_max": 7500000,  "ca_net_max": 15000000, "effectif_max": 50 },
+      "moyenne": { "bilan_total_max": 25000000, "ca_net_max": 50000000, "effectif_max": 250 },
+      "grande":  { "bilan_total_max": null,     "ca_net_max": null,     "effectif_max": null }
+    },
+    "dispense_pcn_personnes_physiques_et_societes_de_personnes_ca_ht_max": 100000
+  },
+  "BE": {
+    "base_legale": "Art. 1:24 / 1:25 CSA",
+    "date_effet": "2024-01-01",
+    "note": "Pas de categorie 'moyenne' au sens du CSA. Effectif non releve en 2024.",
+    "categories": {
+      "micro":  { "bilan_total_max": 450000,  "ca_net_max": 900000,    "effectif_max": 10, "condition": "ni mere ni filiale" },
+      "petite": { "bilan_total_max": 6000000, "ca_net_max": 11250000,  "effectif_max": 50 },
+      "grande": { "bilan_total_max": null,    "ca_net_max": null,      "effectif_max": null }
+    },
+    "comptabilite_simplifiee_personnes_physiques_et_societes_de_personnes": {
+      "ca_ht_max": 500000,
+      "ca_ht_max_carburants": 620000,
+      "base_legale": "Art. III.85 CDE"
+    }
+  },
+  "FR": {
+    "base_legale": "Code de commerce art. D.230-1 ; decret n. 2024-152 du 28/02/2024",
+    "date_effet": "2024-01-01",
+    "categories": {
+      "micro":   { "bilan_total_max": 450000,   "ca_net_max": 900000,   "effectif_max": 10 },
+      "petite":  { "bilan_total_max": 7500000,  "ca_net_max": 15000000, "effectif_max": 50 },
+      "moyenne": { "bilan_total_max": 25000000, "ca_net_max": 50000000, "effectif_max": 250 },
+      "grande":  { "bilan_total_max": null,     "ca_net_max": null,     "effectif_max": null }
+    },
+    "regime_micro_fiscal": {
+      "note": "Distinct des categories de taille comptables. Plafonds CA pour rester en micro-entreprise.",
+      "micro_bic_vente_marchandises_max": 188700,
+      "micro_bic_services_et_micro_bnc_max": 77700,
+      "periode_reference": "2023-2025"
+    }
+  },
+  "DE": {
+    "base_legale": "Sec. 267 / 267a HGB",
+    "date_effet": "2024-01-01",
+    "date_entree_vigueur_loi": "2024-04-17",
+    "categories": {
+      "kleinst":     { "bilan_total_max": 450000,   "ca_net_max": 900000,   "effectif_max": 10 },
+      "klein":       { "bilan_total_max": 7500000,  "ca_net_max": 15000000, "effectif_max": 50 },
+      "mittelgross": { "bilan_total_max": 25000000, "ca_net_max": 50000000, "effectif_max": 250 },
+      "gross":       { "bilan_total_max": null,     "ca_net_max": null,     "effectif_max": null }
+    },
+    "dispense_buchfuehrung_einzelkaufmann": {
+      "base_legale": "Sec. 241a HGB",
+      "ca_max": 800000,
+      "benefice_annuel_max": 80000,
+      "condition": "les DEUX seuils doivent etre respectes sur 2 exercices consecutifs",
+      "consequence": "EUR -> Einnahmenueberschussrechnung (EUeR) au lieu de la partie double"
+    }
+  }
+}

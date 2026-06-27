@@ -1,0 +1,55 @@
+{
+  "_meta": {
+    "description": "Taux de TVA, seuils de franchise et periodicite des declarations par pays.",
+    "monnaie": "EUR",
+    "situation": "2025-2026",
+    "avertissement": "Les taux et seuils de TVA evoluent en loi de finances annuelle. Reconfirmer avant production."
+  },
+  "LU": {
+    "taux": { "normal": 17, "intermediaire": 14, "reduit": 8, "super_reduit": 3 },
+    "franchise_nationale_max": 50000,
+    "franchise_tolerance_pct": 10,
+    "format_num_tva": "LU + 8 chiffres",
+    "periodicite": "mensuelle / trimestrielle / annuelle selon CA (fixee par l'AED a l'immatriculation)"
+  },
+  "BE": {
+    "taux": { "normal": 21, "intermediaire": 12, "reduit": 6, "super_reduit": 0 },
+    "franchise_nationale_max": 25000,
+    "format_num_tva": "BE0 + 9 chiffres",
+    "periodicite": "mensuelle par defaut ; trimestrielle si CA <= 2500000 ; mensuelle obligatoire si CA > 2500000",
+    "seuil_mensuel_obligatoire": 2500000
+  },
+  "FR": {
+    "taux": { "normal": 20, "intermediaire": 10, "reduit": 5.5, "super_reduit": 2.1 },
+    "franchise": {
+      "vente_marchandises_max": 85000,
+      "services_et_bnc_max": 37500,
+      "vente_majore_max": 93500,
+      "services_majore_max": 41250,
+      "note": "Projet de seuil unique a 25000 EUR suspendu - statu quo maintenu."
+    },
+    "format_num_tva": "FR + cle 2 caracteres + SIREN 9 chiffres",
+    "periodicite": "reel normal: mensuelle (CA3), trimestrielle possible si TVA due < 4000/an ; reel simplifie: annuelle (CA12) + 2 acomptes"
+  },
+  "DE": {
+    "taux": { "normal": 19, "intermediaire": null, "reduit": 7, "super_reduit": null },
+    "franchise_kleinunternehmer": {
+      "ca_annee_precedente_max": 25000,
+      "ca_annee_courante_max": 100000,
+      "base_legale": "Sec. 19 UStG (revise 2025)"
+    },
+    "format_num_tva": "DE + 9 chiffres",
+    "periodicite": "Umsatzsteuer-Voranmeldung : mensuelle / trimestrielle / annuelle selon la TVA de l'annee precedente"
+  },
+  "regime_ue_franchise_transfrontalier": {
+    "en_vigueur_depuis": "2025-01-01",
+    "seuil_ca_ue_max": 100000,
+    "description": "Permet a une PME etablie dans un Etat membre de beneficier de la franchise dans d'autres Etats membres si son CA annuel total dans l'UE <= 100000 EUR.",
+    "declaration": "trimestrielle pour les utilisateurs du regime transfrontalier"
+  },
+  "declarations_connexes": [
+    "Etat recapitulatif / releve intracommunautaire (livraisons de biens et prestations B2B)",
+    "Intrastat au-dela des seuils statistiques",
+    "OSS / IOSS pour le e-commerce"
+  ]
+}
