@@ -1,0 +1,21 @@
+{
+  "name": "claude-backend",
+  "version": "1.0.0",
+  "description": "Backend multi-utilisateurs pour l'appli Claude (auth, projets, fichiers, proxy API Claude)",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "mammoth": "^1.7.2",
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^6.9.14",
+    "pdf-parse": "^1.1.1",
+    "pg": "^8.12.0"
+  }
+}

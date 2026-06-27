@@ -1,0 +1,577 @@
+'use client';
+import { useEffect, useState, useRef } from 'react';
+import dynamic from 'next/dynamic';
+import { invoicing, companies, Quote, Company, Service } from '@/lib/api';
+import { Modal } from '@/components/Modal';
+import { HistoryPanel } from '@/components/HistoryPanel';
+import { SendModal, SendType, SendLang } from '@/components/SendModal';
+import { FormField, inputClass, selectClass, T } from '@/components/FormField';
+import { ComboSelect } from '@/components/ComboSelect';
+import { PageHeader, AddButton, FilterBar, DataTable, Td, StatusBadge, FormActions, usePagination, useSort, useColumns, TableFooter, useSegmentFilter, SegmentFilterBar, FilterRuleDef } from '@/components/PageShell';
+import { NotesWidget } from '@/components/NotesWidget';
+import { ServicePicker } from '@/components/ServicePicker';
+import { computeVat, LU_VAT_RATES } from '@/lib/vat-rules';
+import type { IneeDocumentProps } from '@/components/IneeDocumentPdf';
+
+const PdfDownloadButton = dynamic(
+  () => import('@/components/PdfDownloadButton').then(m => m.PdfDownloadButton),
+  { ssr: false }
+) as React.ComponentType<IneeDocumentProps & { filename: string }>;
+
+async function generatePdfBase64(props: IneeDocumentProps, lang: 'fr' | 'en' = 'fr'): Promise<string | null> {
+  try {
+    const { pdf } = await import('@react-pdf/renderer');
+    const { IneeDocumentPdf } = await import('@/components/IneeDocumentPdf');
+    const blob = await pdf(IneeDocumentPdf({ ...props, lang }) as any).toBlob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve((reader.result as string).split(',')[1]);
+      reader.readAsDataURL(blob);
+    });
+  } catch { return null; }
+}
+
+const STATUS_ST: Record<string, { bg: string; color: string }> = {
+  DRAFT:    { bg: '#F5F5F5', color: '#666'    },
+  SENT:     { bg: '#EFF6FF', color: '#1D6FD8' },
+  ACCEPTED: { bg: '#F0FDF4', color: '#16A34A' },
+  REJECTED: { bg: '#FEF2F2', color: '#DC2626' },
+  EXPIRED:  { bg: '#FFF7ED', color: '#C2410C' },
+};
+const STATUS_FR: Record<string, string> = { DRAFT: 'Brouillon', SENT: 'Envoyé', ACCEPTED: 'Accepté', REJECTED: 'Refusé', EXPIRED: 'Expiré' };
+const FILTERS = [
+  { value: '',         label: 'Tous'       },
+  { value: 'DRAFT',    label: 'Brouillon'  },
+  { value: 'SENT',     label: 'Envoyés'    },
+  { value: 'ACCEPTED', label: 'Acceptés'   },
+  { value: 'REJECTED', label: 'Refusés'    },
+];
+
+const fmt = (n: number) => new Intl.NumberFormat('fr-LU', { style: 'currency', currency: 'EUR' }).format(n);
+const today = () => new Date().toLocaleDateString('fr-LU');
+const fmtDate = (d?: string) => d ? new Date(d).toLocaleDateString('fr-LU') : '—';
+
+type LineForm = { serviceId: string; description: string; quantity: string; unitPrice: string; unite: string; discountRate: string; lineVatRate: string; periodStart: string; periodEnd: string; };
+const emptyLine = (): LineForm => ({ serviceId: '', description: '', quantity: '1', unitPrice: '', unite: '', discountRate: '', lineVatRate: '', periodStart: '', periodEnd: '' });
+const emptyForm = () => ({ companyId: '', vatRate: '17', vatMention: '', notes: '', remarque: '', lines: [emptyLine()] });
+const lineTotal = (l: LineForm) => { const q = parseFloat(l.quantity)||0; const p = parseFloat(l.unitPrice)||0; const d = parseFloat(l.discountRate)||0; return q * p * (1 - d/100); };
+function calcVatGroups(lines: LineForm[], defaultVatRate: number) {
+  const groups: Record<string, number> = {};
+  let subtotal = 0;
+  for (const l of lines) { const lt = lineTotal(l); subtotal += lt; const rate = String(parseFloat(l.lineVatRate)||defaultVatRate); groups[rate]=(groups[rate]||0)+lt; }
+  subtotal = Math.round(subtotal*100)/100;
+  const vatTotal = Math.round(Object.entries(groups).reduce((s,[r,b])=>s+b*Number(r)/100,0)*100)/100;
+  return { subtotal, vatGroups: groups, vatTotal, total: Math.round((subtotal+vatTotal)*100)/100 };
+}
+const SEGMENT_DEFS_Q: FilterRuleDef[] = [
+  { key: 'number',    label: 'Numéro',          dataType: 'text',   getValue: (q) => q.number },
+  { key: 'company',   label: 'Client',           dataType: 'text',   getValue: (q) => q.company?.name ?? '' },
+  { key: 'subtotal',  label: 'Montant HT (€)',   dataType: 'number', getValue: (q) => String(q.subtotal) },
+  { key: 'total',     label: 'Montant TTC (€)',  dataType: 'number', getValue: (q) => String(q.total) },
+  { key: 'createdAt', label: 'Date de création', dataType: 'date',   getValue: (q) => q.createdAt?.slice(0, 10) ?? '' },
+];
+
+const ALL_COLS_Q = [
+  { key: 'number',    label: 'Numéro'  },
+  { key: 'company',   label: 'Client'  },
+  { key: 'subtotal',  label: 'HT'      },
+  { key: 'vatAmount', label: 'TVA'     },
+  { key: 'total',     label: 'TTC'     },
+  { key: 'createdAt', label: 'Création'},
+  { key: 'status',    label: 'Statut'  },
+];
+
+function ActionBtn({ label, color, bg, border, onClick, disabled }: { label: string; color: string; bg: string; border: string; onClick: () => void; disabled?: boolean }) {
+  return (
+    <button onClick={onClick} disabled={disabled}
+      className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+      style={{ color, background: bg, border: `1px solid ${border}`, opacity: disabled ? 0.5 : 1 }}>
+      {label}
+    </button>
+  );
+}
+
+export default function QuotesPage() {
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const h = (e: MouseEvent) => { if (moreRef.current && !moreRef.current.contains(e.target as Node)) setMoreOpen(false); };
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
+  }, []);
+  const [list, setList] = useState<Quote[]>([]);
+  const [compList, setCompList] = useState<Company[]>([]);
+  const [filter, setFilter] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(false);
+  const [sendModalOpen, setSendModalOpen] = useState(false);
+  const [editingQuote, setEditingQuote] = useState<Quote | null>(null);
+  const [form, setForm] = useState(emptyForm());
+  const [saving, setSaving] = useState(false);
+  const [fullQuotes, setFullQuotes] = useState<Record<string, Quote>>({});
+  const { sort, toggle: sortToggle, sorted } = useSort(list);
+  const { search, setSearch, rules, addRule, removeRule, updateRule, clearRules, clearAll, filtered, activeCount } = useSegmentFilter(sorted, SEGMENT_DEFS_Q);
+  const pagination = usePagination(filtered);
+  const { visible, toggle: colToggle } = useColumns('quotes', ALL_COLS_Q);
+
+  // Detail / action modal
+  const [viewItem, setViewItem] = useState<Quote | null>(null);
+  const [actioning, setActioning] = useState(false);
+  const [convertOpen, setConvertOpen] = useState(false);
+  const [convertDueDate, setConvertDueDate] = useState('');
+  const [converting, setConverting] = useState(false);
+
+  const load = (s?: string) => { setLoading(true); invoicing.quotes.list(s || undefined).then(setList).finally(() => setLoading(false)); };
+  useEffect(() => { load(); companies.list().then(setCompList); }, []);
+  useEffect(() => { list.forEach(q => { if (!fullQuotes[q.id]) invoicing.quotes.get(q.id).then(full => setFullQuotes(p => ({ ...p, [q.id]: full }))); }); }, [list]);
+
+  const openView = (q: Quote) => setViewItem(fullQuotes[q.id] ?? q);
+
+  const updateStatus = async (q: Quote, status: string) => {
+    setActioning(true);
+    try {
+      const updated = await invoicing.quotes.update(q.id, {
+        status,
+        vatRate: q.vatRate,
+        vatMention: q.vatMention,
+        notes: q.notes,
+        lines: (q.lines ?? []).map(l => ({
+          ...(l.serviceId ? { serviceId: l.serviceId } : {}),
+          description: l.description, quantity: l.quantity, unitPrice: l.unitPrice,
+          ...(l.unite ? { unite: l.unite } : {}),
+        })),
+      } as any);
+      setFullQuotes(p => ({ ...p, [q.id]: updated }));
+      setViewItem(updated);
+      load(filter || undefined);
+    } finally { setActioning(false); }
+  };
+
+  const convertToInvoice = async () => {
+    if (!viewItem) return;
+    setConverting(true);
+    try {
+      await invoicing.invoices.fromQuote(viewItem.id, convertDueDate || undefined);
+      setConvertOpen(false);
+      setViewItem(null);
+      load(filter || undefined);
+    } finally { setConverting(false); }
+  };
+
+  const setField = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
+  const setLine = (i: number, k: string, v: string) => setForm(f => { const l = [...f.lines]; l[i] = { ...l[i], [k]: v }; return { ...f, lines: l }; });
+  const addLine = () => setForm(f => ({ ...f, lines: [...f.lines, emptyLine()] }));
+  const removeLine = (i: number) => setForm(f => ({ ...f, lines: f.lines.filter((_, idx) => idx !== i) }));
+
+  const onClientChange = (companyId: string) => {
+    const client = compList.find(c => c.id === companyId) ?? null;
+    const vat = computeVat(client, parseFloat(form.vatRate) || 17);
+    setForm(f => ({ ...f, companyId, vatRate: String(vat.rate), vatMention: vat.mention ?? '' }));
+  };
+
+  const pickService = (i: number, s: Service) => {
+    setForm(f => {
+      const lines = [...f.lines];
+      lines[i] = { serviceId: s.id, description: s.description, quantity: '1', unitPrice: String(s.prixHT), unite: s.unite ?? '', discountRate: '', lineVatRate: '', periodStart: '', periodEnd: '' };
+      const client = compList.find(c => c.id === f.companyId) ?? null;
+      const vat = computeVat(client, s.vatRate ?? 17);
+      return { ...f, lines, vatRate: String(vat.rate), vatMention: vat.mention ?? '' };
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault(); setSaving(true);
+    try {
+      const data: any = {
+        vatRate: parseFloat(form.vatRate) || 0,
+        vatMention: form.vatMention || undefined, notes: form.notes,
+        lines: form.lines.map(l => ({
+          ...(l.serviceId ? { serviceId: l.serviceId } : {}),
+          description: l.description, quantity: parseFloat(l.quantity) || 1,
+          unitPrice: parseFloat(l.unitPrice) || 0, ...(l.unite ? { unite: l.unite } : {}),
+          ...(l.discountRate ? { discountRate: parseFloat(l.discountRate) } : {}),
+          ...(l.lineVatRate ? { lineVatRate: parseFloat(l.lineVatRate) } : {}),
+          ...(l.periodStart ? { periodStart: l.periodStart } : {}),
+          ...(l.periodEnd ? { periodEnd: l.periodEnd } : {}),
+        })),
+      };
+      if (form.companyId) data.companyId = form.companyId;
+      if (editingQuote) {
+        await invoicing.quotes.update(editingQuote.id, data as any);
+        setEditingQuote(null);
+      } else {
+        await invoicing.quotes.create(data);
+      }
+      setOpen(false); setForm(emptyForm()); load(filter || undefined);
+    } finally { setSaving(false); }
+  };
+
+  const openEditQuote = (q: Quote) => {
+    setViewItem(null);
+    setForm({
+      companyId: q.company?.id ?? '',
+      vatRate: String(q.vatRate),
+      vatMention: q.vatMention ?? '',
+      notes: q.notes ?? '',
+      remarque: '',
+      lines: (q.lines ?? []).map(l => ({
+        serviceId: l.serviceId ?? '',
+        description: l.description,
+        quantity: String(l.quantity),
+        unitPrice: String(l.unitPrice),
+        unite: l.unite ?? '',
+        discountRate: l.discountRate ? String(l.discountRate) : '',
+        lineVatRate: l.lineVatRate ? String(l.lineVatRate) : '',
+        periodStart: (l as any).periodStart ?? '',
+        periodEnd: (l as any).periodEnd ?? '',
+      })),
+    });
+    setEditingQuote(q);
+    setOpen(true);
+  };
+
+  const selectedClient = compList.find(c => c.id === form.companyId) ?? null;
+  const vatResult = computeVat(selectedClient, parseFloat(form.vatRate) || 17);
+  const formTotals = open ? calcVatGroups(form.lines, parseFloat(form.vatRate) || 17) : { subtotal: 0, vatGroups: {} as Record<string, number>, vatTotal: 0, total: 0 };
+
+  const buildPdfProps = (q: Quote): IneeDocumentProps & { filename: string } => ({
+    type: 'DEVIS',
+    number: q.number,
+    date: q.createdAt ? new Date(q.createdAt).toLocaleDateString('fr-LU') : today(),
+    status: q.status,
+    company: q.company ? {
+      name: q.company.name,
+      address: (q.company as any).address ?? undefined,
+      postalCode: (q.company as any).postalCode ?? undefined,
+      city: (q.company as any).city ?? undefined,
+      country: (q.company as any).country ?? undefined,
+      vatNumber: (q.company as any).vatNumber ?? undefined,
+    } : undefined,
+    lines: (q.lines ?? []).map(l => ({
+      description: l.description,
+      quantity: l.quantity,
+      unitPrice: l.unitPrice,
+      total: l.total,
+      vatRate: (l as any).lineVatRate ?? q.vatRate,
+      discountRate: (l as any).discountRate,
+    })),
+    subtotal: q.subtotal, vatRate: q.vatRate, vatAmount: q.vatAmount, total: q.total,
+    vatMention: q.vatMention, filename: `${q.number}.pdf`,
+  });
+
+  return (
+    <div className="p-6">
+      <PageHeader title="Devis" action={<AddButton onClick={() => setOpen(true)} />} />
+      <FilterBar filters={FILTERS} active={filter} onChange={v => { setFilter(v); load(v || undefined); }} />
+      <SegmentFilterBar search={search} onSearch={setSearch} placeholder="Rechercher un devis..." defs={SEGMENT_DEFS_Q} rules={rules} addRule={addRule} removeRule={removeRule} updateRule={updateRule} clearRules={clearRules} clearAll={clearAll} activeCount={activeCount} />
+
+      <DataTable loading={loading} empty="Aucun devis" sort={sort} onSort={sortToggle}
+        headers={[
+          ...(visible.includes('number')   ? [{ label: 'Numéro',  key: 'number' }] : []),
+          ...(visible.includes('company')  ? [{ label: 'Client', key: 'company.name' }] : []),
+          ...(visible.includes('subtotal') ? [{ label: 'HT',      key: 'subtotal',  align: 'right' as const }] : []),
+          ...(visible.includes('vatAmount')? [{ label: 'TVA',     key: 'vatAmount', align: 'right' as const }] : []),
+          ...(visible.includes('total')     ? [{ label: 'TTC',      key: 'total',     align: 'right' as const }] : []),
+          ...(visible.includes('createdAt') ? [{ label: 'Création', key: 'createdAt' }] : []),
+          ...(visible.includes('status')    ? [{ label: 'Statut',   key: 'status',    align: 'center' as const }] : []),
+          { label: '', align: 'center' as const },
+        ]}>
+        {pagination.paged.map((q, i) => {
+          const full = fullQuotes[q.id] ?? q;
+          const ss = STATUS_ST[q.status] ?? { bg: '#F5F5F5', color: '#888' };
+          return (
+            <tr key={q.id} onClick={() => openView(q)} style={{ borderTop: i > 0 ? `1px solid ${T.rowDiv}` : undefined, cursor: 'pointer' }}
+              onMouseEnter={e => (e.currentTarget.style.background = T.copperBg)}
+              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+              {visible.includes('number')    && <td className="px-4 py-3 font-mono text-xs font-bold" style={{ color: T.dark }}>{q.number}</td>}
+              {visible.includes('company')   && <Td>{q.company?.name ?? '—'}</Td>}
+              {visible.includes('subtotal')  && <td className="px-4 py-3 text-right text-sm" style={{ color: T.dark }}>{fmt(q.subtotal)}</td>}
+              {visible.includes('vatAmount') && <td className="px-4 py-3 text-right text-sm" style={{ color: T.muted }}>{fmt(q.vatAmount)}</td>}
+              {visible.includes('total')     && <td className="px-4 py-3 text-right text-sm font-bold" style={{ color: T.dark }}>{fmt(q.total)}</td>}
+              {visible.includes('createdAt') && <Td>{q.createdAt ? new Date(q.createdAt).toLocaleDateString('fr-LU') : '—'}</Td>}
+              {visible.includes('status')    && <td className="px-4 py-3 text-center"><StatusBadge label={STATUS_FR[q.status] ?? q.status} bg={ss.bg} color={ss.color} /></td>}
+              <td className="px-4 py-3 text-center" onClick={e => e.stopPropagation()}>
+                <PdfDownloadButton {...buildPdfProps(full)} />
+              </td>
+            </tr>
+          );
+        })}
+      </DataTable>
+      <TableFooter pagination={pagination} export={{ getData: () => filtered.map(q => ({ Numéro: q.number, Client: q.company?.name ?? '', 'HT (€)': q.subtotal, 'TVA (€)': q.vatAmount, 'TTC (€)': q.total, Statut: STATUS_FR[q.status] ?? q.status, Validité: (q as any).validUntil ? new Date((q as any).validUntil).toLocaleDateString('fr-LU') : '' })), filename: 'devis', title: 'Devis' }} columnSelector={{ allCols: ALL_COLS_Q, visible, toggle: colToggle }} />
+
+      {/* ── Detail / Actions modal ── */}
+      {viewItem && (
+        <Modal title={`Devis ${viewItem.number}`} open={!!viewItem} onClose={() => setViewItem(null)} wide>
+          <div className="grid gap-6" style={{ gridTemplateColumns: 'minmax(0,1fr) 260px' }}>
+          <div className="space-y-4">
+            {/* Status + PDF + menu ⋮ */}
+            {(() => {
+              const ss = STATUS_ST[viewItem.status] ?? { bg: '#F5F5F5', color: '#888' };
+              const menuItem = (label: string, onClick: () => void, danger?: boolean) => (
+                <button key={label} type="button" onClick={() => { onClick(); setMoreOpen(false); }}
+                  className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-2 cursor-pointer transition-colors"
+                  style={{ color: danger ? '#DC2626' : T.dark, background: 'transparent', border: 'none' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = T.head)}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                  {label}
+                </button>
+              );
+              return (
+                <div className="flex items-center gap-3 pb-3" style={{ borderBottom: `1px solid ${T.border}` }}>
+                  <StatusBadge label={STATUS_FR[viewItem.status] ?? viewItem.status} bg={ss.bg} color={ss.color} />
+                  <NotesWidget value={viewItem.notes ?? ''} onChange={v => setViewItem(d => d ? { ...d, notes: v } : d)} />
+                  <div className="ml-auto flex items-center gap-2">
+                    <PdfDownloadButton {...buildPdfProps(viewItem)} />
+                    <div ref={moreRef} className="relative">
+                      <button type="button" onClick={() => setMoreOpen(o => !o)}
+                        className="flex items-center justify-center w-8 h-8 rounded-lg cursor-pointer transition-colors"
+                        style={{ background: moreOpen ? T.head : 'transparent', border: `1px solid ${T.border}`, color: T.muted }}>
+                        ···
+                      </button>
+                      {moreOpen && (
+                        <div className="absolute right-0 top-9 z-50 rounded-xl shadow-xl overflow-hidden min-w-[200px]"
+                          style={{ background: '#FFF', border: `1px solid ${T.border}` }}>
+                          {['DRAFT', 'SENT'].includes(viewItem.status) && menuItem('✎ Modifier', () => openEditQuote(fullQuotes[viewItem.id] ?? viewItem))}
+                          {viewItem.status === 'SENT' && menuItem('✕ Marquer expiré', () => updateStatus(viewItem, 'EXPIRED'))}
+                          {viewItem.status === 'SENT' && menuItem('✕ Refuser', () => updateStatus(viewItem, 'REJECTED'), true)}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Action tabs — bas de fiche (style TeamLeader) */}
+            <div style={{ display: 'none' }} />
+
+            {/* Info */}
+            <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
+              <div><span style={{ color: T.muted }}>Client : </span><span className="font-semibold" style={{ color: T.dark }}>{viewItem.company?.name ?? '—'}</span></div>
+              <div><span style={{ color: T.muted }}>TVA : </span><span className="font-semibold" style={{ color: T.dark }}>{viewItem.vatRate}%</span></div>
+            </div>
+
+            {/* Lines */}
+            {(viewItem.lines ?? []).length > 0 && (
+              <div className="rounded-lg overflow-hidden" style={{ border: `1px solid ${T.border}` }}>
+                <table className="w-full text-xs">
+                  <thead style={{ background: T.head }}>
+                    <tr>
+                      <th className="text-left px-3 py-2 font-semibold" style={{ color: T.muted }}>Description</th>
+                      <th className="text-center px-3 py-2 font-semibold" style={{ color: T.muted }}>Qté</th>
+                      <th className="text-right px-3 py-2 font-semibold" style={{ color: T.muted }}>Prix HT</th>
+                      <th className="text-right px-3 py-2 font-semibold" style={{ color: T.muted }}>Total HT</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {viewItem.lines!.map((l, i) => (
+                      <tr key={i} style={{ borderTop: `1px solid ${T.rowDiv}` }}>
+                        <td className="px-3 py-2" style={{ color: T.dark }}>{l.description}</td>
+                        <td className="px-3 py-2 text-center" style={{ color: T.muted }}>{l.quantity}</td>
+                        <td className="px-3 py-2 text-right" style={{ color: T.muted }}>{fmt(l.unitPrice)}</td>
+                        <td className="px-3 py-2 text-right font-semibold" style={{ color: T.dark }}>{fmt(l.total)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Totals */}
+            <div className="flex justify-end">
+              <div className="w-52 space-y-1 text-sm">
+                <div className="flex justify-between"><span style={{ color: T.muted }}>HT</span><span style={{ color: T.dark }}>{fmt(viewItem.subtotal)}</span></div>
+                <div className="flex justify-between"><span style={{ color: T.muted }}>TVA {viewItem.vatRate}%</span><span style={{ color: T.muted }}>{fmt(viewItem.vatAmount)}</span></div>
+                <div className="flex justify-between font-bold pt-1" style={{ borderTop: `1px solid ${T.border}`, color: T.dark }}>
+                  <span>Total TTC</span><span>{fmt(viewItem.total)}</span>
+                </div>
+              </div>
+            </div>
+
+            {viewItem.vatMention && (
+              <div className="rounded-lg px-3 py-2 text-xs" style={{ background: '#FFFBEB', border: '1px solid #FDE68A' }}>
+                <span className="font-semibold" style={{ color: '#92400E' }}>Mention légale TVA : </span>
+                <span style={{ color: '#78350F' }}>{viewItem.vatMention}</span>
+              </div>
+            )}
+
+            {/* ── Action tabs (style TeamLeader) ── */}
+            <div className="flex items-center flex-wrap" style={{ borderTop: `1px solid ${T.border}`, marginTop: 8 }}>
+              {(viewItem.status === 'DRAFT' || viewItem.status === 'SENT') && (
+                <button type="button" onClick={() => setSendModalOpen(true)} disabled={actioning}
+                  className="px-4 py-2.5 text-sm font-medium cursor-pointer border-r transition-colors"
+                  style={{ color: T.copper, borderColor: T.border, background: 'transparent', opacity: actioning ? 0.5 : 1 }}
+                  onMouseEnter={e => (e.currentTarget.style.background = T.head)} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                  Envoyer
+                </button>
+              )}
+              {viewItem.status === 'SENT' && (
+                <button type="button" onClick={() => updateStatus(viewItem, 'ACCEPTED')} disabled={actioning}
+                  className="px-4 py-2.5 text-sm font-medium cursor-pointer border-r transition-colors"
+                  style={{ color: T.copper, borderColor: T.border, background: 'transparent', opacity: actioning ? 0.5 : 1 }}
+                  onMouseEnter={e => (e.currentTarget.style.background = T.head)} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                  Accepter
+                </button>
+              )}
+              {viewItem.status === 'ACCEPTED' && (
+                <button type="button" onClick={() => { const d = new Date(); d.setDate(d.getDate() + 14); setConvertDueDate(d.toISOString().slice(0,10)); setConvertOpen(true); }} disabled={actioning}
+                  className="px-4 py-2.5 text-sm font-semibold cursor-pointer border-r transition-colors"
+                  style={{ color: '#FFF', background: T.copper, opacity: actioning ? 0.5 : 1 }}>
+                  Convertir en facture
+                </button>
+              )}
+              {viewItem.status === 'ACCEPTED' && (
+                <button type="button" onClick={() => setSendModalOpen(true)} disabled={actioning}
+                  className="px-4 py-2.5 text-sm font-medium cursor-pointer transition-colors"
+                  style={{ color: T.muted, background: 'transparent', opacity: actioning ? 0.5 : 1 }}
+                  onMouseEnter={e => (e.currentTarget.style.background = T.head)} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                  Envoyer
+                </button>
+              )}
+            </div>
+          </div>
+          <HistoryPanel entityType="Quote" entityId={viewItem.id} />
+          </div>
+        </Modal>
+      )}
+
+      {/* ── Modal d'envoi devis ── */}
+      {viewItem && sendModalOpen && (
+        <SendModal
+          open={sendModalOpen}
+          onClose={() => setSendModalOpen(false)}
+          title={`Envoyer le devis ${viewItem.number}`}
+          generatePdf={(lang) => generatePdfBase64(buildPdfProps(viewItem), lang)}
+          onSend={async (_type: SendType, lang: SendLang, pdfBase64?: string) => {
+            const updated = await invoicing.quotes.sendAuto(viewItem.id, pdfBase64, lang);
+            setFullQuotes(p => ({ ...p, [viewItem.id]: updated }));
+            setViewItem(updated);
+            load(filter || undefined);
+          }}
+        />
+      )}
+
+      {/* ── Convertir en facture ── */}
+      <Modal title="Convertir en facture" open={convertOpen} onClose={() => setConvertOpen(false)}>
+        <div className="space-y-4">
+          <p className="text-sm" style={{ color: T.muted }}>
+            Le devis <strong style={{ color: T.dark }}>{viewItem?.number}</strong> sera converti en facture brouillon.
+          </p>
+          <div className="rounded-lg px-4 py-3 text-sm" style={{ background: T.head, border: `1px solid ${T.border}` }}>
+            <span style={{ color: T.muted }}>Échéance automatique : </span>
+            <strong style={{ color: T.dark }}>{convertDueDate ? new Date(convertDueDate).toLocaleDateString('fr-LU') : '—'}</strong>
+            <span style={{ color: T.muted }}> (aujourd'hui + 14 jours)</span>
+          </div>
+          <div className="flex gap-3 pt-1">
+            <button onClick={() => setConvertOpen(false)} className="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium cursor-pointer" style={{ border: `1px solid ${T.border}`, color: T.muted }}>Annuler</button>
+            <button onClick={convertToInvoice} disabled={converting} className="flex-1 px-4 py-2.5 rounded-lg text-sm font-semibold text-white cursor-pointer" style={{ background: T.copper, opacity: converting ? 0.7 : 1 }}>
+              {converting ? 'Conversion...' : 'Convertir ✓'}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ── Nouveau devis ── */}
+      <Modal title={editingQuote ? `Modifier le devis ${editingQuote.number}` : 'Nouveau devis'} open={open} onClose={() => { setOpen(false); setEditingQuote(null); setForm(emptyForm()); }} wide>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <FormField label="Client">
+            <ComboSelect
+              options={compList.map(c => ({ value: c.id, label: c.name }))}
+              value={form.companyId}
+              onChange={onClientChange}
+              placeholder="— Aucun —"
+              emptyLabel="— Aucun —"
+            />
+          </FormField>
+
+          {/* ── Régime TVA ── */}
+          <div className="rounded-lg p-3 space-y-2" style={{ background: vatResult.regime === 'LU' ? T.head : '#FEF3C7', border: `1px solid ${vatResult.regime === 'LU' ? T.border : '#FDE68A'}` }}>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider" style={{ color: T.muted }}>Régime TVA</span>
+              <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: vatResult.regime === 'LU' ? T.copper + '20' : '#FDE68A', color: vatResult.regime === 'LU' ? T.copper : '#92400E' }}>
+                {vatResult.label}
+              </span>
+            </div>
+            {vatResult.regime === 'EU_B2B' && selectedClient && !selectedClient.vatNumber && (
+              <p className="text-xs font-semibold" style={{ color: '#DC2626' }}>⚠ N° TVA client requis pour l&apos;autoliquidation — ajoutez-le dans la fiche client</p>
+            )}
+            {vatResult.mention && (
+              <div>
+                <label className="block text-xs mb-1" style={{ color: '#92400E' }}>Mention légale (apparaîtra sur le document)</label>
+                <textarea rows={2} className={inputClass} value={form.vatMention} onChange={e => setField('vatMention', e.target.value)}
+                  style={{ fontSize: 11 }} />
+              </div>
+            )}
+            {vatResult.regime === 'LU' && (
+              <p className="text-xs" style={{ color: T.muted }}>Le taux TVA est défini par prestation (17% par défaut, modifiable ligne par ligne).</p>
+            )}
+          </div>
+
+
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#6B4C35' }}>Lignes</label>
+              <button type="button" onClick={addLine} className="text-xs font-semibold" style={{ color: T.copper }}>+ Ajouter ligne</button>
+            </div>
+            <div className="space-y-2">
+              {form.lines.map((l, i) => (
+                <div key={i} className="rounded-lg p-3 space-y-2" style={{ background: T.head, border: `1px solid ${T.border}` }}>
+                  {/* Ligne prestation */}
+                  <div className="flex items-center gap-2 mb-2">
+                    <ServicePicker onSelect={s => pickService(i, s)} />
+                    <div className="flex-1 px-3 py-2.5 rounded-lg text-sm"
+                      style={{ background: l.description ? '#FFF' : T.head, border: `1px solid ${T.border}`, color: l.description ? T.dark : T.muted }}>
+                      {l.description || 'Aucune prestation sélectionnée — cliquez sur 📋'}
+                    </div>
+                    {form.lines.length > 1 && <button type="button" onClick={() => removeLine(i)} className="text-lg leading-none cursor-pointer flex-shrink-0" style={{ color: '#CCC' }}>✕</button>}
+                  </div>
+                  <div className="grid gap-2 items-center" style={{ gridTemplateColumns: '64px 88px' }}>
+                    <input type="number" min="0" step="0.01" placeholder="Qté" className={inputClass} value={l.quantity} onChange={e => setLine(i, 'quantity', e.target.value)} />
+                    <input type="number" min="0" step="0.01" placeholder="Prix HT" className={inputClass} value={l.unitPrice} onChange={e => setLine(i, 'unitPrice', e.target.value)} required />
+                  </div>
+                  <div className="grid gap-2" style={{ gridTemplateColumns: '90px 90px 1fr' }}>
+                    <div>
+                      <label className="block text-xs mb-0.5" style={{ color: T.muted }}>TVA %</label>
+                      <select className={inputClass} value={l.lineVatRate} onChange={e => setLine(i, 'lineVatRate', e.target.value)}>
+                        <option value="">{form.vatRate}% — Défaut</option>
+                        {LU_VAT_RATES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs mb-0.5" style={{ color: T.muted }}>Remise %</label>
+                      <input type="number" min="0" max="100" step="0.1" placeholder="0" className={inputClass} value={l.discountRate} onChange={e => setLine(i, 'discountRate', e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="block text-xs mb-0.5" style={{ color: T.muted }}>Complément</label>
+                      <input placeholder="ex: mensuel, par dossier…" className={inputClass} value={l.unite} onChange={e => setLine(i, 'unite', e.target.value)} />
+                    </div>
+                  </div>
+                  {(parseFloat(l.quantity)||0) > 0 && (parseFloat(l.unitPrice)||0) > 0 && (
+                    <div className="flex justify-end text-xs">
+                      <span className="font-semibold" style={{ color: T.copper }}>HT ligne : {fmt(lineTotal(l))}</span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Totaux multi-TVA */}
+          <div className="rounded-xl p-4 space-y-1.5 text-sm" style={{ background: T.head, border: `1px solid ${T.border}` }}>
+            <div className="flex justify-between"><span style={{ color: T.muted }}>Sous-total HT</span><span style={{ color: T.dark }}>{fmt(formTotals.subtotal)}</span></div>
+            {Object.entries(formTotals.vatGroups).sort((a, b) => Number(a[0]) - Number(b[0])).map(([rate, base]) => (
+              <div key={rate} className="flex justify-between"><span style={{ color: T.muted }}>TVA {rate}%</span><span style={{ color: T.dark }}>{fmt(Math.round(base * Number(rate) / 100 * 100) / 100)}</span></div>
+            ))}
+            <div className="flex justify-between font-bold text-base pt-1" style={{ borderTop: `1px solid ${T.border}` }}>
+              <span style={{ color: T.dark }}>Total TTC</span><span style={{ color: T.copper }}>{fmt(formTotals.total)}</span>
+            </div>
+          </div>
+
+          <FormField label="Notes"><textarea className={inputClass} rows={2} value={form.notes} onChange={e => setField('notes', e.target.value)} /></FormField>
+          
+          <FormActions onCancel={() => setOpen(false)} saving={saving} />
+        </form>
+      </Modal>
+    </div>
+  );
+}

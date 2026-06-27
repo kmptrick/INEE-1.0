@@ -1,0 +1,20 @@
+node_modules/
+.env
+.env.local
+.env.server
+dist/
+.next/
+*.log
+
+# Fichiers de travail / comptabilité — hors application, ne pas committer
+Comptes_annuels_2025_*.xlsx
+Modele_eCDF_comptes_annuels.xlsx
+gen_comptes_annuels.py
+gen_modele_ecdf.py
+gen-archiver-fusion.js
+clean_invoices.sql
+archiver-fusion.json
+n8n-chat-webhook.json
+workflow.json
+Users*.svg
+deploy.bat

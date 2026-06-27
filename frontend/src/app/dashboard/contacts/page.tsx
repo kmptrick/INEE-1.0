@@ -1,0 +1,248 @@
+'use client';
+import { useEffect, useState } from 'react';
+import { contacts, companies, Contact, Company } from '@/lib/api';
+import { Modal } from '@/components/Modal';
+import { HistoryPanel } from '@/components/HistoryPanel';
+import { FormField, inputClass, selectClass, T } from '@/components/FormField';
+import { ComboSelect } from '@/components/ComboSelect';
+import { PageHeader, AddButton, DataTable, Td, FormActions, usePagination, useSort, TableFooter, useSegmentFilter, SegmentFilterBar, FilterRuleDef } from '@/components/PageShell';
+
+const QUALIFICATIONS = ['Actionnaire', 'Associé', 'Dirigeant', 'Comptable', 'Agent payeur', 'Autre'];
+
+const emptyForm = () => ({ firstName: '', lastName: '', email: '', phone: '', mobile: '', jobTitle: '', companyId: '', notes: '' });
+
+const SEGMENT_DEFS: FilterRuleDef[] = [
+  { key: 'name',      label: 'Nom',             dataType: 'text',   getValue: (c) => `${c.firstName} ${c.lastName}` },
+  { key: 'email',     label: 'Email',            dataType: 'text',   getValue: (c) => c.email ?? '' },
+  { key: 'jobTitle',  label: 'Poste',            dataType: 'text',   getValue: (c) => c.jobTitle ?? '' },
+  { key: 'company',   label: 'Client',           dataType: 'text',   getValue: (c) => c.company?.name ?? '' },
+  { key: 'status',    label: 'Statut',           dataType: 'select', options: [{ value: 'actif', label: 'Actif' }, { value: 'inactif', label: 'Inactif' }], getValue: (c) => c.isActive === false ? 'inactif' : 'actif' },
+  { key: 'invoices',  label: 'Reçoit factures',  dataType: 'select', options: [{ value: 'oui', label: 'Oui' }, { value: 'non', label: 'Non' }], getValue: (c) => c.canReceiveInvoices ? 'oui' : 'non' },
+  { key: 'createdAt', label: 'Date de création', dataType: 'date',   getValue: (c) => c.createdAt?.slice(0, 10) ?? '' },
+];
+
+// ── Formulaire contact (composant externe au composant page) ──────────────────
+interface ContactFormProps {
+  form: ReturnType<typeof emptyForm>;
+  set: (k: string, v: string) => void;
+  compList: Company[];
+  saving: boolean;
+  onSubmit: (e: React.FormEvent) => void;
+  onCancel: () => void;
+}
+
+function ContactFormFields({ form, set, compList, saving, onSubmit, onCancel }: ContactFormProps) {
+  return (
+    <form onSubmit={onSubmit} className="space-y-4">
+      <div className="grid grid-cols-2 gap-3">
+        <FormField label="Prénom" required><input className={inputClass} value={form.firstName} onChange={e => set('firstName', e.target.value)} required /></FormField>
+        <FormField label="Nom" required><input className={inputClass} value={form.lastName} onChange={e => set('lastName', e.target.value)} required /></FormField>
+      </div>
+      <FormField label="Email"><input type="email" className={inputClass} value={form.email} onChange={e => set('email', e.target.value)} /></FormField>
+      <div className="grid grid-cols-2 gap-3">
+        <FormField label="Téléphone 1"><input className={inputClass} value={form.phone} onChange={e => set('phone', e.target.value)} /></FormField>
+        <FormField label="Téléphone 2"><input className={inputClass} value={form.mobile} onChange={e => set('mobile', e.target.value)} /></FormField>
+      </div>
+      <FormField label="Poste / Qualification">
+        <select className={selectClass} value={form.jobTitle} onChange={e => set('jobTitle', e.target.value)}>
+          <option value="">— Choisir —</option>
+          {QUALIFICATIONS.map(q => <option key={q} value={q}>{q}</option>)}
+        </select>
+      </FormField>
+      <FormField label="Client">
+        <ComboSelect
+          options={compList.map(c => ({ value: c.id, label: c.name }))}
+          value={form.companyId}
+          onChange={v => set('companyId', v)}
+          placeholder="— Aucune —"
+          emptyLabel="— Aucune —"
+        />
+      </FormField>
+      <FormActions onCancel={onCancel} saving={saving} />
+    </form>
+  );
+}
+
+// ── Page ─────────────────────────────────────────────────────────────────────
+export default function ContactsPage() {
+  const [list, setList]           = useState<Contact[]>([]);
+  const [compList, setCompList]   = useState<Company[]>([]);
+  const [loading, setLoading]     = useState(true);
+  const [open, setOpen]           = useState(false);
+  const [editContact, setEditContact] = useState<Contact | null>(null);
+  const [viewContact, setViewContact] = useState<Contact | null>(null);
+  const [form, setForm]           = useState(emptyForm());
+  const [saving, setSaving]       = useState(false);
+  const [toggling, setToggling]   = useState<string | null>(null);
+  const [togglingActive, setTogglingActive] = useState<string | null>(null);
+
+  const { sort, toggle: sortToggle, sorted } = useSort(list);
+  const { search, setSearch, rules, addRule, removeRule, updateRule, clearRules, clearAll, filtered, activeCount } = useSegmentFilter(sorted, SEGMENT_DEFS);
+  const pagination = usePagination(filtered);
+
+  const load = () => { setLoading(true); contacts.list().then(setList).finally(() => setLoading(false)); };
+  useEffect(() => { load(); companies.list().then(setCompList); }, []);
+
+  const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
+
+  const openEdit = (c: Contact) => {
+    setForm({
+      firstName: c.firstName, lastName: c.lastName,
+      email: c.email ?? '', phone: c.phone ?? '', mobile: (c as any).mobile ?? '',
+      jobTitle: c.jobTitle ?? '', companyId: c.company?.id ?? '', notes: (c as any).notes ?? '',
+    });
+    setEditContact(c);
+  };
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault(); setSaving(true);
+    try {
+      const data: any = { ...form };
+      if (!data.companyId) delete data.companyId;
+      await contacts.create(data); setOpen(false); setForm(emptyForm()); load();
+    } finally { setSaving(false); }
+  };
+
+  const handleEdit = async (e: React.FormEvent) => {
+    e.preventDefault(); if (!editContact) return; setSaving(true);
+    try {
+      const data: any = { ...form };
+      if (!data.companyId) delete data.companyId;
+      await contacts.update(editContact.id, data);
+      setEditContact(null); setForm(emptyForm()); load();
+    } finally { setSaving(false); }
+  };
+
+  const toggleInvoice = async (c: Contact) => {
+    setToggling(c.id);
+    try {
+      await contacts.update(c.id, { canReceiveInvoices: !c.canReceiveInvoices } as any);
+      setList(l => l.map(x => x.id === c.id ? { ...x, canReceiveInvoices: !c.canReceiveInvoices } : x));
+    } finally { setToggling(null); }
+  };
+
+  const toggleActive = async (c: Contact) => {
+    setTogglingActive(c.id);
+    try {
+      const updated = c.isActive === false ? await contacts.activate(c.id) : await contacts.deactivate(c.id);
+      setList(l => l.map(x => x.id === c.id ? { ...x, isActive: updated.isActive } : x));
+    } finally { setTogglingActive(null); }
+  };
+
+  return (
+    <div className="p-6">
+      <PageHeader title="Contacts" action={<AddButton onClick={() => { setForm(emptyForm()); setOpen(true); }} />} />
+      <SegmentFilterBar search={search} onSearch={setSearch} placeholder="Rechercher un contact..." defs={SEGMENT_DEFS} rules={rules} addRule={addRule} removeRule={removeRule} updateRule={updateRule} clearRules={clearRules} clearAll={clearAll} activeCount={activeCount} />
+
+      <DataTable loading={loading} empty="Aucun contact — cliquez sur «+ Ajouter»" sort={sort} onSort={sortToggle}
+        headers={[
+          { label: 'Réf.', key: 'reference' }, { label: 'Nom', key: 'lastName' }, { label: 'Email', key: 'email' },
+          { label: 'Tél. 1', key: 'phone' }, { label: 'Poste', key: 'jobTitle' }, { label: 'Client', key: 'company.name' },
+          { label: 'Création', key: 'createdAt' },
+          { label: 'Reçoit factures', key: 'canReceiveInvoices', align: 'center' as const },
+          { label: '', align: 'center' as const },
+        ]}>
+        {pagination.paged.map((c, i) => {
+          const inactive = c.isActive === false;
+          return (
+            <tr key={c.id} onClick={() => setViewContact(c)}
+              style={{ borderTop: i > 0 ? `1px solid ${T.rowDiv}` : undefined, opacity: inactive ? 0.55 : 1, cursor: 'pointer' }}
+              onMouseEnter={e => (e.currentTarget.style.background = T.copperBg)}
+              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+              <td className="px-4 py-3 font-mono text-xs" style={{ color: T.muted }}>{(c as any).reference ?? '—'}</td>
+              <td className="px-4 py-3 font-semibold text-sm" style={{ color: T.dark }}>
+                {c.firstName} {c.lastName}
+                {inactive && <span className="ml-2 text-xs px-1.5 py-0.5 rounded-full" style={{ background: '#F5F5F5', color: '#999' }}>Inactif</span>}
+              </td>
+              <Td>{c.email ?? '—'}</Td>
+              <Td>{c.phone ?? '—'}</Td>
+              <Td>{c.jobTitle ?? '—'}</Td>
+              <Td>{c.company?.name ?? '—'}</Td>
+              <Td>{c.createdAt ? new Date(c.createdAt).toLocaleDateString('fr-LU') : '—'}</Td>
+              <td className="px-4 py-3 text-center" onClick={e => e.stopPropagation()}>
+                <button onClick={() => toggleInvoice(c)} disabled={toggling === c.id || inactive}
+                  title={inactive ? 'Contact inactif' : c.canReceiveInvoices ? 'Autorisé' : 'Non autorisé'}
+                  className="w-9 h-5 rounded-full transition-all relative flex-shrink-0 inline-flex cursor-pointer"
+                  style={{ background: (c.canReceiveInvoices && !inactive) ? T.copper : T.border, opacity: (toggling === c.id || inactive) ? 0.4 : 1 }}>
+                  <span className="absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all"
+                    style={{ left: (c.canReceiveInvoices && !inactive) ? '18px' : '2px' }} />
+                </button>
+              </td>
+              <td className="px-4 py-3 text-center" onClick={e => e.stopPropagation()}>
+                <div className="flex items-center justify-center gap-1.5">
+                  <button onClick={() => openEdit(c)}
+                    className="text-xs px-3 py-1.5 rounded-lg border font-medium cursor-pointer"
+                    style={{ color: T.copper, borderColor: T.copper + '60', background: 'transparent' }}>
+                    ✎ Modifier
+                  </button>
+                  <button onClick={() => toggleActive(c)} disabled={togglingActive === c.id}
+                    className="text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors cursor-pointer"
+                    style={inactive
+                      ? { color: '#16A34A', borderColor: '#BBF7D0', background: 'transparent', opacity: togglingActive === c.id ? 0.5 : 1 }
+                      : { color: '#DC2626', borderColor: '#FECACA', background: 'transparent', opacity: togglingActive === c.id ? 0.5 : 1 }}>
+                    {inactive ? 'Réactiver' : 'Désactiver'}
+                  </button>
+                </div>
+              </td>
+            </tr>
+          );
+        })}
+      </DataTable>
+
+      <TableFooter pagination={pagination} export={{ getData: () => filtered.map(c => ({
+        Référence: (c as any).reference ?? '', Prénom: c.firstName, Nom: c.lastName,
+        Email: c.email ?? '', 'Téléphone 1': c.phone ?? '', 'Téléphone 2': (c as any).mobile ?? '',
+        Poste: c.jobTitle ?? '', Client: c.company?.name ?? '',
+        'Reçoit factures': c.canReceiveInvoices ? 'Oui' : 'Non', Statut: c.isActive === false ? 'Inactif' : 'Actif',
+      })), filename: 'contacts', title: 'Contacts' }} />
+
+      {/* ── Modale détail contact ── */}
+      {viewContact && (
+        <Modal title={`${viewContact.firstName} ${viewContact.lastName}`} open onClose={() => setViewContact(null)} wide>
+          <div className="grid gap-6" style={{ gridTemplateColumns: 'minmax(0,1fr) 260px' }}>
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 pb-3" style={{ borderBottom: `1px solid ${T.border}` }}>
+                {viewContact.jobTitle && (
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: T.head, color: T.copper, border: `1px solid ${T.border}` }}>
+                    {viewContact.jobTitle}
+                  </span>
+                )}
+                {viewContact.isActive === false && (
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: '#F5F5F5', color: '#999' }}>Inactif</span>
+                )}
+                <div className="flex gap-2 ml-auto">
+                  <button onClick={() => { setViewContact(null); openEdit(viewContact); }}
+                    className="text-xs px-3 py-1.5 rounded-lg border font-semibold cursor-pointer"
+                    style={{ color: T.copper, borderColor: T.copper + '60', background: 'transparent' }}>✎ Modifier</button>
+                </div>
+              </div>
+              <div className="rounded-xl border p-4 space-y-3" style={{ borderColor: T.border, background: '#FAFAF9' }}>
+                <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                  {viewContact.email && <div><span style={{ color: T.muted }}>Email : </span><span className="font-semibold" style={{ color: T.dark }}>{viewContact.email}</span></div>}
+                  {viewContact.phone && <div><span style={{ color: T.muted }}>Tél. 1 : </span><span style={{ color: T.dark }}>{viewContact.phone}</span></div>}
+                  {(viewContact as any).mobile && <div><span style={{ color: T.muted }}>Tél. 2 : </span><span style={{ color: T.dark }}>{(viewContact as any).mobile}</span></div>}
+                  {viewContact.company && <div><span style={{ color: T.muted }}>Client : </span><span className="font-semibold" style={{ color: T.dark }}>{viewContact.company.name}</span></div>}
+                  <div><span style={{ color: T.muted }}>Reçoit factures : </span>
+                    <span className="font-semibold" style={{ color: viewContact.canReceiveInvoices ? '#16A34A' : T.muted }}>
+                      {viewContact.canReceiveInvoices ? 'Oui ✓' : 'Non'}
+                    </span>
+                  </div>
+                  {viewContact.createdAt && <div><span style={{ color: T.muted }}>Création : </span><span style={{ color: T.dark }}>{new Date(viewContact.createdAt).toLocaleDateString('fr-LU')}</span></div>}
+                </div>
+              </div>
+            </div>
+            <HistoryPanel entityType="Contact" entityId={viewContact.id} />
+          </div>
+        </Modal>
+      )}
+
+      <Modal title="Nouveau contact" open={open} onClose={() => setOpen(false)}>
+        <ContactFormFields form={form} set={set} compList={compList} saving={saving} onSubmit={handleCreate} onCancel={() => setOpen(false)} />
+      </Modal>
+
+      <Modal title="Modifier le contact" open={!!editContact} onClose={() => setEditContact(null)}>
+        <ContactFormFields form={form} set={set} compList={compList} saving={saving} onSubmit={handleEdit} onCancel={() => setEditContact(null)} />
+      </Modal>
+    </div>
+  );
+}

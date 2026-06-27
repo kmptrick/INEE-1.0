@@ -1,0 +1,496 @@
+{
+  "name": "INEE - Assistant (Teams 4 canaux prives + CRM + Email 6 boites)",
+  "nodes": [
+    {
+      "parameters": { "event": "newChannelMessage" },
+      "id": "trg-teams-1",
+      "name": "Teams - User 1",
+      "type": "n8n-nodes-base.microsoftTeamsTrigger",
+      "typeVersion": 1,
+      "position": [120, 80],
+      "credentials": { "microsoftTeamsOAuth2Api": { "id": "REMPLACER", "name": "Microsoft Teams" } }
+    },
+    {
+      "parameters": { "event": "newChannelMessage" },
+      "id": "trg-teams-2",
+      "name": "Teams - User 2",
+      "type": "n8n-nodes-base.microsoftTeamsTrigger",
+      "typeVersion": 1,
+      "position": [120, 200],
+      "credentials": { "microsoftTeamsOAuth2Api": { "id": "REMPLACER", "name": "Microsoft Teams" } }
+    },
+    {
+      "parameters": { "event": "newChannelMessage" },
+      "id": "trg-teams-3",
+      "name": "Teams - User 3",
+      "type": "n8n-nodes-base.microsoftTeamsTrigger",
+      "typeVersion": 1,
+      "position": [120, 320],
+      "credentials": { "microsoftTeamsOAuth2Api": { "id": "REMPLACER", "name": "Microsoft Teams" } }
+    },
+    {
+      "parameters": { "event": "newChannelMessage" },
+      "id": "trg-teams-4",
+      "name": "Teams - User 4",
+      "type": "n8n-nodes-base.microsoftTeamsTrigger",
+      "typeVersion": 1,
+      "position": [120, 440],
+      "credentials": { "microsoftTeamsOAuth2Api": { "id": "REMPLACER", "name": "Microsoft Teams" } }
+    },
+
+    {
+      "parameters": { "httpMethod": "POST", "path": "inee-assistant", "responseMode": "responseNode", "options": {} },
+      "id": "trg-crm",
+      "name": "Webhook CRM",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [120, 580]
+    },
+
+    {
+      "parameters": { "event": "messageReceived", "options": {} },
+      "id": "trg-mail-1",
+      "name": "Outlook privee 1",
+      "type": "n8n-nodes-base.microsoftOutlookTrigger",
+      "typeVersion": 1,
+      "position": [120, 740],
+      "credentials": { "microsoftOutlookOAuth2Api": { "id": "REMPLACER", "name": "Outlook prive 1" } }
+    },
+    {
+      "parameters": { "event": "messageReceived", "options": {} },
+      "id": "trg-mail-2",
+      "name": "Outlook privee 2",
+      "type": "n8n-nodes-base.microsoftOutlookTrigger",
+      "typeVersion": 1,
+      "position": [120, 860],
+      "credentials": { "microsoftOutlookOAuth2Api": { "id": "REMPLACER", "name": "Outlook prive 2" } }
+    },
+    {
+      "parameters": { "event": "messageReceived", "options": {} },
+      "id": "trg-mail-3",
+      "name": "Outlook privee 3",
+      "type": "n8n-nodes-base.microsoftOutlookTrigger",
+      "typeVersion": 1,
+      "position": [120, 980],
+      "credentials": { "microsoftOutlookOAuth2Api": { "id": "REMPLACER", "name": "Outlook prive 3" } }
+    },
+    {
+      "parameters": { "event": "messageReceived", "options": {} },
+      "id": "trg-mail-4",
+      "name": "Outlook privee 4",
+      "type": "n8n-nodes-base.microsoftOutlookTrigger",
+      "typeVersion": 1,
+      "position": [120, 1100],
+      "credentials": { "microsoftOutlookOAuth2Api": { "id": "REMPLACER", "name": "Outlook prive 4" } }
+    },
+    {
+      "parameters": { "event": "messageReceived", "options": {} },
+      "id": "trg-mail-5",
+      "name": "Outlook partagee 1",
+      "type": "n8n-nodes-base.microsoftOutlookTrigger",
+      "typeVersion": 1,
+      "position": [120, 1220],
+      "credentials": { "microsoftOutlookOAuth2Api": { "id": "REMPLACER", "name": "Outlook partage 1 (contact@)" } }
+    },
+    {
+      "parameters": { "event": "messageReceived", "options": {} },
+      "id": "trg-mail-6",
+      "name": "Outlook partagee 2",
+      "type": "n8n-nodes-base.microsoftOutlookTrigger",
+      "typeVersion": 1,
+      "position": [120, 1340],
+      "credentials": { "microsoftOutlookOAuth2Api": { "id": "REMPLACER", "name": "Outlook partage 2 (info@)" } }
+    },
+
+    {
+      "parameters": {
+        "assignments": { "assignments": [
+          { "id": "t1", "name": "chatInput", "type": "string", "value": "={{ $json.body?.content || $json.text || '' }}" },
+          { "id": "t2", "name": "teamId", "type": "string", "value": "={{ $json.channelIdentity?.teamId || $json.teamId }}" },
+          { "id": "t3", "name": "channelId", "type": "string", "value": "={{ $json.channelIdentity?.channelId || $json.channelId }}" },
+          { "id": "t4", "name": "userId", "type": "string", "value": "={{ $json.from?.user?.id || 'inconnu' }}" }
+        ] },
+        "options": {}
+      },
+      "id": "capture-teams",
+      "name": "Capture Teams",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [340, 260]
+    },
+
+    {
+      "parameters": { "method": "POST", "url": "https://app.inee.lu/api/auth/login", "sendBody": true, "specifyBody": "json", "jsonBody": "={\n  \"email\": \"assistant@inee.lu\",\n  \"password\": \"__MOT_DE_PASSE_BOT__\"\n}", "options": {} },
+      "id": "login-teams",
+      "name": "Login (Teams)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [540, 260]
+    },
+    {
+      "parameters": { "method": "POST", "url": "https://app.inee.lu/api/auth/login", "sendBody": true, "specifyBody": "json", "jsonBody": "={\n  \"email\": \"assistant@inee.lu\",\n  \"password\": \"__MOT_DE_PASSE_BOT__\"\n}", "options": {} },
+      "id": "login-crm",
+      "name": "Login (CRM)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [340, 580]
+    },
+    {
+      "parameters": { "method": "POST", "url": "https://app.inee.lu/api/auth/login", "sendBody": true, "specifyBody": "json", "jsonBody": "={\n  \"email\": \"assistant@inee.lu\",\n  \"password\": \"__MOT_DE_PASSE_BOT__\"\n}", "options": {} },
+      "id": "login-email",
+      "name": "Login (Email)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [560, 1040]
+    },
+
+    {
+      "parameters": {
+        "assignments": { "assignments": [
+          { "id": "a1", "name": "chatInput", "type": "string", "value": "={{ $('Capture Teams').item.json.chatInput }}" },
+          { "id": "a2", "name": "channel", "type": "string", "value": "teams" },
+          { "id": "a3", "name": "token", "type": "string", "value": "={{ $json.access_token }}" },
+          { "id": "a4", "name": "sessionKey", "type": "string", "value": "=teams-{{ $('Capture Teams').item.json.channelId }}" }
+        ] },
+        "options": {}
+      },
+      "id": "norm-teams",
+      "name": "Normalize Teams",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [740, 260]
+    },
+    {
+      "parameters": {
+        "assignments": { "assignments": [
+          { "id": "c1", "name": "chatInput", "type": "string", "value": "={{ $('Webhook CRM').item.json.body.message }}" },
+          { "id": "c2", "name": "channel", "type": "string", "value": "crm" },
+          { "id": "c3", "name": "token", "type": "string", "value": "={{ $json.access_token }}" },
+          { "id": "c4", "name": "sessionKey", "type": "string", "value": "=crm-{{ $('Webhook CRM').item.json.body.userId }}" }
+        ] },
+        "options": {}
+      },
+      "id": "norm-crm",
+      "name": "Normalize CRM",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [540, 580]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Detecte la boite INEE receptrice en cherchant une adresse connue parmi\n// les destinataires (To + CC). Robuste au multi-destinataires et au CC.\nfunction stripHtml(html){\n  if(!html) return '';\n  return html.replace(/<style[\\s\\S]*?<\\/style>/gi,'').replace(/<script[\\s\\S]*?<\\/script>/gi,'').replace(/<[^>]+>/g,' ').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'\"').replace(/\\s{2,}/g,' ').trim();\n}\nconst t = $json;\nconst KNOWN = ['pkuete@inee.lu','cbricusse@inee.lu','hbricusse@inee.lu','ltati@inee.lu','contact@inee.lu','invoices@inee.lu'];\nconst recips = [].concat(t.toRecipients||[], t.ccRecipients||[]).map(r => ((r.emailAddress && r.emailAddress.address)||'').toLowerCase());\nconst mailbox = KNOWN.find(k => recips.includes(k)) || ((t.toRecipients && t.toRecipients[0] && t.toRecipients[0].emailAddress && t.toRecipients[0].emailAddress.address)||'').toLowerCase();\nconst rawBody = t.body && t.body.contentType === 'html' ? stripHtml(t.body.content||'') : (t.body && t.body.content ? t.body.content : (t.bodyPreview||''));\nconst body = rawBody.length > 3000 ? rawBody.substring(0,3000)+'... [tronque]' : rawBody;\nconst senderEmail = (t.from && t.from.emailAddress && t.from.emailAddress.address) || '';\nconst senderName = (t.from && t.from.emailAddress && t.from.emailAddress.name) || senderEmail || 'Inconnu';\nconst subject = t.subject || '(sans objet)';\nconst messageId = t.id || '';\nconst chatInput = `Expediteur: ${senderName} <${senderEmail}>\\nObjet: ${subject}\\n\\n${body || 'Email vide.'}`;\nreturn [{ json: { chatInput, senderEmail, senderName, subject, messageId, mailbox } }];"
+      },
+      "id": "prep-email",
+      "name": "Prepare Email",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [360, 1040]
+    },
+    {
+      "parameters": {
+        "assignments": { "assignments": [
+          { "id": "e1", "name": "chatInput", "type": "string", "value": "={{ $('Prepare Email').item.json.chatInput }}" },
+          { "id": "e2", "name": "channel", "type": "string", "value": "email" },
+          { "id": "e3", "name": "token", "type": "string", "value": "={{ $json.access_token }}" },
+          { "id": "e4", "name": "sessionKey", "type": "string", "value": "=email-{{ $('Prepare Email').item.json.messageId }}" }
+        ] },
+        "options": {}
+      },
+      "id": "norm-email",
+      "name": "Normalize Email",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [760, 1040]
+    },
+
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "={{ $json.channel === 'email' ? 'Tu traites un EMAIL entrant chez INEE (services aux entreprises, Luxembourg). Etapes: 1) utilise search_company avec le nom/adresse de l expediteur pour savoir s il est deja client; 2) si client, regarde list_invoices pour son statut de factures; 3) classe l email en CHAUD, TIEDE ou FROID; 4) redige un brouillon de reponse en francais, signe Patrick KUETE - INEE. Reponds UNIQUEMENT par un objet JSON valide (aucun texte autour) avec les champs: classification, resume, actions, brouillon.' : 'Tu es l assistant interne d INEE (ERP/CRM, Luxembourg). Tu reponds en francais, concis et professionnel. Tu as des outils de CONSULTATION du CRM (lecture seule). Pour un client, utilise search_company; ne jamais inventer d identifiant. Si plusieurs clients correspondent, demande lequel. Si une info manque, dis-le. Ne modifie ni supprime jamais de donnee.' }}"
+        }
+      },
+      "id": "agent",
+      "name": "Assistant INEE",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [1020, 500]
+    },
+    {
+      "parameters": { "model": "claude-sonnet-4-6", "options": {} },
+      "id": "model",
+      "name": "Claude",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.2,
+      "position": [900, 800],
+      "credentials": { "anthropicApi": { "id": "REMPLACER", "name": "Anthropic" } }
+    },
+    {
+      "parameters": { "sessionIdType": "customKey", "sessionKey": "={{ $json.sessionKey }}", "contextWindowLength": 10 },
+      "id": "memory",
+      "name": "Memoire",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [1020, 800]
+    },
+    {
+      "parameters": {
+        "toolDescription": "Recherche un client/societe dans le CRM INEE par nom ou fragment.",
+        "method": "GET",
+        "url": "https://app.inee.lu/api/companies",
+        "sendQuery": true,
+        "parametersQuery": { "values": [ { "name": "search", "valueProvider": "modelRequired" } ] },
+        "sendHeaders": true,
+        "parametersHeaders": { "values": [ { "name": "Authorization", "value": "=Bearer {{ $json.token }}" } ] }
+      },
+      "id": "tool-company",
+      "name": "search_company",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [1140, 800]
+    },
+    {
+      "parameters": {
+        "toolDescription": "Liste les factures INEE. Parametre optionnel status (DRAFT, SENT, PAID, OVERDUE).",
+        "method": "GET",
+        "url": "https://app.inee.lu/api/invoicing/invoices",
+        "sendQuery": true,
+        "parametersQuery": { "values": [ { "name": "status", "valueProvider": "modelOptional" } ] },
+        "sendHeaders": true,
+        "parametersHeaders": { "values": [ { "name": "Authorization", "value": "=Bearer {{ $json.token }}" } ] }
+      },
+      "id": "tool-invoices",
+      "name": "list_invoices",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [1280, 800]
+    },
+    {
+      "parameters": {
+        "toolDescription": "Renvoie les statistiques de facturation INEE. Aucun parametre.",
+        "method": "GET",
+        "url": "https://app.inee.lu/api/invoicing/stats",
+        "sendHeaders": true,
+        "parametersHeaders": { "values": [ { "name": "Authorization", "value": "=Bearer {{ $json.token }}" } ] }
+      },
+      "id": "tool-stats",
+      "name": "get_stats",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [1420, 800]
+    },
+
+    {
+      "parameters": {
+        "rules": { "values": [
+          { "conditions": { "options": { "caseSensitive": true, "typeValidation": "loose" }, "conditions": [ { "leftValue": "={{ $('Normalize Teams').isExecuted }}", "rightValue": "", "operator": { "type": "boolean", "operation": "true", "singleValue": true } } ], "combinator": "and" }, "renameOutput": true, "outputKey": "Teams" },
+          { "conditions": { "options": { "caseSensitive": true, "typeValidation": "loose" }, "conditions": [ { "leftValue": "={{ $('Normalize CRM').isExecuted }}", "rightValue": "", "operator": { "type": "boolean", "operation": "true", "singleValue": true } } ], "combinator": "and" }, "renameOutput": true, "outputKey": "CRM" },
+          { "conditions": { "options": { "caseSensitive": true, "typeValidation": "loose" }, "conditions": [ { "leftValue": "={{ $('Normalize Email').isExecuted }}", "rightValue": "", "operator": { "type": "boolean", "operation": "true", "singleValue": true } } ], "combinator": "and" }, "renameOutput": true, "outputKey": "Email" }
+        ] },
+        "options": {}
+      },
+      "id": "switch",
+      "name": "Route reponse",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [1300, 500]
+    },
+
+    {
+      "parameters": {
+        "resource": "channelMessage",
+        "operation": "create",
+        "teamId": "={{ $('Capture Teams').item.json.teamId }}",
+        "channelId": "={{ $('Capture Teams').item.json.channelId }}",
+        "contentType": "text",
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "id": "reply-teams",
+      "name": "Repondre Teams",
+      "type": "n8n-nodes-base.microsoftTeams",
+      "typeVersion": 2,
+      "position": [1560, 260],
+      "credentials": { "microsoftTeamsOAuth2Api": { "id": "REMPLACER", "name": "Microsoft Teams" } }
+    },
+    {
+      "parameters": { "respondWith": "json", "responseBody": "={{ { \"reply\": $json.output } }}", "options": {} },
+      "id": "reply-crm",
+      "name": "Repondre Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1560, 460]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Parse le JSON renvoye par l agent pour la branche EMAIL\nlet raw = ($input.item.json.output) || '';\nraw = raw.replace(/```json/g,'').replace(/```/g,'').trim();\nlet p;\ntry { p = JSON.parse(raw); } catch(e){ p = { classification:'FROID', resume:'Erreur de parsing', actions:'Verifier manuellement', brouillon: raw }; }\nreturn [{ json: p }];"
+      },
+      "id": "parse-email",
+      "name": "Parse Email JSON",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1560, 700]
+    },
+    {
+      "parameters": {
+        "rules": { "values": [
+          { "conditions": { "options": { "caseSensitive": false, "typeValidation": "loose" }, "conditions": [ { "leftValue": "={{ $('Prepare Email').item.json.mailbox }}", "rightValue": "user1@inee.lu", "operator": { "type": "string", "operation": "equals" } } ], "combinator": "and" }, "renameOutput": true, "outputKey": "Boite1" },
+          { "conditions": { "options": { "caseSensitive": false, "typeValidation": "loose" }, "conditions": [ { "leftValue": "={{ $('Prepare Email').item.json.mailbox }}", "rightValue": "user2@inee.lu", "operator": { "type": "string", "operation": "equals" } } ], "combinator": "and" }, "renameOutput": true, "outputKey": "Boite2" },
+          { "conditions": { "options": { "caseSensitive": false, "typeValidation": "loose" }, "conditions": [ { "leftValue": "={{ $('Prepare Email').item.json.mailbox }}", "rightValue": "user3@inee.lu", "operator": { "type": "string", "operation": "equals" } } ], "combinator": "and" }, "renameOutput": true, "outputKey": "Boite3" },
+          { "conditions": { "options": { "caseSensitive": false, "typeValidation": "loose" }, "conditions": [ { "leftValue": "={{ $('Prepare Email').item.json.mailbox }}", "rightValue": "user4@inee.lu", "operator": { "type": "string", "operation": "equals" } } ], "combinator": "and" }, "renameOutput": true, "outputKey": "Boite4" },
+          { "conditions": { "options": { "caseSensitive": false, "typeValidation": "loose" }, "conditions": [ { "leftValue": "={{ $('Prepare Email').item.json.mailbox }}", "rightValue": "contact@inee.lu", "operator": { "type": "string", "operation": "equals" } } ], "combinator": "and" }, "renameOutput": true, "outputKey": "Boite5" },
+          { "conditions": { "options": { "caseSensitive": false, "typeValidation": "loose" }, "conditions": [ { "leftValue": "={{ $('Prepare Email').item.json.mailbox }}", "rightValue": "info@inee.lu", "operator": { "type": "string", "operation": "equals" } } ], "combinator": "and" }, "renameOutput": true, "outputKey": "Boite6" }
+        ] },
+        "options": { "fallbackOutput": "none" }
+      },
+      "id": "route-boite",
+      "name": "Route boite",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [1760, 700]
+    },
+    {
+      "parameters": { "resource": "draft", "subject": "=RE: {{ $('Prepare Email').item.json.subject }}", "bodyContent": "={{ $json.brouillon }}", "toRecipients": "={{ $('Prepare Email').item.json.senderEmail }}", "options": {} },
+      "id": "draft-1",
+      "name": "Brouillon boite 1",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [2000, 360],
+      "credentials": { "microsoftOutlookOAuth2Api": { "id": "REMPLACER", "name": "Outlook prive 1" } }
+    },
+    {
+      "parameters": { "resource": "draft", "subject": "=RE: {{ $('Prepare Email').item.json.subject }}", "bodyContent": "={{ $json.brouillon }}", "toRecipients": "={{ $('Prepare Email').item.json.senderEmail }}", "options": {} },
+      "id": "draft-2",
+      "name": "Brouillon boite 2",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [2000, 480],
+      "credentials": { "microsoftOutlookOAuth2Api": { "id": "REMPLACER", "name": "Outlook prive 2" } }
+    },
+    {
+      "parameters": { "resource": "draft", "subject": "=RE: {{ $('Prepare Email').item.json.subject }}", "bodyContent": "={{ $json.brouillon }}", "toRecipients": "={{ $('Prepare Email').item.json.senderEmail }}", "options": {} },
+      "id": "draft-3",
+      "name": "Brouillon boite 3",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [2000, 600],
+      "credentials": { "microsoftOutlookOAuth2Api": { "id": "REMPLACER", "name": "Outlook prive 3" } }
+    },
+    {
+      "parameters": { "resource": "draft", "subject": "=RE: {{ $('Prepare Email').item.json.subject }}", "bodyContent": "={{ $json.brouillon }}", "toRecipients": "={{ $('Prepare Email').item.json.senderEmail }}", "options": {} },
+      "id": "draft-4",
+      "name": "Brouillon boite 4",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [2000, 720],
+      "credentials": { "microsoftOutlookOAuth2Api": { "id": "REMPLACER", "name": "Outlook prive 4" } }
+    },
+    {
+      "parameters": { "resource": "draft", "subject": "=RE: {{ $('Prepare Email').item.json.subject }}", "bodyContent": "={{ $json.brouillon }}", "toRecipients": "={{ $('Prepare Email').item.json.senderEmail }}", "options": {} },
+      "id": "draft-5",
+      "name": "Brouillon boite 5",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [2000, 840],
+      "credentials": { "microsoftOutlookOAuth2Api": { "id": "REMPLACER", "name": "Outlook partage 1 (contact@)" } }
+    },
+    {
+      "parameters": { "resource": "draft", "subject": "=RE: {{ $('Prepare Email').item.json.subject }}", "bodyContent": "={{ $json.brouillon }}", "toRecipients": "={{ $('Prepare Email').item.json.senderEmail }}", "options": {} },
+      "id": "draft-6",
+      "name": "Brouillon boite 6",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [2000, 960],
+      "credentials": { "microsoftOutlookOAuth2Api": { "id": "REMPLACER", "name": "Outlook partage 2 (info@)" } }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Choisit le canal Teams prive selon la boite qui a recu l email.\n// >>> Remplace les REMPLACER par les vrais teamId/channelId de chaque personne.\nconst e = $('Prepare Email').item.json;\nconst p = $('Parse Email JSON').item.json;\nconst m = (e.mailbox || '').toLowerCase();\nconst table = {\n  'user1@inee.lu':   { teamId: 'REMPLACER', channelId: 'REMPLACER' },\n  'user2@inee.lu':   { teamId: 'REMPLACER', channelId: 'REMPLACER' },\n  'user3@inee.lu':   { teamId: 'REMPLACER', channelId: 'REMPLACER' },\n  'user4@inee.lu':   { teamId: 'REMPLACER', channelId: 'REMPLACER' },\n  'contact@inee.lu': { teamId: 'REMPLACER', channelId: 'REMPLACER' },\n  'info@inee.lu':    { teamId: 'REMPLACER', channelId: 'REMPLACER' }\n};\nconst dest = table[m] || { teamId: 'REMPLACER', channelId: 'REMPLACER' };\nreturn { json: { teamId: dest.teamId, channelId: dest.channelId, classification: p.classification, resume: p.resume, actions: p.actions, brouillon: p.brouillon, mailbox: e.mailbox, senderName: e.senderName, subject: e.subject } };"
+      },
+      "id": "map-canal",
+      "name": "Map canal",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2240, 660]
+    },
+    {
+      "parameters": {
+        "resource": "channelMessage",
+        "operation": "create",
+        "teamId": "={{ $json.teamId }}",
+        "channelId": "={{ $json.channelId }}",
+        "contentType": "text",
+        "message": "=[{{ $json.classification }}] Email recu sur {{ $json.mailbox }} — de {{ $json.senderName }}\nObjet: {{ $json.subject }}\n\nResume: {{ $json.resume }}\nActions: {{ $json.actions }}\n\n--- Brouillon prepare (dans ta boite Outlook) ---\n{{ $json.brouillon }}",
+        "options": {}
+      },
+      "id": "notify-teams",
+      "name": "Notifier Teams",
+      "type": "n8n-nodes-base.microsoftTeams",
+      "typeVersion": 2,
+      "position": [2440, 660],
+      "credentials": { "microsoftTeamsOAuth2Api": { "id": "REMPLACER", "name": "Microsoft Teams" } }
+    }
+  ],
+  "connections": {
+    "Teams - User 1": { "main": [[{ "node": "Capture Teams", "type": "main", "index": 0 }]] },
+    "Teams - User 2": { "main": [[{ "node": "Capture Teams", "type": "main", "index": 0 }]] },
+    "Teams - User 3": { "main": [[{ "node": "Capture Teams", "type": "main", "index": 0 }]] },
+    "Teams - User 4": { "main": [[{ "node": "Capture Teams", "type": "main", "index": 0 }]] },
+    "Capture Teams": { "main": [[{ "node": "Login (Teams)", "type": "main", "index": 0 }]] },
+
+    "Webhook CRM": { "main": [[{ "node": "Login (CRM)", "type": "main", "index": 0 }]] },
+
+    "Outlook privee 1": { "main": [[{ "node": "Prepare Email", "type": "main", "index": 0 }]] },
+    "Outlook privee 2": { "main": [[{ "node": "Prepare Email", "type": "main", "index": 0 }]] },
+    "Outlook privee 3": { "main": [[{ "node": "Prepare Email", "type": "main", "index": 0 }]] },
+    "Outlook privee 4": { "main": [[{ "node": "Prepare Email", "type": "main", "index": 0 }]] },
+    "Outlook partagee 1": { "main": [[{ "node": "Prepare Email", "type": "main", "index": 0 }]] },
+    "Outlook partagee 2": { "main": [[{ "node": "Prepare Email", "type": "main", "index": 0 }]] },
+
+    "Login (Teams)": { "main": [[{ "node": "Normalize Teams", "type": "main", "index": 0 }]] },
+    "Login (CRM)": { "main": [[{ "node": "Normalize CRM", "type": "main", "index": 0 }]] },
+    "Prepare Email": { "main": [[{ "node": "Login (Email)", "type": "main", "index": 0 }]] },
+    "Login (Email)": { "main": [[{ "node": "Normalize Email", "type": "main", "index": 0 }]] },
+
+    "Normalize Teams": { "main": [[{ "node": "Assistant INEE", "type": "main", "index": 0 }]] },
+    "Normalize CRM": { "main": [[{ "node": "Assistant INEE", "type": "main", "index": 0 }]] },
+    "Normalize Email": { "main": [[{ "node": "Assistant INEE", "type": "main", "index": 0 }]] },
+
+    "Claude": { "ai_languageModel": [[{ "node": "Assistant INEE", "type": "ai_languageModel", "index": 0 }]] },
+    "Memoire": { "ai_memory": [[{ "node": "Assistant INEE", "type": "ai_memory", "index": 0 }]] },
+    "search_company": { "ai_tool": [[{ "node": "Assistant INEE", "type": "ai_tool", "index": 0 }]] },
+    "list_invoices": { "ai_tool": [[{ "node": "Assistant INEE", "type": "ai_tool", "index": 0 }]] },
+    "get_stats": { "ai_tool": [[{ "node": "Assistant INEE", "type": "ai_tool", "index": 0 }]] },
+
+    "Assistant INEE": { "main": [[{ "node": "Route reponse", "type": "main", "index": 0 }]] },
+    "Route reponse": {
+      "main": [
+        [{ "node": "Repondre Teams", "type": "main", "index": 0 }],
+        [{ "node": "Repondre Webhook", "type": "main", "index": 0 }],
+        [{ "node": "Parse Email JSON", "type": "main", "index": 0 }]
+      ]
+    },
+    "Parse Email JSON": { "main": [[{ "node": "Route boite", "type": "main", "index": 0 }]] },
+    "Route boite": {
+      "main": [
+        [{ "node": "Brouillon boite 1", "type": "main", "index": 0 }],
+        [{ "node": "Brouillon boite 2", "type": "main", "index": 0 }],
+        [{ "node": "Brouillon boite 3", "type": "main", "index": 0 }],
+        [{ "node": "Brouillon boite 4", "type": "main", "index": 0 }],
+        [{ "node": "Brouillon boite 5", "type": "main", "index": 0 }],
+        [{ "node": "Brouillon boite 6", "type": "main", "index": 0 }]
+      ]
+    },
+    "Brouillon boite 1": { "main": [[{ "node": "Map canal", "type": "main", "index": 0 }]] },
+    "Brouillon boite 2": { "main": [[{ "node": "Map canal", "type": "main", "index": 0 }]] },
+    "Brouillon boite 3": { "main": [[{ "node": "Map canal", "type": "main", "index": 0 }]] },
+    "Brouillon boite 4": { "main": [[{ "node": "Map canal", "type": "main", "index": 0 }]] },
+    "Brouillon boite 5": { "main": [[{ "node": "Map canal", "type": "main", "index": 0 }]] },
+    "Brouillon boite 6": { "main": [[{ "node": "Map canal", "type": "main", "index": 0 }]] },
+    "Map canal": { "main": [[{ "node": "Notifier Teams", "type": "main", "index": 0 }]] }
+  },
+  "settings": {},
+  "active": false
+}

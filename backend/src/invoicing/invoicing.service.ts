@@ -1,0 +1,544 @@
+import { Injectable, NotFoundException, BadRequestException, MethodNotAllowedException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { MailService } from '../mail/mail.service';
+import { AuditService } from '../audit/audit.service';
+import { CreateQuoteDto, UpdateQuoteDto } from './dto/quote.dto';
+import { CreateInvoiceDto, UpdateInvoiceDto, CreateInvoiceFromQuoteDto } from './dto/invoice.dto';
+
+const VAT_LU = 17;
+const fmt = (n: number) => new Intl.NumberFormat('fr-LU', { style: 'currency', currency: 'EUR' }).format(n);
+
+@Injectable()
+export class InvoicingService {
+  constructor(private prisma: PrismaService, private mail: MailService, private audit: AuditService) {}
+
+  // ─── Numérotation ──────────────────────────────────────────────────────────
+
+  private async nextQuoteNumber(): Promise<string> {
+    const year = new Date().getFullYear();
+    const count = await this.prisma.quote.count();
+    return `Dev - ${year} - ${String(count + 1).padStart(3, '0')}`;
+  }
+
+  private async nextInvoiceNumber(): Promise<string> {
+    const year = new Date().getFullYear();
+    // Compter uniquement les factures qui ont déjà un numéro (comptabilisées)
+    const count = await (this.prisma as any).invoice.count({ where: { number: { not: null } } });
+    return `Fact - ${year} - ${String(count + 1).padStart(3, '0')}`;
+  }
+
+  // ─── Calcul TVA ────────────────────────────────────────────────────────────
+
+  private calcTotals(lines: { quantity: number; unitPrice: number; discountRate?: number; lineVatRate?: number }[], defaultVatRate = VAT_LU) {
+    let subtotal = 0;
+    let vatAmount = 0;
+    for (const l of lines) {
+      const disc = l.discountRate ?? 0;
+      const lineTotal = Math.round(l.quantity * l.unitPrice * (1 - disc / 100) * 100) / 100;
+      subtotal += lineTotal;
+      const vr = l.lineVatRate ?? defaultVatRate;
+      vatAmount += Math.round(lineTotal * vr) / 100;
+    }
+    subtotal = Math.round(subtotal * 100) / 100;
+    vatAmount = Math.round(vatAmount * 100) / 100;
+    const total = Math.round((subtotal + vatAmount) * 100) / 100;
+    return { subtotal, vatRate: defaultVatRate, vatAmount, total };
+  }
+
+  private lineTotal(l: { quantity: number; unitPrice: number; discountRate?: number }): number {
+    const disc = l.discountRate ?? 0;
+    return Math.round(l.quantity * l.unitPrice * (1 - disc / 100) * 100) / 100;
+  }
+
+  // ─── DEVIS ─────────────────────────────────────────────────────────────────
+
+  findAllQuotes(status?: string) {
+    return this.prisma.quote.findMany({
+      where: status ? { status: status as any } : undefined,
+      include: {
+        company: { select: { id: true, name: true } },
+        createdBy: { select: { id: true, firstName: true, lastName: true } },
+        lines: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async findOneQuote(id: string) {
+    const quote = await this.prisma.quote.findUnique({
+      where: { id },
+      include: { company: true, createdBy: { select: { id: true, firstName: true, lastName: true } }, lines: true },
+    });
+    if (!quote) throw new NotFoundException('Quote not found');
+    return quote;
+  }
+
+  async createQuote(data: CreateQuoteDto, userId: string) {
+    const { lines, vatRate = VAT_LU, ...rest } = data;
+    const totals = this.calcTotals(lines, vatRate);
+    const number = await this.nextQuoteNumber();
+
+    const quote = await this.prisma.quote.create({
+      data: { ...rest, number, createdById: userId, ...totals, lines: { create: lines.map(l => ({ ...l, total: this.lineTotal(l) })) } },
+      include: { company: true, lines: true },
+    });
+    await this.audit.log({ entityType: 'Quote', entityId: quote.id, userId, action: `Devis créé (${number})`, details: `Total : ${totals.total} €` });
+    return quote;
+  }
+
+  async updateQuote(id: string, data: UpdateQuoteDto) {
+    await this.findOneQuote(id);
+    const { lines, vatRate = VAT_LU, ...rest } = data;
+    const totals = this.calcTotals(lines, vatRate);
+
+    return this.prisma.quote.update({
+      where: { id },
+      data: {
+        ...rest,
+        ...totals,
+        lines: {
+          deleteMany: {},
+          create: lines.map(l => ({ ...l, total: this.lineTotal(l) })),
+        },
+      } as any,
+      include: { company: true, lines: true },
+    });
+  }
+
+  async removeQuote(id: string) {
+    throw new MethodNotAllowedException('Les devis ne peuvent pas être supprimés.');
+  }
+
+  private filterActiveRecipients(recipients: string[]): string[] {
+    // This filters at the service level only when auto-building the list.
+    // For explicit recipient arrays passed from frontend, we trust the frontend
+    // to only include active contacts. Backend validation is a safety net.
+    return recipients.filter(r => r && r.includes('@'));
+  }
+
+  async sendQuote(id: string, recipients: string[]) {
+    const quote = await this.findOneQuote(id);
+    const linesHtml = (quote.lines ?? []).map(l =>
+      `<tr><td style="padding:6px 10px;border-bottom:1px solid #eee">${l.description}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:center">${l.quantity}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right">${fmt(l.unitPrice)}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right;font-weight:bold">${fmt(l.total)}</td></tr>`
+    ).join('');
+    const html = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;color:#1A1008">
+      <div style="background:#1A1008;padding:20px 30px;border-radius:8px 8px 0 0">
+        <h1 style="color:#C8803A;margin:0;font-size:24px;letter-spacing:3px">INEE</h1>
+        <p style="color:#F5EDE4;margin:4px 0 0;font-size:12px">37, Rue du Baumbusch — 8213 Mamer — TVA : LU36332830</p>
+      </div>
+      <div style="background:#fff;padding:24px 30px;border:1px solid #E8DDD5;border-top:none;border-radius:0 0 8px 8px">
+        <h2 style="color:#C8803A;margin:0 0 4px">DEVIS ${quote.number}</h2>
+        ${quote.company ? `<p style="color:#7A6050;margin:0 0 16px">Client : <strong style="color:#1A1008">${quote.company.name}</strong></p>` : ''}
+        ${(quote as any).vatMention ? `<p style="background:#FFFBEB;border:1px solid #FDE68A;padding:8px 12px;border-radius:4px;font-size:12px;color:#92400E">${(quote as any).vatMention}</p>` : ''}
+        <table style="width:100%;border-collapse:collapse;margin:16px 0">
+          <thead><tr style="background:#F5EDE4"><th style="padding:8px 10px;text-align:left;font-size:12px;color:#7A6050">Description</th><th style="padding:8px 10px;text-align:center;font-size:12px;color:#7A6050">Qté</th><th style="padding:8px 10px;text-align:right;font-size:12px;color:#7A6050">Prix HT</th><th style="padding:8px 10px;text-align:right;font-size:12px;color:#7A6050">Total HT</th></tr></thead>
+          <tbody>${linesHtml}</tbody>
+        </table>
+        <div style="text-align:right;margin-top:8px">
+          <p style="margin:4px 0;color:#7A6050">HT : ${fmt(quote.subtotal)}</p>
+          <p style="margin:4px 0;color:#7A6050">TVA ${quote.vatRate}% : ${fmt(quote.vatAmount)}</p>
+          <p style="margin:8px 0;font-size:16px;font-weight:bold;background:#C8803A;color:#fff;display:inline-block;padding:6px 16px;border-radius:4px">Total TTC : ${fmt(quote.total)}</p>
+        </div>
+        ${quote.notes ? `<p style="margin-top:16px;color:#7A6050;font-size:13px"><em>${quote.notes}</em></p>` : ''}
+      </div>
+    </div>`;
+    await this.mail.sendBilling({ to: recipients, subject: `Devis ${quote.number} — INEE`, html });
+    return this.prisma.quote.update({ where: { id }, data: { status: 'SENT' }, include: { company: true, lines: true } });
+  }
+
+  // ─── FACTURES ──────────────────────────────────────────────────────────────
+
+  findAllInvoices(status?: string) {
+    return this.prisma.invoice.findMany({
+      where: status ? { status: status as any } : undefined,
+      include: {
+        company: { select: { id: true, name: true } },
+        createdBy: { select: { id: true, firstName: true, lastName: true } },
+        lines: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async findOneInvoice(id: string) {
+    const invoice = await this.prisma.invoice.findUnique({
+      where: { id },
+      include: { company: true, createdBy: { select: { id: true, firstName: true, lastName: true } }, lines: true },
+    });
+    if (!invoice) throw new NotFoundException('Invoice not found');
+    return invoice;
+  }
+
+  async createInvoice(data: CreateInvoiceDto, userId: string) {
+    const { lines, vatRate = VAT_LU, ...rest } = data;
+    const totals = this.calcTotals(lines, vatRate);
+    // Brouillon : pas de numéro assigné immédiatement
+
+    const inv = await (this.prisma as any).invoice.create({
+      data: {
+        ...rest,
+        createdById: userId,
+        ...totals,
+        number: null,
+        lines: { create: lines.map(l => ({ ...l, total: this.lineTotal(l) })) },
+      },
+      include: { company: true, lines: true },
+    });
+    await this.audit.log({ entityType: 'Invoice', entityId: inv.id, userId, action: 'Brouillon créé', details: `Client : ${inv.company?.name ?? '—'} · Total : ${inv.total} €` });
+    return inv;
+  }
+
+  async postInvoice(id: string) {
+    const inv = await this.findOneInvoice(id);
+    if ((inv as any).number) throw new BadRequestException('Cette facture est déjà comptabilisée.');
+    const number = await this.nextInvoiceNumber();
+    const now = new Date();
+    const posted = await (this.prisma as any).invoice.update({
+      where: { id },
+      data: { number, issueDate: now },
+      include: { company: true, lines: true },
+    });
+    await this.audit.log({ entityType: 'Invoice', entityId: id, action: `Comptabilisée → ${number}`, details: `Date : ${now.toLocaleDateString('fr-LU')}` });
+    return posted;
+  }
+
+  // ─── Templates email facture ──────────────────────────────────────────────
+
+  private buildInvoiceEmailHtml(invoice: any, type: string, lang: string): string {
+    const fmtDate = (d?: string) => d ? new Date(d).toLocaleDateString(lang === 'en' ? 'en-GB' : 'fr-LU') : '—';
+    const num = invoice.number ?? '—';
+    const tot = fmt(invoice.total);
+    const due = fmtDate(invoice.dueDate);
+    const bank = `Revolut | IBAN : LT07 3250 0544 6550 1204 | BIC : REVOLT21`;
+
+    const templates: Record<string, Record<string, { subject: string; body: string }>> = {
+      send: {
+        fr: {
+          subject: `Facture N° ${num} — INEE`,
+          body: `Madame, Monsieur,\n\nVeuillez trouver ci-joint notre facture N° ${num} d'un montant de ${tot}, établie le ${fmtDate(invoice.issueDate)} et payable au plus tard le ${due}.\n\nNos coordonnées bancaires :\n${bank}\n\nPour toute question, contactez-nous à invoices@inee.lu.\n\nCordialement,\nINEE S.à r.l.`,
+        },
+        en: {
+          subject: `Invoice No. ${num} — INEE`,
+          body: `Dear Sir or Madam,\n\nPlease find attached our invoice No. ${num} for ${tot}, dated ${fmtDate(invoice.issueDate)} and payable by ${due}.\n\nOur bank details:\n${bank}\n\nFor any questions, please contact us at invoices@inee.lu.\n\nKind regards,\nINEE S.à r.l.`,
+        },
+      },
+      reminder1: {
+        fr: {
+          subject: `Rappel — Facture N° ${num} échue le ${due}`,
+          body: `Madame, Monsieur,\n\nSauf erreur de notre part, notre facture N° ${num} d'un montant de ${tot}, dont l'échéance était fixée au ${due}, n'a pas encore été réglée.\n\nNous vous serions reconnaissants de bien vouloir procéder au paiement dans les meilleurs délais.\n\nSi ce paiement a déjà été effectué, veuillez ignorer ce message.\n\nCordialement,\nINEE S.à r.l.`,
+        },
+        en: {
+          subject: `Reminder — Invoice No. ${num} due ${due}`,
+          body: `Dear Sir or Madam,\n\nUnless there has been an oversight, our invoice No. ${num} for ${tot}, which was due on ${due}, has not yet been settled.\n\nWe kindly ask you to proceed with payment at your earliest convenience.\n\nIf payment has already been made, please disregard this message.\n\nKind regards,\nINEE S.à r.l.`,
+        },
+      },
+      reminder2: {
+        fr: {
+          subject: `2ème rappel — Facture N° ${num} — Règlement urgent`,
+          body: `Madame, Monsieur,\n\nMalgré notre premier rappel, nous n'avons pas reçu le règlement de notre facture N° ${num} d'un montant de ${tot}, échue depuis le ${due}.\n\nNous vous invitons instamment à régulariser votre situation dans un délai de 8 jours ouvrés.\n\nConformément à nos CGV, des intérêts de retard au taux de 8 %/an sont applicables à compter du jour suivant l'échéance.\n\nCordialement,\nINEE S.à r.l.`,
+        },
+        en: {
+          subject: `2nd Reminder — Invoice No. ${num} — Urgent Payment Required`,
+          body: `Dear Sir or Madam,\n\nDespite our previous reminder, we have not received payment for invoice No. ${num} for ${tot}, due on ${due}.\n\nWe strongly urge you to settle this balance within 8 business days.\n\nAs per our Terms and Conditions, late payment interest at 8% per annum applies from the day following the due date.\n\nKind regards,\nINEE S.à r.l.`,
+        },
+      },
+      reminder3: {
+        fr: {
+          subject: `DERNIER RAPPEL — Facture N° ${num} — Mise en demeure`,
+          body: `Madame, Monsieur,\n\nMalgré nos deux relances précédentes, la facture N° ${num} d'un montant de ${tot} demeure impayée depuis le ${due}.\n\nSans règlement sous 48 heures, nous procéderons à :\n• Application d'une indemnité forfaitaire de 150 EUR\n• Suspension de toute prestation en cours\n• Transmission à notre service juridique pour recouvrement\n\nContactez-nous immédiatement à invoices@inee.lu pour trouver une solution amiable.\n\nINEE S.à r.l.`,
+        },
+        en: {
+          subject: `FINAL NOTICE — Invoice No. ${num} — Formal Demand`,
+          body: `Dear Sir or Madam,\n\nDespite two previous reminders, invoice No. ${num} for ${tot} remains unpaid since ${due}.\n\nUnless full payment is received within 48 hours, we will:\n• Apply a flat-rate collection fee of €150\n• Suspend all ongoing services\n• Refer this matter to our legal department\n\nPlease contact us immediately at invoices@inee.lu.\n\nINEE S.à r.l.`,
+        },
+      },
+    };
+
+    const tpl = templates[type]?.[lang] ?? templates.send.fr;
+    const bodyHtml = tpl.body.replace(/\n/g, '<br>');
+    const isEn = lang === 'en';
+    const linesHtml = (invoice.lines ?? []).map((l: any) =>
+      `<tr><td style="padding:6px 10px;border-bottom:1px solid #eee">${l.description}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:center">${l.quantity}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right">${fmt(l.unitPrice)}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right;font-weight:bold">${fmt(l.total)}</td></tr>`
+    ).join('');
+    const docLabel   = isEn ? 'INVOICE' : 'FACTURE';
+    const descLabel  = isEn ? 'Description' : 'Description';
+    const qtyLabel   = isEn ? 'Qty' : 'Qté';
+    const puLabel    = isEn ? 'Unit price' : 'Prix HT';
+    const totLabel   = isEn ? 'Total' : 'Total HT';
+    const htLabel    = isEn ? 'Subtotal excl. VAT' : 'HT';
+    const ttcLabel   = isEn ? 'Total incl. VAT' : 'Total TTC';
+    const bankLabel  = isEn ? 'Bank details' : 'Coordonnées bancaires';
+    return `<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;color:#1A1008">
+      <div style="background:#1A1008;padding:20px 30px;border-radius:8px 8px 0 0">
+        <h1 style="color:#C8803A;margin:0;font-size:24px;letter-spacing:3px">INEE</h1>
+        <p style="color:#F5EDE4;margin:4px 0 0;font-size:12px">37, Rue du Baumbusch — 8213 Mamer — TVA : LU36332830</p>
+      </div>
+      <div style="background:#fff;padding:24px 30px;border:1px solid #E8DDD5;border-top:none;border-radius:0 0 8px 8px">
+        <p style="font-size:14px;line-height:1.7;color:#1A1008;margin:0 0 20px">${bodyHtml}</p>
+        <div style="border-top:1px solid #E8DDD5;padding-top:16px">
+          <h2 style="color:#C8803A;margin:0 0 4px;font-size:16px">${docLabel} N° ${num}</h2>
+          ${invoice.company ? `<p style="color:#7A6050;margin:0 0 12px;font-size:13px">${isEn ? 'Client' : 'Client'} : <strong style="color:#1A1008">${invoice.company.name}</strong></p>` : ''}
+          ${linesHtml.length ? `<table style="width:100%;border-collapse:collapse;margin:12px 0;font-size:13px">
+            <thead><tr style="background:#F5EDE4"><th style="padding:8px 10px;text-align:left;color:#7A6050">${descLabel}</th><th style="padding:8px 10px;text-align:center;color:#7A6050">${qtyLabel}</th><th style="padding:8px 10px;text-align:right;color:#7A6050">${puLabel}</th><th style="padding:8px 10px;text-align:right;color:#7A6050">${totLabel}</th></tr></thead>
+            <tbody>${linesHtml}</tbody>
+          </table>
+          <div style="text-align:right;margin-top:8px">
+            <p style="margin:4px 0;color:#7A6050;font-size:13px">${htLabel} : ${fmt(invoice.subtotal)}</p>
+            <p style="margin:8px 0;font-size:15px;font-weight:bold;background:#C8803A;color:#fff;display:inline-block;padding:6px 16px;border-radius:4px">${ttcLabel} : ${tot}</p>
+          </div>` : ''}
+          ${invoice.vatMention ? `<p style="margin-top:12px;font-size:11px;color:#92400E;background:#FEF3C7;padding:8px 12px;border-radius:4px">${invoice.vatMention}</p>` : ''}
+        </div>
+        <div style="margin-top:20px;padding:12px;background:#F0FDF4;border-radius:4px;font-size:13px">
+          <strong>${bankLabel}</strong><br>${bank}
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // ─── Envoi facture avec options (type + langue) ────────────────────────────
+
+  async sendInvoiceWithOptions(id: string, type: string, lang: string, userId?: string, pdfBase64?: string) {
+    const invoice = await this.findOneInvoice(id);
+    if (!(invoice as any).number) throw new BadRequestException('Comptabilisez la facture avant de l\'envoyer.');
+    const recipients = await this.getCompanyRecipients(invoice.companyId);
+    if (recipients.length === 0) throw new BadRequestException('Aucun contact autorisé pour ce client.');
+
+    const html = this.buildInvoiceEmailHtml(invoice, type, lang);
+    const num = (invoice as any).number ?? '';
+    const subjects: Record<string, Record<string, string>> = {
+      send:      { fr: `Facture N° ${num} — INEE`, en: `Invoice No. ${num} — INEE` },
+      reminder1: { fr: `Rappel 1 — Facture N° ${num}`, en: `Reminder 1 — Invoice No. ${num}` },
+      reminder2: { fr: `Rappel 2 — Facture N° ${num}`, en: `2nd Reminder — Invoice No. ${num}` },
+      reminder3: { fr: `DERNIER RAPPEL — Facture N° ${num}`, en: `FINAL NOTICE — Invoice No. ${num}` },
+    };
+    const subject = subjects[type]?.[lang] ?? subjects.send.fr;
+    await this.mail.sendBilling({ to: recipients, subject, html, pdfBase64, pdfFilename: pdfBase64 ? `${num}.pdf` : undefined });
+    await this.audit.log({ entityType: 'Invoice', entityId: id, userId, action: `Facture envoyée (${type}, ${lang})`, details: `Destinataires : ${recipients.join(', ')}` });
+    return (this.prisma as any).invoice.update({
+      where: { id },
+      data: { status: 'SENT', lang },
+      include: { company: true, lines: true },
+    });
+  }
+
+  // ─── Récupération des destinataires autorisés ──────────────────────────────
+
+  private async getCompanyRecipients(companyId: string | null): Promise<string[]> {
+    if (!companyId) return [];
+    const cts = await this.prisma.contact.findMany({
+      where: { companyId, canReceiveInvoices: true, isActive: true, email: { not: null } } as any,
+      select: { email: true },
+    });
+    return cts.map((c: any) => c.email).filter(Boolean);
+  }
+
+  // ─── Envoi automatique FACTURE ─────────────────────────────────────────────
+
+  async sendInvoiceAuto(id: string) {
+    const invoice = await this.findOneInvoice(id);
+    if (!(invoice as any).number) throw new BadRequestException('Comptabilisez la facture avant de l\'envoyer.');
+    const recipients = await this.getCompanyRecipients(invoice.companyId);
+    if (recipients.length === 0) throw new BadRequestException('Aucun contact autorisé à recevoir les factures pour ce client.');
+    const linesHtml = (invoice.lines ?? []).map(l =>
+      `<tr><td style="padding:6px 10px;border-bottom:1px solid #eee">${l.description}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:center">${l.quantity}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right">${fmt(l.unitPrice)}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right;font-weight:bold">${fmt(l.total)}</td></tr>`
+    ).join('');
+    const html = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;color:#1A1008">
+      <div style="background:#1A1008;padding:20px 30px;border-radius:8px 8px 0 0">
+        <h1 style="color:#C8803A;margin:0;font-size:24px;letter-spacing:3px">INEE</h1>
+        <p style="color:#F5EDE4;margin:4px 0 0;font-size:12px">37, Rue du Baumbusch — 8213 Mamer — TVA : LU36332830</p>
+      </div>
+      <div style="background:#fff;padding:24px 30px;border:1px solid #E8DDD5;border-top:none;border-radius:0 0 8px 8px">
+        <h2 style="color:#C8803A;margin:0 0 4px">FACTURE ${(invoice as any).number}</h2>
+        ${invoice.company ? `<p style="color:#7A6050;margin:0 0 16px">Client : <strong style="color:#1A1008">${invoice.company.name}</strong></p>` : ''}
+        ${invoice.dueDate ? `<p style="color:#7A6050;margin:0 0 16px">Échéance : <strong style="color:#1A1008">${new Date(invoice.dueDate).toLocaleDateString('fr-LU')}</strong></p>` : ''}
+        <table style="width:100%;border-collapse:collapse;margin:16px 0">
+          <thead><tr style="background:#F5EDE4"><th style="padding:8px 10px;text-align:left;font-size:12px;color:#7A6050">Description</th><th style="padding:8px 10px;text-align:center;font-size:12px;color:#7A6050">Qté</th><th style="padding:8px 10px;text-align:right;font-size:12px;color:#7A6050">Prix HT</th><th style="padding:8px 10px;text-align:right;font-size:12px;color:#7A6050">Total HT</th></tr></thead>
+          <tbody>${linesHtml}</tbody>
+        </table>
+        <div style="text-align:right;margin-top:8px">
+          <p style="margin:4px 0;color:#7A6050">HT : ${fmt(invoice.subtotal)}</p>
+          <p style="margin:8px 0;font-size:16px;font-weight:bold;background:#C8803A;color:#fff;display:inline-block;padding:6px 16px;border-radius:4px">Total TTC : ${fmt(invoice.total)}</p>
+        </div>
+        <div style="margin-top:20px;padding:12px;background:#F0FDF4;border-radius:4px;font-size:13px">
+          <strong>Coordonnées bancaires</strong><br>Banque : Revolut | IBAN : LT07 3250 0544 6550 1204 | BIC : REVOLT21
+        </div>
+        ${invoice.notes ? `<p style="margin-top:16px;color:#7A6050;font-size:13px"><em>${invoice.notes}</em></p>` : ''}
+      </div>
+    </div>`;
+    await this.mail.sendBilling({ to: recipients, subject: `Facture ${(invoice as any).number} — INEE`, html });
+    await this.audit.log({ entityType: 'Invoice', entityId: id, action: 'Envoyée par email', details: `Destinataires : ${recipients.join(', ')}` });
+    return this.prisma.invoice.update({ where: { id }, data: { status: 'SENT' }, include: { company: true, lines: true } });
+  }
+
+  // ─── Envoi automatique DEVIS ───────────────────────────────────────────────
+
+  async sendQuoteAuto(id: string, userId?: string, pdfBase64?: string, lang = 'fr') {
+    const quote = await this.findOneQuote(id);
+    if (['REJECTED', 'EXPIRED', 'CANCELLED'].includes(quote.status as string)) {
+      throw new BadRequestException('Ce devis ne peut plus être envoyé.');
+    }
+    const recipients = await this.getCompanyRecipients(quote.companyId);
+    // Récupérer l'email de l'utilisateur connecté comme expéditeur
+    const senderEmail = 'INEE <contact@inee.lu>';
+    if (recipients.length === 0) throw new BadRequestException('Aucun contact autorisé à recevoir les documents pour ce client.');
+    const isEn = lang === 'en';
+    const clientName = (quote.company as any)?.name ?? '';
+    const linesHtml = (quote.lines ?? []).map((l: any) =>
+      `<tr><td style="padding:6px 10px;border-bottom:1px solid #eee">${l.description}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:center">${l.quantity}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right">${fmt(l.unitPrice)}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right;font-weight:bold">${fmt(l.total)}</td></tr>`
+    ).join('');
+    const introText = isEn
+      ? `Dear Sir/Madam,<br><br>We are pleased to submit our quotation <strong>${quote.number}</strong>${clientName ? ` for <strong>${clientName}</strong>` : ''}. This document is valid for 30 days from its issue date.<br><br>Please find the full quote attached to this email.<br><br>We remain available for any questions and thank you for the trust you place in us.`
+      : `Madame, Monsieur,<br><br>Nous avons le plaisir de vous soumettre notre devis <strong>${quote.number}</strong>${clientName ? ` à l'attention de <strong>${clientName}</strong>` : ''}. Ce document est valable 30 jours à compter de sa date d'émission.<br><br>Vous trouverez le devis complet en pièce jointe à cet e-mail.<br><br>Nous restons disponibles pour toute question et vous remercions de la confiance que vous nous accordez.`;
+    const signatureText = isEn ? `Kind regards,<br><strong>The INEE team</strong>` : `Cordialement,<br><strong>L'équipe INEE</strong>`;
+    const subject = isEn ? `Quotation ${quote.number} — INEE` : `Devis ${quote.number} — INEE`;
+    const docLabel = isEn ? 'QUOTATION' : 'DEVIS';
+    const descLabel = isEn ? 'Description' : 'Description';
+    const qtyLabel = isEn ? 'Qty' : 'Qté';
+    const puLabel = isEn ? 'Unit price' : 'Prix HT';
+    const totLabel = isEn ? 'Total' : 'Total HT';
+    const htLabel = isEn ? 'Subtotal excl. VAT' : 'HT';
+    const ttcLabel = isEn ? 'Total incl. VAT' : 'Total TTC';
+    const clientLabel = isEn ? 'Client' : 'Client';
+
+    const html = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;color:#1A1008">
+      <div style="background:#1A1008;padding:20px 30px;border-radius:8px 8px 0 0">
+        <h1 style="color:#C8803A;margin:0;font-size:24px;letter-spacing:3px">INEE</h1>
+        <p style="color:#F5EDE4;margin:4px 0 0;font-size:12px">37, Rue du Baumbusch — 8213 Mamer — TVA : LU36332830</p>
+      </div>
+      <div style="background:#fff;padding:24px 30px;border:1px solid #E8DDD5;border-top:none;border-radius:0 0 8px 8px">
+        <p style="font-size:14px;line-height:1.7;color:#1A1008;margin:0 0 20px">${introText}</p>
+        <div style="border-top:1px solid #E8DDD5;padding-top:20px">
+          <h2 style="color:#C8803A;margin:0 0 4px;font-size:16px">${docLabel} ${quote.number}</h2>
+          ${clientName ? `<p style="color:#7A6050;margin:0 0 16px;font-size:13px">${clientLabel} : <strong style="color:#1A1008">${clientName}</strong></p>` : ''}
+          <table style="width:100%;border-collapse:collapse;margin:12px 0;font-size:13px">
+            <thead><tr style="background:#F5EDE4"><th style="padding:8px 10px;text-align:left;color:#7A6050">${descLabel}</th><th style="padding:8px 10px;text-align:center;color:#7A6050">${qtyLabel}</th><th style="padding:8px 10px;text-align:right;color:#7A6050">${puLabel}</th><th style="padding:8px 10px;text-align:right;color:#7A6050">${totLabel}</th></tr></thead>
+            <tbody>${linesHtml}</tbody>
+          </table>
+          <div style="text-align:right;margin-top:8px">
+            <p style="margin:4px 0;color:#7A6050;font-size:13px">${htLabel} : ${fmt(quote.subtotal)}</p>
+            <p style="margin:8px 0;font-size:15px;font-weight:bold;background:#C8803A;color:#fff;display:inline-block;padding:6px 16px;border-radius:4px">${ttcLabel} : ${fmt(quote.total)}</p>
+          </div>
+          ${quote.vatMention ? `<p style="margin-top:12px;font-size:11px;color:#92400E;background:#FEF3C7;padding:8px 12px;border-radius:4px">${quote.vatMention}</p>` : ''}
+          ${quote.notes ? `<p style="margin-top:12px;color:#7A6050;font-size:13px"><em>${quote.notes}</em></p>` : ''}
+        </div>
+        <div style="margin-top:24px;padding-top:16px;border-top:1px solid #E8DDD5;font-size:13px;color:#1A1008;line-height:1.6">
+          ${signatureText}<br>
+          <span style="color:#7A6050;font-size:12px">invoices@inee.lu</span>
+        </div>
+      </div>
+    </div>`;
+    await this.mail.sendBilling({ to: recipients, subject, html, pdfBase64, pdfFilename: pdfBase64 ? `${quote.number}.pdf` : undefined });
+    await this.audit.log({ entityType: 'Quote', entityId: id, userId, action: `Devis envoyé par email (${lang})`, details: `De : ${senderEmail} · À : ${recipients.join(', ')}` });
+    return this.prisma.quote.update({ where: { id }, data: { status: 'SENT' }, include: { company: true, lines: true } });
+  }
+
+  async createInvoiceFromQuote(data: CreateInvoiceFromQuoteDto, userId: string) {
+    const quote = await this.findOneQuote(data.quoteId);
+    if (quote.status !== 'ACCEPTED') throw new BadRequestException('Quote must be accepted before converting to invoice');
+
+    // Brouillon : pas de numéro, l'utilisateur comptabilise ensuite
+    return (this.prisma as any).invoice.create({
+      data: {
+        number: null,
+        companyId: quote.companyId,
+        createdById: userId,
+        dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
+        subtotal: quote.subtotal,
+        vatRate: quote.vatRate,
+        vatAmount: quote.vatAmount,
+        total: quote.total,
+        notes: quote.notes,
+        lines: {
+          create: quote.lines.map(l => ({
+            description: l.description,
+            quantity: l.quantity,
+            unitPrice: l.unitPrice,
+            total: l.total,
+          })),
+        },
+      },
+      include: { company: true, lines: true },
+    });
+  }
+
+  async updateInvoice(id: string, data: UpdateInvoiceDto) {
+    await this.findOneInvoice(id);
+    const { lines, vatRate = VAT_LU, paidAmount, status, waivedInterest, ...rest } = data as any;
+    const totals = this.calcTotals(lines, vatRate);
+
+    const updateData: any = { ...rest, ...totals };
+    if (paidAmount !== undefined) updateData.paidAmount = paidAmount;
+    if (status) updateData.status = status;
+    if (waivedInterest !== undefined) updateData.waivedInterest = waivedInterest;
+
+    const inv = await this.prisma.invoice.update({
+      where: { id },
+      data: { ...updateData, lines: { deleteMany: {}, create: lines.map(l => ({ ...l, total: Math.round(l.quantity * l.unitPrice * 100) / 100 })) } },
+      include: { company: true, lines: true },
+    });
+    if (status) await this.audit.log({ entityType: 'Invoice', entityId: id, action: `Statut → ${status}` });
+    return inv;
+  }
+
+  async removeInvoice(id: string) {
+    throw new MethodNotAllowedException('Les factures ne peuvent pas être supprimées.');
+  }
+
+  async sendInvoice(id: string, recipients: string[]) {
+    const invoice = await this.findOneInvoice(id);
+    const linesHtml = (invoice.lines ?? []).map(l =>
+      `<tr><td style="padding:6px 10px;border-bottom:1px solid #eee">${l.description}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:center">${l.quantity}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right">${fmt(l.unitPrice)}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right;font-weight:bold">${fmt(l.total)}</td></tr>`
+    ).join('');
+    const html = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;color:#1A1008">
+      <div style="background:#1A1008;padding:20px 30px;border-radius:8px 8px 0 0">
+        <h1 style="color:#C8803A;margin:0;font-size:24px;letter-spacing:3px">INEE</h1>
+        <p style="color:#F5EDE4;margin:4px 0 0;font-size:12px">37, Rue du Baumbusch — 8213 Mamer — TVA : LU36332830</p>
+      </div>
+      <div style="background:#fff;padding:24px 30px;border:1px solid #E8DDD5;border-top:none;border-radius:0 0 8px 8px">
+        <h2 style="color:#C8803A;margin:0 0 4px">FACTURE ${invoice.number}</h2>
+        ${invoice.company ? `<p style="color:#7A6050;margin:0 0 16px">Client : <strong style="color:#1A1008">${invoice.company.name}</strong></p>` : ''}
+        ${invoice.dueDate ? `<p style="color:#7A6050;margin:0 0 16px">Échéance : <strong style="color:#1A1008">${new Date(invoice.dueDate).toLocaleDateString('fr-LU')}</strong></p>` : ''}
+        ${(invoice as any).vatMention ? `<p style="background:#FFFBEB;border:1px solid #FDE68A;padding:8px 12px;border-radius:4px;font-size:12px;color:#92400E">${(invoice as any).vatMention}</p>` : ''}
+        <table style="width:100%;border-collapse:collapse;margin:16px 0">
+          <thead><tr style="background:#F5EDE4"><th style="padding:8px 10px;text-align:left;font-size:12px;color:#7A6050">Description</th><th style="padding:8px 10px;text-align:center;font-size:12px;color:#7A6050">Qté</th><th style="padding:8px 10px;text-align:right;font-size:12px;color:#7A6050">Prix HT</th><th style="padding:8px 10px;text-align:right;font-size:12px;color:#7A6050">Total HT</th></tr></thead>
+          <tbody>${linesHtml}</tbody>
+        </table>
+        <div style="text-align:right;margin-top:8px">
+          <p style="margin:4px 0;color:#7A6050">HT : ${fmt(invoice.subtotal)}</p>
+          <p style="margin:4px 0;color:#7A6050">TVA ${invoice.vatRate}% : ${fmt(invoice.vatAmount)}</p>
+          <p style="margin:8px 0;font-size:16px;font-weight:bold;background:#C8803A;color:#fff;display:inline-block;padding:6px 16px;border-radius:4px">Total TTC : ${fmt(invoice.total)}</p>
+        </div>
+        <div style="margin-top:20px;padding:12px;background:#F0FDF4;border-radius:4px;font-size:13px">
+          <strong>Coordonnées bancaires</strong><br>
+          Banque : Revolut | IBAN : LT07 3250 0544 6550 1204 | BIC : REVOLT21
+        </div>
+        ${invoice.notes ? `<p style="margin-top:16px;color:#7A6050;font-size:13px"><em>${invoice.notes}</em></p>` : ''}
+      </div>
+    </div>`;
+    await this.mail.sendBilling({ to: recipients, subject: `Facture ${invoice.number} — INEE`, html });
+    return this.prisma.invoice.update({ where: { id }, data: { status: 'SENT' }, include: { company: true, lines: true } });
+  }
+
+  // ─── STATS ─────────────────────────────────────────────────────────────────
+
+  async getStats() {
+    const [invoiceStats, quoteStats, overdue] = await Promise.all([
+      this.prisma.invoice.groupBy({
+        by: ['status'],
+        _sum: { total: true, paidAmount: true },
+        _count: true,
+      }),
+      this.prisma.quote.groupBy({
+        by: ['status'],
+        _sum: { total: true },
+        _count: true,
+      }),
+      this.prisma.invoice.findMany({
+        where: { status: 'SENT', dueDate: { lt: new Date() } },
+        select: { id: true, number: true, total: true, dueDate: true, company: { select: { name: true } } },
+      }),
+    ]);
+
+    return { invoiceStats, quoteStats, overdueInvoices: overdue };
+  }
+}
