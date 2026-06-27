@@ -18,6 +18,7 @@ Documentation fiscale comparative pour **France, Belgique, Luxembourg et Allemag
 - 📄 **Fiches & synthèse** : [`docs/fiscalite/`](docs/fiscalite/)
   - [`00-synthese-comparative.md`](docs/fiscalite/00-synthese-comparative.md) — vue d'ensemble et recommandations d'architecture
   - [`01-france.md`](docs/fiscalite/01-france.md) · [`02-belgique.md`](docs/fiscalite/02-belgique.md) · [`03-luxembourg.md`](docs/fiscalite/03-luxembourg.md) · [`04-allemagne.md`](docs/fiscalite/04-allemagne.md)
+  - [`05-exemples-calculs.md`](docs/fiscalite/05-exemples-calculs.md) — calculs pas à pas servant de cas de test (fixtures) pour le moteur
 - 🗂️ **Données structurées (JSON)** : [`data/fiscalite/`](data/fiscalite/) — barèmes, taux et seuils exploitables par le code (voir le [README des données](data/fiscalite/README.md)).
 
 Couverture : personnes physiques, indépendants/professions libérales, sociétés par forme juridique, TVA et conformité déclarative. Chaque chiffre est sourcé (administrations fiscales officielles).
