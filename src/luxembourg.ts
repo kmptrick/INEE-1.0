@@ -32,6 +32,13 @@ export function irpp(revenuImposable: number, classe: "1" | "1a" | "2" = "1") {
   };
 }
 
+/** Retenue à la source sur dividendes (15 %). Hors exonération de 50 % au barème. */
+export function retenueDividendes(montant: number) {
+  const t = D().personnes_physiques.capitaux_mobiliers.retenue_dividendes;
+  const impot = montant * t;
+  return { taux: t, impot: round2(impot), net: round2(montant - impot) };
+}
+
 /** IRC + impôt commercial communal (ICC). multiplicateurCommunal: ex. 2.25 = Luxembourg-Ville. */
 export function ircIcc(benefice: number, multiplicateurCommunal?: number) {
   const s = D().societes;

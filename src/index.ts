@@ -12,3 +12,16 @@ export * as allemagne from "./allemagne.js";
 export { loadCountry, DATA_DIR } from "./loader.js";
 export type { Bracket } from "./core.js";
 export { taxFromBrackets, marginalRate, round2, round4 } from "./core.js";
+
+// API unifiée (point d'entrée recommandé pour l'application)
+export { calcule } from "./api.js";
+export type {
+  Pays,
+  Profil,
+  ParticulierProfil,
+  CapitalProfil,
+  SocieteProfil,
+  IndependantProfil,
+  CalculInput,
+  CalculResult,
+} from "./api.js";

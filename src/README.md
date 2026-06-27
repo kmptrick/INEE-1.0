@@ -28,6 +28,43 @@ allemagne.gmbh(100000, 4.9);                  // Hebesatz de Munich (490 %)
 //   { koerperschaftsteuer: 15000, gewerbesteuer: 17150, charge_totale: 32975, ... }
 ```
 
+## API unifiée (recommandée pour l'intégration)
+
+Point d'entrée unique `calcule({ pays, profil })` qui dispatche vers le bon
+calculateur et renvoie un résultat normalisé (`{ pays, categorie, libelle,
+impot, details, meta }`).
+
+```ts
+import { calcule } from "inee-fiscalite"; // ou "./dist/index.js"
+
+calcule({ pays: "FR", profil: { type: "particulier", revenuImposable: 60000, parts: 3, couple: true } });
+// { pays:"FR", categorie:"particulier", libelle:"Impôt sur le revenu (IR)", impot:2605.7, details:{...}, meta:{...} }
+
+calcule({ pays: "DE", profil: { type: "societe", benefice: 100000, hebesatz: 4.9 } });
+// { ..., libelle:"KSt + Soli + Gewerbesteuer", impot:32975, ... }
+
+calcule({ pays: "LU", profil: { type: "particulier", revenuImposable: 100000, classe: "2" } });
+calcule({ pays: "BE", profil: { type: "independant", revenuNet: 50000 } });
+calcule({ pays: "FR", profil: { type: "capital", montant: 10000 } });
+```
+
+**Profils disponibles** : `particulier` (IR/IPP/IRPP/ESt), `capital`
+(dividendes/PV mobilières), `societe` (IS/ISOC/IRC+ICC/GmbH), `independant`
+(micro FR, cotisations INASTI BE). Champs spécifiques par pays : `parts`/`couple`
+(FR), `tauxCommunal` (BE), `classe` (LU), `hebesatz`/`multiplicateurCommunal`,
+`couple` (DE). Voir les types dans [`api.ts`](api.ts).
+
+## Serveur HTTP (démo)
+
+`server.ts` expose `POST /calcule` (node:http, sans dépendance) — à intégrer
+ensuite dans le framework HTTP réel d'INEE2.0 (Express, Fastify, Next API…).
+
+```bash
+npm run build && npm run serve         # http://localhost:3000/calcule
+curl -s localhost:3000/calcule \
+  -d '{"pays":"FR","profil":{"type":"particulier","revenuImposable":35000}}'
+```
+
 ## Utilisation (CLI)
 
 ```bash

@@ -38,6 +38,14 @@ export function cotisationsIndependant(revenuNet: number) {
   };
 }
 
+/** Précompte mobilier (dividendes/intérêts). Taux par défaut = régime général (30 %). */
+export function precompteMobilier(montant: number, taux?: number) {
+  const p = D().personnes_physiques.precompte_mobilier;
+  const t = taux ?? p.dividendes_general;
+  const impot = montant * t;
+  return { taux: t, impot: round2(impot), net: round2(montant - impot) };
+}
+
 /** Impôt des sociétés (ISOC). */
 export function impotSocietes(benefice: number, pmeTauxReduit = true) {
   const s = D().societes.isoc;
