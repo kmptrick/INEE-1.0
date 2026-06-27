@@ -50,13 +50,15 @@ export interface IndependantProfil {
   revenuNet?: number; // BE (cotisations INASTI)
 }
 
-/** Droits de succession (ligne directe par défaut). */
+/** Droits de succession. */
 export interface SuccessionProfil {
   type: "succession";
   partNette: number;
-  lien?: allemagne.LienDE; // DE (enfant, conjoint, frere_soeur…)
+  /** Lien de parenté (valeurs selon le pays : LienFR / LienDE / LienLU). */
+  lien?: string;
   region?: belgique.RegionBE; // BE (flandre / wallonie / bruxelles)
   abattement?: number; // surcharge l'abattement par défaut
+  handicap?: boolean; // FR (abattement handicap)
 }
 
 export type Profil =
@@ -85,10 +87,6 @@ export interface CalculResult {
 
 const AVERTISSEMENT =
   "Calcul indicatif (mécanique principale). À verrouiller sur les textes officiels avant production.";
-
-function nonImplemente(pays: Pays, categorie: string): never {
-  throw new Error(`Cas non implémenté: ${categorie} pour ${pays}`);
-}
 
 /** Calcule un impôt à partir d'un pays et d'un profil. */
 export function calcule(input: CalculInput): CalculResult {
@@ -250,18 +248,23 @@ function chargesIndependant(pays: Pays, p: IndependantProfil) {
 function droitsSuccession(pays: Pays, p: SuccessionProfil) {
   switch (pays) {
     case "FR": {
-      const d = france.droitsLigneDirecte(p.partNette, p.abattement ?? 100000);
-      return { impot: d.impot, libelle: "Droits de succession (ligne directe)", details: d };
+      const d = france.droitsSuccession(p.partNette, (p.lien ?? "ligne_directe") as france.LienFR, {
+        handicap: p.handicap,
+        abattement: p.abattement,
+      });
+      return { impot: d.impot, libelle: "Droits de succession", details: d };
     }
     case "BE": {
       const d = belgique.droitsSuccessionLigneDirecte(p.partNette, p.region ?? "wallonie", p.abattement);
       return { impot: d.impot, libelle: "Droits de succession (ligne directe)", details: d };
     }
     case "DE": {
-      const d = allemagne.erbschaftsteuer(p.partNette, p.lien ?? "enfant");
+      const d = allemagne.erbschaftsteuer(p.partNette, (p.lien ?? "enfant") as allemagne.LienDE);
       return { impot: d.impot, libelle: "Erbschaftsteuer", details: d };
     }
-    case "LU":
-      return nonImplemente(pays, "succession");
+    case "LU": {
+      const d = luxembourg.droitsSuccession(p.partNette, (p.lien ?? "frere_soeur") as luxembourg.LienLU);
+      return { impot: d.impot, libelle: "Droits de succession", details: d };
+    }
   }
 }

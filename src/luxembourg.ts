@@ -81,6 +81,51 @@ export function cotisationsIndependant(revenuProfessionnel: number) {
   };
 }
 
+/**
+ * Facteur de majoration des droits de succession selon la taille de la part
+ * nette (taux effectif = taux_base × (1 + facteur)). Bandes ≤ 250 000 € et
+ * points 120 000/240 000/550 000 vérifiés ; bandes 250 000–750 000 à confirmer.
+ */
+export function majorationSuccession(partNette: number): number {
+  const tranches = D().personnes_physiques.succession.majoration_tranches as Array<{
+    min: number;
+    max: number | null;
+    facteur: number;
+  }>;
+  let facteur = 0;
+  for (const t of tranches) {
+    const max = t.max === null ? Infinity : t.max;
+    if (partNette > t.min && partNette <= max) return t.facteur;
+    if (max === Infinity && partNette > t.min) facteur = t.facteur;
+  }
+  return facteur;
+}
+
+export type LienLU =
+  | "ligne_directe" // part légale exonérée
+  | "conjoint_enfants_communs" // exonéré
+  | "frere_soeur"
+  | "oncle_neveu"
+  | "autre";
+
+/**
+ * Droits de succession (modèle simplifié) : exonérations en ligne directe (part
+ * légale) et conjoint avec enfants communs ; sinon taux de base × part ×
+ * (1 + majoration). ⚠️ Taux de base « au-delà » et bandes hautes de majoration
+ * à verrouiller sur pfi.public.lu avant production.
+ */
+export function droitsSuccession(partNette: number, lien: LienLU = "frere_soeur") {
+  const s = D().personnes_physiques.succession;
+  if (lien === "ligne_directe" || lien === "conjoint_enfants_communs") {
+    return { lien, exonere: true, majoration: 0, impot: 0 };
+  }
+  const tauxBase =
+    lien === "frere_soeur" ? s.freres_soeurs.au_dela : lien === "oncle_neveu" ? s.oncles_neveux.au_dela : 0.15;
+  const facteur = partNette > s.majoration_progressive_au_dela ? majorationSuccession(partNette) : 0;
+  const impot = partNette * tauxBase * (1 + facteur);
+  return { lien, taux_base: tauxBase, majoration: facteur, impot: round2(impot) };
+}
+
 /** Retenue à la source sur dividendes (15 %). Hors exonération de 50 % au barème. */
 export function retenueDividendes(montant: number) {
   const t = D().personnes_physiques.capitaux_mobiliers.retenue_dividendes;

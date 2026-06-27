@@ -70,7 +70,25 @@
       "conjoint_sans_descendance": { "taux": 0.05, "abattement": 38000 },
       "freres_soeurs": { "part_legale": 0.06, "au_dela": 0.15 },
       "oncles_neveux": { "part_legale": 0.09, "au_dela": 0.15 },
-      "majoration_progressive_au_dela": 10000
+      "majoration_progressive_au_dela": 10000,
+      "majoration_note": "Surtaxe = taux_base x (1 + facteur) selon la taille de la part nette > 10000. Bandes <=250000 et anchors 120000->0.7, 240000->0.9, 550000->1.4 verifies ; bandes 250000-750000 (hors anchors) A VERIFIER sur pfi.public.lu/fr/citoyen/successions/tarif.html.",
+      "majoration_tranches": [
+        { "min": 0, "max": 10000, "facteur": 0.0 },
+        { "min": 10000, "max": 20000, "facteur": 0.1 },
+        { "min": 20000, "max": 30000, "facteur": 0.2 },
+        { "min": 30000, "max": 40000, "facteur": 0.3 },
+        { "min": 40000, "max": 50000, "facteur": 0.4 },
+        { "min": 50000, "max": 75000, "facteur": 0.5 },
+        { "min": 75000, "max": 100000, "facteur": 0.6 },
+        { "min": 100000, "max": 150000, "facteur": 0.7 },
+        { "min": 150000, "max": 200000, "facteur": 0.8 },
+        { "min": 200000, "max": 250000, "facteur": 0.9 },
+        { "min": 250000, "max": 380000, "facteur": 1.0 },
+        { "min": 380000, "max": 500000, "facteur": 1.2 },
+        { "min": 500000, "max": 620000, "facteur": 1.4 },
+        { "min": 620000, "max": 750000, "facteur": 1.9 },
+        { "min": 750000, "max": null, "facteur": 2.2 }
+      ]
     },
     "donation": { "ligne_directe_sans_dispense_rapport": 0.018, "ligne_directe_avec_dispense": 0.024 }
   },

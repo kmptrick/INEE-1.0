@@ -70,6 +70,12 @@ test("API indépendant LU & DE (désormais implémentés)", () => {
   near(calcule({ pays: "DE", profil: { type: "independant", revenuNet: 60000 } }).impot, 23580);
 });
 
-test("API succession LU lève une erreur (non implémenté)", () => {
-  assert.throws(() => calcule({ pays: "LU", profil: { type: "succession", partNette: 100000 } }));
+test("API succession LU (exonération ligne directe)", () => {
+  const r = calcule({ pays: "LU", profil: { type: "succession", partNette: 100000, lien: "ligne_directe" } });
+  assert.equal(r.impot, 0);
+});
+
+test("API succession FR frère/sœur & BE Wallonie", () => {
+  near(calcule({ pays: "FR", profil: { type: "succession", partNette: 50000, lien: "frere_soeur" } }).impot, 12887.6, 1);
+  near(calcule({ pays: "BE", profil: { type: "succession", partNette: 200000, region: "wallonie" } }).impot, 15875, 1);
 });

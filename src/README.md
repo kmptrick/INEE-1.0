@@ -101,10 +101,14 @@ Au-delà des calculs principaux :
 - **Luxembourg** : crédits d'impôt **CIS/CII** (`creditImpotSalarie`), **CIM**
   (`creditImpotMonoparental`), **CIP** (`creditImpotPensionne`) ; **cotisations
   indépendant CCSS** (`cotisationsIndependant`).
-- **France** : droits de **succession/donation en ligne directe**
-  (`droitsLigneDirecte`).
+- **France** : droits de **succession par lien de parenté** (`droitsSuccession` :
+  ligne directe, conjoint/PACS exonéré, frère/sœur 35-45 %, neveu/nièce 55 %,
+  tiers 60 %) avec **abattement handicap** ; `droitsLigneDirecte` conservé.
 - **Belgique** : droits de **succession en ligne directe par région**
-  (`droitsSuccessionLigneDirecte`) ; **précompte mobilier** (`precompteMobilier`).
+  (`droitsSuccessionLigneDirecte`) ; **précompte mobilier** (`precompteMobilier`) ;
+  **cotisation spéciale sécurité sociale** (`cotisationSpecialeSecu`).
+- **Luxembourg** : droits de **succession avec majoration** (`droitsSuccession`,
+  `majorationSuccession`) — exonérations ligne directe / conjoint avec enfants.
 
 Le profil **`succession`** de l'API unifiée couvre FR / BE / DE.
 
@@ -117,8 +121,11 @@ Le profil **`succession`** de l'API unifiée couvre FR / BE / DE.
 - La version **Python** (`/engine`) reste la référence des calculs *principaux*
   mais n'a pas reçu les calculs complémentaires ni l'API unifiée (spécifiques à
   cette implémentation TypeScript). Sync possible sur demande.
-- **Limites restantes** (encore à faire) : cotisation spéciale sécurité sociale
-  belge, droits de succession luxembourgeois (système de majoration progressive),
-  abattements/cas particuliers fins (handicap, pactes Dutreil, etc.). Cotisations
-  indépendant LU/DE = **estimations** (modèle documenté dans le code). À
+- **Données à vérifier** : les **bandes hautes de majoration successorale LU**
+  (250 000–750 000 €, hors points 120k/240k/550k vérifiés) sont marquées
+  « à confirmer » dans `lu-2025.json`. La **CSSS belge** utilise le barème
+  « isolé » (variante ménage à deux revenus légèrement différente). Cotisations
+  indépendant **LU/DE = estimations** (modèle documenté dans le code).
+- **Limites restantes** : barème CSSS « ménage », succession LU avec base
+  légale/extra-légale fine, pactes Dutreil, donations spécifiques. À
   **verrouiller sur les textes officiels** avant production.

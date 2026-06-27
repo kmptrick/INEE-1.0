@@ -89,6 +89,10 @@
         { "min": 1805677, "max": null, "taux": 0.45 }
       ],
       "taux_freres_soeurs": "35% jusqu'a 24430 EUR puis 45%",
+      "bareme_freres_soeurs": [
+        { "min": 0, "max": 24430, "taux": 0.35 },
+        { "min": 24430, "max": null, "taux": 0.45 }
+      ],
       "taux_neveux_nieces": 0.55,
       "taux_tiers": 0.60
     }

@@ -28,6 +28,23 @@ export function ipp(revenuImposable: number, tauxCommunal = 0) {
   };
 }
 
+/**
+ * Cotisation spéciale pour la sécurité sociale (CSSS) — barème annuel figé,
+ * sur le revenu imposable du ménage. Barème « isolé » (la variante ménage à
+ * deux revenus atteint le maximum plus haut). En suppression progressive.
+ */
+export function cotisationSpecialeSecu(revenuMenage: number) {
+  const cfg = D().personnes_physiques.cotisation_speciale_secu;
+  let montant = 0;
+  for (const t of cfg.tranches) {
+    const max = t.max === null ? Infinity : t.max;
+    if (revenuMenage > t.min) {
+      montant = t.base + (Math.min(revenuMenage, max) - t.min) * t.taux;
+    }
+  }
+  return { cotisation: round2(Math.min(montant, cfg.maximum)) };
+}
+
 export type RegionBE = "flandre" | "wallonie" | "bruxelles";
 
 /**

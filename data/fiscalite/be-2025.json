@@ -47,6 +47,16 @@
         { "min": 10000000, "max": null, "taux": 0.10 }
       ]
     },
+    "cotisation_speciale_secu": {
+      "note": "Bareme annuel fige (revenu imposable du menage). Bareme isole ; la variante menage atteint le max plus haut. En suppression progressive (baisse 2028).",
+      "tranches": [
+        { "min": 0, "max": 18592.01, "base": 0, "taux": 0 },
+        { "min": 18592.01, "max": 21070.96, "base": 0, "taux": 0.09 },
+        { "min": 21070.96, "max": 60161.85, "base": 223.10, "taux": 0.013 },
+        { "min": 60161.85, "max": null, "base": 731.28, "taux": 0 }
+      ],
+      "maximum": 731.28
+    },
     "succession_ligne_directe": {
       "competence": "regionale",
       "flandre": [

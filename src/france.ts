@@ -81,15 +81,68 @@ export function impotSocietes(benefice: number, tauxReduitEligible = true) {
   return { impot: round2(impot), taux_effectif: benefice ? round4(impot / benefice) : 0 };
 }
 
+export type LienFR =
+  | "ligne_directe"
+  | "conjoint_pacs"
+  | "frere_soeur"
+  | "neveu_niece"
+  | "tiers";
+
+export interface OptionsSuccessionFR {
+  /** Abattement spécifique handicap (+159 325 €, cumulable). */
+  handicap?: boolean;
+  /** Surcharge manuelle de l'abattement (sinon valeur légale par lien). */
+  abattement?: number;
+}
+
 /**
- * Droits de succession/donation en **ligne directe** (barème progressif marginal).
- * Abattement par défaut : 100 000 € (parent → enfant).
+ * Droits de succession selon le lien de parenté (barèmes marginaux / taux fixes).
+ * - ligne_directe : abattement 100 000 €, barème 5 %→45 %
+ * - conjoint_pacs : succession **exonérée**
+ * - frere_soeur : abattement 15 932 €, 35 % puis 45 %
+ * - neveu_niece : abattement 7 967 €, taux fixe 55 %
+ * - tiers : abattement 1 594 €, taux fixe 60 %
  */
-export function droitsLigneDirecte(montant: number, abattement = 100000) {
+export function droitsSuccession(
+  montant: number,
+  lien: LienFR = "ligne_directe",
+  options: OptionsSuccessionFR = {},
+) {
   const sd = D().personnes_physiques.succession_donation;
+  const ab = sd.abattements;
+
+  if (lien === "conjoint_pacs") {
+    return { lien, base_taxable: 0, abattement: "exoneration_totale", impot: 0 };
+  }
+
+  const abattementsLegaux: Record<string, number> = {
+    ligne_directe: ab.ligne_directe,
+    frere_soeur: ab.frere_soeur,
+    neveu_niece: ab.neveu_niece,
+    tiers: ab.tiers,
+  };
+  let abattement = options.abattement ?? abattementsLegaux[lien];
+  if (options.handicap) abattement += ab.personne_handicapee_supplementaire;
+
   const taxable = Math.max(0, montant - abattement);
-  const impot = taxFromBrackets(taxable, sd.bareme_ligne_directe as Bracket[]);
-  return { base_taxable: round2(taxable), abattement, impot: round2(impot) };
+  let impot: number;
+  if (lien === "ligne_directe") {
+    impot = taxFromBrackets(taxable, sd.bareme_ligne_directe as Bracket[]);
+  } else if (lien === "frere_soeur") {
+    impot = taxFromBrackets(taxable, sd.bareme_freres_soeurs as Bracket[]);
+  } else if (lien === "neveu_niece") {
+    impot = taxable * sd.taux_neveux_nieces;
+  } else {
+    impot = taxable * sd.taux_tiers;
+  }
+
+  return { lien, base_taxable: round2(taxable), abattement, impot: round2(impot) };
+}
+
+/** Alias rétro-compatible : droits de succession en ligne directe. */
+export function droitsLigneDirecte(montant: number, abattement = 100000) {
+  const r = droitsSuccession(montant, "ligne_directe", { abattement });
+  return { base_taxable: r.base_taxable, abattement, impot: r.impot };
 }
 
 export type ActiviteMicro = "vente_bic" | "services_bic" | "bnc_hors_cipav" | "liberal_cipav";
