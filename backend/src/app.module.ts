@@ -18,6 +18,7 @@ import { LeaveRequestsModule } from './leave-requests/leave-requests.module';
 import { CalendarModule } from './calendar/calendar.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { AuditModule } from './audit/audit.module';
+import { ComptabiliteModule } from './comptabilite/comptabilite.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { AuditModule } from './audit/audit.module';
     CalendarModule,
     SubscriptionsModule,
     AuditModule,
+    ComptabiliteModule,
   ],
   controllers: [AppController],
   providers: [AppService],

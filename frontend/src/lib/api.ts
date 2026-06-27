@@ -327,3 +327,55 @@ export const calendar = {
   update: (id: string, data: Partial<CalendarEvent>) => api.put<CalendarEvent>(`/calendar/${id}`, data),
   delete: (id: string) => api.delete(`/calendar/${id}`),
 };
+
+// ─── Comptabilité (calculs LU/BE/FR/DE) ───────────────────────────────────────
+export type PaysCompta = 'LU' | 'BE' | 'FR' | 'DE';
+export type CategorieTaille = 'micro' | 'petite' | 'moyenne' | 'grande';
+export type TypeEntite =
+  | 'SOCIETE_CAPITAUX' | 'SOCIETE_PERSONNES' | 'PERSONNE_PHYSIQUE' | 'PROFESSION_LIBERALE' | 'ASSOCIATION';
+
+export interface ClassificationResult {
+  pays: PaysCompta;
+  categorie: CategorieTaille;
+  libelleCategorie: string;
+  criteres: { critere: string; valeur: number; seuil: number | null; depasse: boolean }[];
+  regle: string;
+  persistance?: { categoriePrecedente: CategorieTaille; changementConfirme: boolean; note: string };
+}
+export interface TvaResult {
+  pays: PaysCompta; montantHT: number; taux: number; tauxParDefaut: boolean;
+  montantTva: number; montantTTC: number;
+}
+export interface FranchiseResult {
+  pays: PaysCompta; ca: number; seuil: number; eligible: boolean; detail: string;
+  regimeUe: { seuilCaUeMax: number; eligibleUe: boolean; declaration: string };
+}
+export interface AuditResult {
+  pays: PaysCompta; obligatoire: boolean; auditeur: string; raison: string;
+  categorie?: CategorieTaille; criteresDepasses?: string[];
+}
+export interface RegimeResult {
+  pays: PaysCompta; typeEntite: TypeEntite; regime: string; partieDouble: boolean; raison: string;
+}
+export interface DepotResult {
+  pays: PaysCompta; categorie: CategorieTaille | null;
+  destinataire: string; formatElectronique: string; delai: string; schema: string | null;
+}
+
+export const comptabilite = {
+  referentiels: () => api.get<Record<string, any>>('/comptabilite/referentiels'),
+  classification: (data: {
+    pays: PaysCompta; bilan: number; ca: number; effectif: number;
+    bilanPrecedent?: number; caPrecedent?: number; effectifPrecedent?: number;
+  }) => api.post<ClassificationResult>('/comptabilite/classification', data),
+  tva: (data: { pays: PaysCompta; montantHT: number; taux?: number }) =>
+    api.post<TvaResult>('/comptabilite/tva', data),
+  franchise: (data: { pays: PaysCompta; ca: number; typeActivite?: 'VENTE' | 'SERVICES' }) =>
+    api.post<FranchiseResult>('/comptabilite/franchise', data),
+  audit: (data: { pays: PaysCompta; bilan: number; ca: number; effectif: number; auditToujoursObligatoire?: boolean }) =>
+    api.post<AuditResult>('/comptabilite/audit', data),
+  regime: (data: { pays: PaysCompta; typeEntite: TypeEntite; ca?: number; beneficeAnnuel?: number }) =>
+    api.post<RegimeResult>('/comptabilite/regime', data),
+  depot: (data: { pays: PaysCompta; categorie?: CategorieTaille; bilan?: number; ca?: number; effectif?: number }) =>
+    api.post<DepotResult>('/comptabilite/depot', data),
+};

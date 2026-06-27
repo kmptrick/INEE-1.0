@@ -39,6 +39,12 @@ const nav = [
       { href: '/dashboard/prestations',   label: 'Prestations',     icon: '📋' },
     ],
   },
+  {
+    label: 'Comptabilité',
+    items: [
+      { href: '/dashboard/comptabilite', label: 'Calculateur', icon: '🧮' },
+    ],
+  },
 ];
 
 const agendaNav = {
