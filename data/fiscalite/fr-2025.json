@@ -1,0 +1,155 @@
+{
+  "pays": "France",
+  "code": "FR",
+  "devise": "EUR",
+  "annee_imposition": 2025,
+  "revenus_de": 2024,
+  "source_principale": "impots.gouv.fr / bofip.impots.gouv.fr / urssaf.fr / service-public.fr",
+  "personnes_physiques": {
+    "impot_revenu": {
+      "type_bareme": "tranches_par_part",
+      "quotient_familial": true,
+      "tranches": [
+        { "min": 0, "max": 11497, "taux": 0.0 },
+        { "min": 11497, "max": 29315, "taux": 0.11 },
+        { "min": 29315, "max": 83823, "taux": 0.30 },
+        { "min": 83823, "max": 180294, "taux": 0.41 },
+        { "min": 180294, "max": null, "taux": 0.45 }
+      ],
+      "parts": { "adulte": 1, "deux_premiers_enfants": 0.5, "enfant_3_et_plus": 1 },
+      "plafond_demi_part": 1791,
+      "plafond_parent_isole": 4224,
+      "plafond_demi_part_personne_seule": 1071,
+      "decote": {
+        "montant_seul": 889,
+        "montant_couple": 1470,
+        "taux": 0.4525,
+        "seuil_impot_seul": 1965,
+        "seuil_impot_couple": 3249
+      },
+      "abattement_10pct_salaires": { "min": 495, "max": 14171 }
+    },
+    "prelevements_sociaux_capital": {
+      "taux_global": 0.172,
+      "csg": 0.092,
+      "crds": 0.005,
+      "prelevement_solidarite": 0.075,
+      "note_2026": "CSG portee a 0.106 -> taux global 0.186 au 1.1.2026 sur capital mobilier ; reste 0.172 pour assurance-vie, PEL/CEL, revenus fonciers et PV immobilieres"
+    },
+    "pfu_flat_tax": {
+      "taux_total": 0.30,
+      "ir": 0.128,
+      "ps": 0.172,
+      "taux_total_2026": 0.314,
+      "abattement_dividendes_si_bareme": 0.40
+    },
+    "plus_values_immobilieres": {
+      "taux_ir": 0.19,
+      "taux_ps": 0.172,
+      "exoneration_ir_ans": 22,
+      "exoneration_ps_ans": 30,
+      "abattement_ir": "6%/an 6e-21e, 4% 22e",
+      "abattement_ps": "1.65%/an 6e-21e, 1.60% 22e, 9%/an 23e-30e",
+      "residence_principale": "exoneree",
+      "surtaxe": "2% a 6% si PV nette > 50000 EUR (CGI 1609 nonies G)"
+    },
+    "ifi": {
+      "seuil_assujettissement": 1300000,
+      "abattement_residence_principale": 0.30,
+      "tranches": [
+        { "min": 0, "max": 800000, "taux": 0.0 },
+        { "min": 800000, "max": 1300000, "taux": 0.005 },
+        { "min": 1300000, "max": 2570000, "taux": 0.007 },
+        { "min": 2570000, "max": 5000000, "taux": 0.01 },
+        { "min": 5000000, "max": 10000000, "taux": 0.0125 },
+        { "min": 10000000, "max": null, "taux": 0.015 }
+      ],
+      "decote_formule": "17500 - 0.0125 * valeur_nette_taxable (entre 1.3M et 1.4M)"
+    },
+    "succession_donation": {
+      "abattements": {
+        "ligne_directe": 100000,
+        "conjoint_pacs_succession": "exoneration_totale",
+        "conjoint_pacs_donation": 80724,
+        "petit_enfant_donation": 31865,
+        "frere_soeur": 15932,
+        "neveu_niece": 7967,
+        "tiers": 1594,
+        "personne_handicapee_supplementaire": 159325,
+        "don_familial_argent_art790G": 31865
+      },
+      "renouvellement_donation_ans": 15,
+      "bareme_ligne_directe": [
+        { "min": 0, "max": 8072, "taux": 0.05 },
+        { "min": 8072, "max": 12109, "taux": 0.10 },
+        { "min": 12109, "max": 15932, "taux": 0.15 },
+        { "min": 15932, "max": 552324, "taux": 0.20 },
+        { "min": 552324, "max": 902838, "taux": 0.30 },
+        { "min": 902838, "max": 1805677, "taux": 0.40 },
+        { "min": 1805677, "max": null, "taux": 0.45 }
+      ],
+      "taux_freres_soeurs": "35% jusqu'a 24430 EUR puis 45%",
+      "taux_neveux_nieces": 0.55,
+      "taux_tiers": 0.60
+    }
+  },
+  "independants": {
+    "micro_entrepreneur": {
+      "seuil_ca_vente": 188700,
+      "seuil_ca_services_bnc": 77700,
+      "cotisations_urssaf": {
+        "vente_bic": 0.123,
+        "services_bic": 0.212,
+        "bnc_hors_cipav": 0.246,
+        "liberal_cipav": 0.232
+      },
+      "versement_liberatoire": {
+        "vente": 0.01,
+        "services_bic": 0.017,
+        "bnc": 0.022,
+        "condition_rfr_n2_par_part": 27478
+      },
+      "abattement_forfaitaire_benefice": {
+        "vente": 0.71,
+        "services_bic": 0.50,
+        "bnc": 0.34,
+        "minimum": 305
+      }
+    },
+    "tns_ssi": {
+      "reforme_2025_assiette_unique": true,
+      "abattement_forfaitaire": 0.26,
+      "maladie_maternite_taux_plein": 0.085,
+      "retraite_complementaire": { "sous_pass": 0.081, "au_dela": 0.091 },
+      "csg_crds": 0.097,
+      "pass": 47100
+    },
+    "cfe": { "exoneration_creation": true, "exoneration_si_ca_inferieur": 5000 }
+  },
+  "societes": {
+    "is": {
+      "taux_normal": 0.25,
+      "taux_reduit": 0.15,
+      "plafond_taux_reduit": 42500,
+      "conditions_taux_reduit": ["CA HT < 10M EUR (niveau groupe)", "capital entierement libere", "detenu >= 75% par personnes physiques"],
+      "note_plf_2026": "Projet de relevement du plafond 15% a 100000 EUR - non definitif"
+    },
+    "mere_fille": { "qpfc": 0.05, "qpfc_integration": 0.01, "participation_min": 0.05, "conservation_ans": 2 },
+    "integration_fiscale": { "detention_min": 0.95 },
+    "regime_dirigeant": {
+      "eurl_sarl_gerant_majoritaire": "TNS (SSI)",
+      "sas_sasu_president": "assimile salarie (sans chomage)",
+      "dividendes_tns_cotises_au_dela": "10% du (capital + primes + compte courant)"
+    },
+    "transparence": { "sci_defaut": "IR", "snc_defaut": "IR", "option_is": "revocable 5 exercices puis irrevocable" },
+    "cet_cvae": { "plafond_cet_valeur_ajoutee": 0.01531, "cvae_taux_max_2025": 0.0028, "suppression_cvae": 2030 }
+  },
+  "tva": {
+    "taux_normal": 0.20,
+    "taux_intermediaire": 0.10,
+    "taux_reduit": 0.055,
+    "taux_super_reduit": 0.021,
+    "franchise_base": { "vente": 85000, "vente_majore": 93500, "services": 37500, "services_majore": 41250 },
+    "regimes": ["reel_normal_CA3_mensuelle", "reel_simplifie_CA12_acomptes_55_40"]
+  }
+}

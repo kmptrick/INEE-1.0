@@ -1,0 +1,133 @@
+{
+  "pays": "Belgique",
+  "code": "BE",
+  "devise": "EUR",
+  "annee_imposition": 2026,
+  "revenus_de": 2025,
+  "source_principale": "finances.belgium.be / fin.belgium.be / inasti.be / wikifin.be",
+  "personnes_physiques": {
+    "impot_revenu_ipp": {
+      "type_bareme": "tranches",
+      "tranches": [
+        { "min": 0, "max": 15820, "taux": 0.25 },
+        { "min": 15820, "max": 27920, "taux": 0.40 },
+        { "min": 27920, "max": 48320, "taux": 0.45 },
+        { "min": 48320, "max": null, "taux": 0.50 }
+      ],
+      "quotite_exemptee_base": 10910,
+      "quotite_exemptee_2027": 11180,
+      "majoration_personne_dependante_agee": 5950,
+      "additionnels_communaux": {
+        "type": "pourcentage_de_l_impot",
+        "moyen_wallonie": 0.0792,
+        "fourchette": "0% a ~9%"
+      }
+    },
+    "cotisations_sociales_salarie": { "onss_personnelle": 0.1307, "plafond": null },
+    "precompte_mobilier": {
+      "dividendes_general": 0.30,
+      "interets_general": 0.30,
+      "vvprbis_apres_delai": 0.15,
+      "vvprbis_note_2026": "porte a 0.18 (reforme De Wever)",
+      "reserve_liquidation_distribuee": { "ancien": 0.05, "nouveau": 0.065 },
+      "exoneration_epargne_reglementee": 1050,
+      "exoneration_dividendes_recuperable": 833
+    },
+    "taxe_plus_values_2026": {
+      "entree_vigueur": "2026-01-01",
+      "taux_general": 0.10,
+      "exoneration_base_annuelle": 10000,
+      "exoneration_max_avec_report": 15000,
+      "participation_importante_seuil": 0.20,
+      "participation_importante_exoneration": 1000000,
+      "bareme_participation_importante": [
+        { "min": 0, "max": 2500000, "taux": 0.0125 },
+        { "min": 2500000, "max": 5000000, "taux": 0.025 },
+        { "min": 5000000, "max": 10000000, "taux": 0.05 },
+        { "min": 10000000, "max": null, "taux": 0.10 }
+      ]
+    },
+    "succession_ligne_directe": {
+      "competence": "regionale",
+      "flandre": [
+        { "min": 0, "max": 50000, "taux": 0.03 },
+        { "min": 50000, "max": 250000, "taux": 0.09 },
+        { "min": 250000, "max": null, "taux": 0.27 }
+      ],
+      "wallonie": [
+        { "min": 0, "max": 12500, "taux": 0.03 },
+        { "min": 12500, "max": 25000, "taux": 0.04 },
+        { "min": 25000, "max": 50000, "taux": 0.05 },
+        { "min": 50000, "max": 100000, "taux": 0.07 },
+        { "min": 100000, "max": 150000, "taux": 0.10 },
+        { "min": 150000, "max": 200000, "taux": 0.14 },
+        { "min": 200000, "max": 250000, "taux": 0.18 },
+        { "min": 250000, "max": 500000, "taux": 0.24 },
+        { "min": 500000, "max": null, "taux": 0.30 }
+      ],
+      "wallonie_note_2028": "taux max 30% -> 15%, abattement 12500 -> 25000",
+      "bruxelles": [
+        { "min": 0, "max": 50000, "taux": 0.03 },
+        { "min": 50000, "max": 100000, "taux": 0.08 },
+        { "min": 100000, "max": 175000, "taux": 0.09 },
+        { "min": 175000, "max": 250000, "taux": 0.18 },
+        { "min": 250000, "max": 500000, "taux": 0.24 },
+        { "min": 500000, "max": null, "taux": 0.30 }
+      ]
+    },
+    "donation": {
+      "mobiliere_ligne_directe": { "flandre": 0.033, "wallonie": 0.033, "bruxelles": 0.03 },
+      "immobiliere_ligne_directe_3_regions": [
+        { "min": 0, "max": 150000, "taux": 0.03 },
+        { "min": 150000, "max": 250000, "taux": 0.09 },
+        { "min": 250000, "max": 450000, "taux": 0.18 },
+        { "min": 450000, "max": null, "taux": 0.27 }
+      ]
+    }
+  },
+  "independants": {
+    "cotisations_inasti": {
+      "paliers": [
+        { "min": 0, "max": 73447.52, "taux": 0.205 },
+        { "min": 73447.52, "max": 108238.40, "taux": 0.1416 },
+        { "min": 108238.40, "max": null, "taux": 0.0 }
+      ],
+      "frais_gestion_caisse": "~0.0395 sur les cotisations",
+      "revenu_plancher": 17008.88,
+      "cotisation_minimale_trimestre": 906.14
+    },
+    "primostarter": { "trimestres": 4, "cotisation_reduite_trimestre": 450.15 },
+    "frais_professionnels_forfait": {
+      "independant": { "taux": 0.30, "max": 5930 },
+      "dirigeant": { "taux": 0.03, "max": 3130 },
+      "conjoint_aidant": { "taux": 0.05, "max": 5210 }
+    }
+  },
+  "societes": {
+    "capital_minimal": { "srl_bv": 0, "sa_nv": 61500 },
+    "isoc": {
+      "taux_normal": 0.25,
+      "taux_reduit": 0.20,
+      "plafond_taux_reduit": 100000,
+      "conditions_taux_reduit": {
+        "petite_societe_art_1_24": { "travailleurs": 50, "ca_net": 11250000, "total_bilan": 6000000 },
+        "remuneration_min_dirigeant": 45000,
+        "remuneration_min_dirigeant_reforme": 50000,
+        "starters_dispense_ans": 4
+      },
+      "cotisation_distincte_insuffisance": 0.051
+    },
+    "reserve_liquidation": { "prelevement_anticipe": 0.10, "distribution_ancien": 0.05, "distribution_nouveau": 0.065, "liquidation": 0.0 },
+    "rdt_mere_fille": { "deduction": 1.0, "participation_min": 0.10, "valeur_alternative": 2500000, "detention_ans": 1 },
+    "interets_notionnels": "quasi supprimee depuis exercices clos >= 31.12.2023",
+    "versements_anticipes": { "majoration_insuffisance": 0.0675, "echeances_2025": ["10-04", "10-07", "10-10", "20-12"] }
+  },
+  "tva": {
+    "taux_normal": 0.21,
+    "taux_intermediaire": 0.12,
+    "taux_reduit": 0.06,
+    "taux_zero": 0.0,
+    "franchise_base": 25000,
+    "regimes": ["mensuelle_le_20", "trimestrielle_le_25_si_ca_inferieur_2500000"]
+  }
+}

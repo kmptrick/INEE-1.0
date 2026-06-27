@@ -1,0 +1,140 @@
+{
+  "pays": "Luxembourg",
+  "code": "LU",
+  "devise": "EUR",
+  "annee_imposition": 2025,
+  "source_principale": "impotsdirects.public.lu / guichet.public.lu / ccss.public.lu / pfi.public.lu",
+  "personnes_physiques": {
+    "impot_revenu_irpp": {
+      "type_bareme": "tranches_classe_1",
+      "classes": ["1", "1a", "2_splitting"],
+      "tranches": [
+        { "min": 0, "max": 13230, "taux": 0.0 },
+        { "min": 13230, "max": 15435, "taux": 0.08 },
+        { "min": 15435, "max": 17640, "taux": 0.09 },
+        { "min": 17640, "max": 19845, "taux": 0.10 },
+        { "min": 19845, "max": 22050, "taux": 0.11 },
+        { "min": 22050, "max": 24255, "taux": 0.12 },
+        { "min": 24255, "max": 26550, "taux": 0.14 },
+        { "min": 26550, "max": 28845, "taux": 0.16 },
+        { "min": 28845, "max": 31140, "taux": 0.18 },
+        { "min": 31140, "max": 33435, "taux": 0.20 },
+        { "min": 33435, "max": 35730, "taux": 0.22 },
+        { "min": 35730, "max": 38025, "taux": 0.24 },
+        { "min": 38025, "max": 40320, "taux": 0.26 },
+        { "min": 40320, "max": 42615, "taux": 0.28 },
+        { "min": 42615, "max": 44910, "taux": 0.30 },
+        { "min": 44910, "max": 47205, "taux": 0.32 },
+        { "min": 47205, "max": 49500, "taux": 0.34 },
+        { "min": 49500, "max": 51795, "taux": 0.36 },
+        { "min": 51795, "max": 54090, "taux": 0.38 },
+        { "min": 54090, "max": 117450, "taux": 0.39 },
+        { "min": 117450, "max": 176160, "taux": 0.40 },
+        { "min": 176160, "max": 234870, "taux": 0.41 },
+        { "min": 234870, "max": null, "taux": 0.42 }
+      ],
+      "fonds_pour_emploi": {
+        "taux_general": 0.07,
+        "taux_eleve": 0.09,
+        "seuil_classe_1_1a": 150000,
+        "seuil_classe_2": 300000
+      },
+      "frais_obtention_forfait_min": 540,
+      "abattement_extra_professionnel": 4500
+    },
+    "credits_impot": {
+      "cis_plafond": 600,
+      "cii_plafond": 600,
+      "cip": 300,
+      "cim_max": 3504,
+      "cim_min": 750
+    },
+    "capitaux_mobiliers": {
+      "retenue_dividendes": 0.15,
+      "exoneration_dividendes": 0.50,
+      "participation_importante_seuil": 0.10,
+      "demi_taux_max": 0.2429
+    },
+    "plus_values_immobilieres": {
+      "residence_principale": "exoneree",
+      "demi_taux_global_max": 0.21,
+      "abattement_decennal": 50000,
+      "abattement_decennal_couple": 100000,
+      "abattement_special_succession": 75000
+    },
+    "impot_fortune_personnes_physiques": "aboli depuis 2006",
+    "succession": {
+      "ligne_directe_part_legale": "exoneree",
+      "ligne_directe_part_extra_legale": 0.025,
+      "conjoint_avec_enfants_communs": "exonere",
+      "conjoint_sans_descendance": { "taux": 0.05, "abattement": 38000 },
+      "freres_soeurs": { "part_legale": 0.06, "au_dela": 0.15 },
+      "oncles_neveux": { "part_legale": 0.09, "au_dela": 0.15 },
+      "majoration_progressive_au_dela": 10000
+    },
+    "donation": { "ligne_directe_sans_dispense_rapport": 0.018, "ligne_directe_avec_dispense": 0.024 }
+  },
+  "independants": {
+    "cotisations_ccss": {
+      "pension": 0.16,
+      "maladie_soins": 0.056,
+      "maladie_especes": 0.005,
+      "dependance": 0.014,
+      "assiette": "revenu_professionnel",
+      "ssm_non_qualifie_mois": 2703.74,
+      "assiette_min_mois": 2703.74,
+      "assiette_max_mois": 13518.70,
+      "penalite_retard_mois": 0.006
+    }
+  },
+  "societes": {
+    "capital_minimal": { "sarl": 12000, "sa": 30000, "scsp": 0 },
+    "irc": {
+      "taux_pme": 0.14,
+      "taux_pme_plafond_benefice": 175000,
+      "taux_normal": 0.16,
+      "seuil_taux_normal": 200000,
+      "lissage_175000_200001": "24500 + 30% de la part > 175000",
+      "fonds_pour_emploi": 0.07
+    },
+    "icc": {
+      "taux_assiette": 0.03,
+      "multiplicateur_luxembourg_ville": 2.25,
+      "icc_luxembourg_ville": 0.0675,
+      "fourchette_multiplicateur": [2.25, 3.50],
+      "abattement_irc": 17500,
+      "abattement_irpp": 40000,
+      "note": "paramétrer par commune via table annuelle ACD"
+    },
+    "taux_global_agrege_lux_ville": { "grandes_societes": 0.2387, "pme": 0.2173 },
+    "impot_fortune_societes": {
+      "taux_ordinaire": 0.005,
+      "taux_au_dela_500M": 0.0005,
+      "if_minimum": [
+        { "total_bilan_max": 350000, "montant": 535 },
+        { "total_bilan_max": 2000000, "montant": 1605 },
+        { "total_bilan_max": null, "montant": 4815 }
+      ],
+      "exoneration_participations_qualifiees": true
+    },
+    "soparfi_mere_fille": {
+      "dividendes_participation_min": 0.10,
+      "dividendes_valeur_alternative": 1200000,
+      "plus_values_participation_min": 0.10,
+      "plus_values_valeur_alternative": 6000000,
+      "detention_mois": 12
+    },
+    "societes_personnes_transparentes": ["SCS", "SCSp"],
+    "icc_scs_seuil_commandite": 0.05
+  },
+  "tva": {
+    "taux_normal": 0.17,
+    "taux_intermediaire": 0.14,
+    "taux_reduit": 0.08,
+    "taux_super_reduit": 0.03,
+    "franchise_base": 50000,
+    "franchise_tolerance": 55000,
+    "franchise_transfrontaliere_ue": 100000,
+    "periodicite": { "annuelle_ca_max": 112000, "trimestrielle_ca_max": 620000, "mensuelle_au_dela": 620000 }
+  }
+}
