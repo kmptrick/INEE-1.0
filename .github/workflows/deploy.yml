@@ -1,0 +1,76 @@
+# Déploiement automatique sur le serveur (push sur master).
+#
+# DÉSACTIVÉ PAR DÉFAUT : ce workflow ne fait rien tant que la variable de dépôt
+# `DEPLOY_ENABLED` ne vaut pas exactement "true". Aucun run en échec, aucun
+# déploiement surprise avant que tu l'actives.
+#
+# ── Pour l'activer (Settings → Secrets and variables → Actions) ──
+# Secrets (onglet "Secrets") :
+#   SSH_HOST   = 178.105.159.65
+#   SSH_USER   = root
+#   SSH_KEY    = <ta clé privée SSH complète, format OpenSSH>
+#   SSH_PORT   = 22                       (optionnel, défaut 22)
+# Variables (onglet "Variables") :
+#   DEPLOY_ENABLED       = true           (interrupteur principal)
+#   DEPLOY_PATH          = /opt/inee                       (défaut)
+#   NEXT_PUBLIC_API_URL  = https://app2.inee.lu/api        (l'env. cible !)
+#   PM2_APP              = inee-frontend                   (nom pm2 du frontend)
+#   BACKEND_SERVICE      = backend                         (service docker compose)
+#
+# ⚠️ NEXT_PUBLIC_API_URL et PM2_APP déterminent QUEL environnement est déployé
+#    (app2 vs prod). Mets les valeurs de l'environnement que tu veux cibler.
+
+name: Deploy to server
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch: {}
+
+concurrency:
+  group: deploy-master
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    # Ne s'exécute que si tu as explicitement activé le déploiement.
+    if: ${{ vars.DEPLOY_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Déploiement via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          command_timeout: 30m
+          script: |
+            set -euo pipefail
+
+            DEPLOY_PATH="${{ vars.DEPLOY_PATH || '/opt/inee' }}"
+            API_URL="${{ vars.NEXT_PUBLIC_API_URL || 'https://app.inee.lu/api' }}"
+            PM2_APP="${{ vars.PM2_APP || 'inee-frontend' }}"
+            BACKEND_SERVICE="${{ vars.BACKEND_SERVICE || 'backend' }}"
+
+            echo "→ Déploiement dans $DEPLOY_PATH (API: $API_URL)"
+            cd "$DEPLOY_PATH"
+
+            # 1. Récupérer le dernier master
+            git fetch origin master
+            git checkout master
+            git pull origin master
+
+            # 2. Backend (rebuild Docker + redémarrage)
+            echo "→ Rebuild backend ($BACKEND_SERVICE)"
+            docker compose build "$BACKEND_SERVICE"
+            docker compose up -d "$BACKEND_SERVICE"
+
+            # 3. Frontend (build webpack obligatoire — Turbopack incompatible next-pwa)
+            echo "→ Build frontend"
+            cd "$DEPLOY_PATH/frontend"
+            npm install --no-audit --no-fund
+            NEXT_PUBLIC_API_URL="$API_URL" npx next build --webpack
+            pm2 restart "$PM2_APP"
+
+            echo "✓ Déploiement terminé"
