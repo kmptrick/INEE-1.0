@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(gh auth *)",
-      "PowerShell(gh auth status)"
+      "PowerShell(gh auth status)",
+      "Workflow(deep-research)"
     ]
   }
 }
