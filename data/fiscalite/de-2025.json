@@ -1,0 +1,121 @@
+{
+  "pays": "Allemagne",
+  "code": "DE",
+  "devise": "EUR",
+  "annee_imposition": 2025,
+  "source_principale": "bundesfinanzministerium.de / gesetze-im-internet.de (EStG/KStG/GewStG)",
+  "personnes_physiques": {
+    "impot_revenu_einkommensteuer": {
+      "type_bareme": "formule_progressive_32a_EStG",
+      "grundfreibetrag": 12096,
+      "grundfreibetrag_2026": 12348,
+      "seuil_42pct": 68480,
+      "seuil_42pct_2026": 69879,
+      "seuil_45pct_reichensteuer": 277826,
+      "zones": [
+        { "zone": 1, "min": 0, "max": 12096, "description": "exoneree" },
+        { "zone": 2, "min": 12097, "max": 17443, "formule": "(932.30 * y + 1400) * y", "y": "(zvE - 12096) / 10000" },
+        { "zone": 3, "min": 17444, "max": 68480, "formule": "(176.64 * z + 2397) * z + 1015.13", "z": "(zvE - 17443) / 10000" },
+        { "zone": 4, "min": 68481, "max": 277825, "formule": "0.42 * zvE - 10911.92" },
+        { "zone": 5, "min": 277826, "max": null, "formule": "0.45 * zvE - 19246.67" }
+      ],
+      "steuerklassen": ["I", "II", "III", "IV", "V", "VI"],
+      "ehegattensplitting": true,
+      "entlastungsbetrag_parent_isole": 4260
+    },
+    "solidaritaetszuschlag": {
+      "taux": 0.055,
+      "freigrenze_individuel": 19950,
+      "freigrenze_couple": 39900,
+      "freigrenze_individuel_2026": 20350,
+      "freigrenze_couple_2026": 40700,
+      "note": "toujours du pour societes de capitaux et sur Abgeltungsteuer"
+    },
+    "kirchensteuer": { "baviere_bw": 0.08, "autres_laender": 0.09 },
+    "abgeltungsteuer": {
+      "taux": 0.25,
+      "avec_soli": 0.26375,
+      "sparer_pauschbetrag": 1000,
+      "sparer_pauschbetrag_couple": 2000
+    },
+    "plus_values_immobilieres": {
+      "delai_exoneration_ans": 10,
+      "exoneration_residence_principale": true,
+      "freigrenze": 1000,
+      "taux": "bareme progressif (pas Abgeltungsteuer)"
+    },
+    "vermoegensteuer": "non preleve depuis 1997 (suspendu, inconstitutionnel)",
+    "erbschaft_schenkungsteuer": {
+      "abattements": {
+        "conjoint": 500000,
+        "enfant": 400000,
+        "petit_enfant_parent_vivant": 200000,
+        "parents_grands_parents_succession": 100000,
+        "classe_II": 20000,
+        "classe_III": 20000
+      },
+      "renouvellement_ans": 10,
+      "bareme": [
+        { "max": 75000, "classe_I": 0.07, "classe_II": 0.15, "classe_III": 0.30 },
+        { "max": 300000, "classe_I": 0.11, "classe_II": 0.20, "classe_III": 0.30 },
+        { "max": 600000, "classe_I": 0.15, "classe_II": 0.25, "classe_III": 0.30 },
+        { "max": 6000000, "classe_I": 0.19, "classe_II": 0.30, "classe_III": 0.30 },
+        { "max": 13000000, "classe_I": 0.23, "classe_II": 0.35, "classe_III": 0.50 },
+        { "max": 26000000, "classe_I": 0.27, "classe_II": 0.40, "classe_III": 0.50 },
+        { "max": null, "classe_I": 0.30, "classe_II": 0.43, "classe_III": 0.50 }
+      ]
+    }
+  },
+  "independants": {
+    "distinction_cle": {
+      "freiberufler": "professions liberales (18 EStG) - PAS de Gewerbesteuer",
+      "gewerbetreibende": "commercants (15-17 EStG) - Gewerbesteuer (Freibetrag 24500)"
+    },
+    "kleinunternehmer": { "seuil_annee_precedente": 25000, "seuil_annee_courante": 100000 },
+    "cotisations_sociales": {
+      "rentenversicherung": 0.186,
+      "krankenversicherung_general": 0.146,
+      "zusatzbeitrag_moyen": 0.025,
+      "pflegeversicherung": 0.036,
+      "base_min_mois_gkv": 1248.33,
+      "cotisation_min_gkv_mois": 258.13,
+      "bbg_maladie_an": 66150,
+      "bbg_retraite_an": 96600
+    }
+  },
+  "societes": {
+    "capital_minimal": { "ug": 1, "gmbh": 25000, "ag": 50000 },
+    "koerperschaftsteuer": {
+      "taux": 0.15,
+      "soli": 0.00825,
+      "kst_plus_soli": 0.15825,
+      "note_reforme": "baisse progressive a partir de 2028"
+    },
+    "gewerbesteuer": {
+      "steuermesszahl": 0.035,
+      "hebesatz_min": 2.00,
+      "hebesatz_fourchette": [2.00, 5.80],
+      "exemples": { "munich": 4.90, "berlin": 4.10, "schoenefeld": 2.00 },
+      "freibetrag_personnes_physiques": 24500,
+      "imputation_35_estg": "jusqu'a 4.0 x Messbetrag (pas pour societes de capitaux)"
+    },
+    "charge_totale_societe_capitaux": { "approx": 0.30, "munich": 0.33, "berlin": 0.302 },
+    "distribution_associe": {
+      "patrimoine_prive": "Abgeltungsteuer 25%",
+      "patrimoine_professionnel": "Teileinkuenfteverfahren (60% imposable)"
+    },
+    "transparence_personengesellschaften": ["GbR", "OHG", "KG", "GmbH & Co. KG"],
+    "option_is_1a_kstg": true
+  },
+  "tva_umsatzsteuer": {
+    "taux_normal": 0.19,
+    "taux_reduit": 0.07,
+    "voranmeldung": { "mensuelle_si_zahllast_sup": 9000, "trimestrielle_entre": [2000, 9000], "annuelle_si_inf": 2000 }
+  },
+  "comptabilite": {
+    "seuil_ca_bilan": 800000,
+    "seuil_benefice_bilan": 80000,
+    "societes_capitaux": "bilan obligatoire des le 1er euro (HGB)",
+    "freiberufler": "EUR (caisse) sans limite"
+  }
+}
