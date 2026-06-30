@@ -141,6 +141,11 @@ remédiation ne dépend pas de cette réponse** (voir §6–7).
 - [x] **Durcissement code Scolaria** : fallbacks `dev-insecure-secret` remplacés par
   des gardes fail-closed (`middleware.ts`, `crypto.ts`), propriété fichiers normalisée
   (`appuser`), recompilé et redéployé.
+- [x] **Fermeture de l'exposition des backends** : `inee-backend` (3001) et
+  `claude-backend` (3008) repassés de `0.0.0.0` à **`127.0.0.1`** dans
+  `/opt/inee/docker-compose.yml` (sauvegarde `.bak.avant-bind`). nginx les sert
+  toujours en local (`app.inee.lu` / `claude.inee.lu` → 200) — accès direct Internet
+  coupé, zéro coupure de service.
 
 > ⚠️ Le confinement **ne suffit pas**. Une machine compromise par une backdoor
 > doit être considérée comme définitivement non fiable → reconstruction (§6).
