@@ -112,7 +112,7 @@ remédiation ne dépend pas de cette réponse** (voir §6–7).
 | Backend INEE (NestJS) | **Écarté** — aucun `child_process`/`exec`/`eval`, aucun upload. |
 | Accès SSH | **Écarté** — root propre, uniquement l'IP du propriétaire depuis le 7 juin. |
 | Scolaria — fallback `SESSION_SECRET` | **Écarté** — `SESSION_SECRET` était défini (66 car.), fallback jamais déclenché. Durci par précaution. |
-| n8n (`n8n.inee.lu`) | **Non confirmé** — n8n 2.26.8 avec mur de login (`/rest/login` → 401) ; aucun IOC dans la base n8n (workflows ni exécutions : pas de `executeCommand`, `child_process`, `/dev/tcp`, `stratum+tcp`, ni IP C2). Reste la surface de code-exec `appuser` la plus puissante (webhooks non authentifiés, CVE éventuelle, identifiants owner), mais sans preuve. |
+| n8n (`n8n.inee.lu`) | **Non confirmé** — n8n 2.26.8 avec mur de login (`/rest/login` → 401) **et 2FA active sur le compte owner** ; aucun IOC dans la base n8n (workflows ni exécutions : pas de `executeCommand`, `child_process`, `/dev/tcp`, `stratum+tcp`, ni IP C2). Admin protégé par login+2FA. Reste théoriquement une CVE pré-auth de la 2.26.8 ou un webhook malveillant (aucun trouvé), mais sans preuve. |
 
 > Constat n8n : `965 × n8n-nodes-base.code` (usage légitime normal du nœud *Code*),
 > et **zéro** indicateur de compromission. La piste n8n est plausible mais
@@ -175,7 +175,9 @@ remédiation ne dépend pas de cette réponse** (voir §6–7).
 - [ ] **`SESSION_SECRET` Scolaria** : définir une valeur forte et aléatoire en
       production ; **supprimer** le fallback `"dev-insecure-secret"` du code et
       faire échouer le démarrage si la variable est absente.
-- [ ] **Protéger n8n** (authentification forte, pas d'exposition publique inutile).
+- [x] **Accès admin n8n** : login + **2FA déjà active** sur le compte owner → admin
+      protégé sans restriction IP (accessible de partout). Webhooks publics conservés.
+- [ ] **n8n — maintien à jour** (sur le serveur neuf) pour couvrir d'éventuelles CVE.
 - [ ] **Isoler les applications** entre elles (utilisateurs/containers dédiés,
       moindre privilège ; `appuser` ne doit pas pouvoir installer de persistance
       système).
