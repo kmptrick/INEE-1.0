@@ -146,6 +146,10 @@ remédiation ne dépend pas de cette réponse** (voir §6–7).
   `/opt/inee/docker-compose.yml` (sauvegarde `.bak.avant-bind`). nginx les sert
   toujours en local (`app.inee.lu` / `claude.inee.lu` → 200) — accès direct Internet
   coupé, zéro coupure de service.
+- [x] **Fermeture de l'exposition des frontends Next** (process hôte pm2, ports
+  3000/3003/3005/3006/3007/3100) : règles **iptables + ip6tables** (`ACCEPT` sur `lo`,
+  `DROP` externe sur ces ports). Accès direct par IP:port coupé ; accès par les domaines
+  via nginx intact (tous les sites répondent 200/307). Réversible (`iptables -D`).
 
 > ⚠️ Le confinement **ne suffit pas**. Une machine compromise par une backdoor
 > doit être considérée comme définitivement non fiable → reconstruction (§6).
@@ -170,8 +174,9 @@ remédiation ne dépend pas de cette réponse** (voir §6–7).
 
 ## 7. Durcissement (checklist)
 
-- [ ] **Lier les backends au localhost** (`127.0.0.1`), exposition uniquement via
-      nginx (reverse proxy). Supprimer les mappings `0.0.0.0:3001` / `0.0.0.0:3008`.
+- [x] **Lier les backends au localhost** (`127.0.0.1`) — fait (docker-compose).
+- [x] **Bloquer l'accès direct aux frontends Next** — fait (iptables/ip6tables).
+- [ ] **Rendre les règles iptables persistantes** (survie au reboot).
 - [ ] **`SESSION_SECRET` Scolaria** : définir une valeur forte et aléatoire en
       production ; **supprimer** le fallback `"dev-insecure-secret"` du code et
       faire échouer le démarrage si la variable est absente.
