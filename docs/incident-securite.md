@@ -100,6 +100,24 @@ Internet), **pas** un vol d'identifiants SSH.
 
 ---
 
+## 3bis. Investigation du vecteur — résultat
+
+Le **vecteur d'entrée exact reste indéterminé**, et c'est un résultat attendu : sur
+une machine où une backdoor a disposé des droits d'effacer ses traces, l'entrée ne
+peut pas être prouvée de façon fiable en lisant la machine compromise. **La
+remédiation ne dépend pas de cette réponse** (voir §6–7).
+
+| Candidat | Verdict |
+|----------|---------|
+| Backend INEE (NestJS) | **Écarté** — aucun `child_process`/`exec`/`eval`, aucun upload. |
+| Accès SSH | **Écarté** — root propre, uniquement l'IP du propriétaire depuis le 7 juin. |
+| Scolaria — fallback `SESSION_SECRET` | **Écarté** — `SESSION_SECRET` était défini (66 car.), fallback jamais déclenché. Durci par précaution. |
+| n8n (`n8n.inee.lu`) | **Non confirmé** — n8n 2.26.8 avec mur de login (`/rest/login` → 401) ; aucun IOC dans la base n8n (workflows ni exécutions : pas de `executeCommand`, `child_process`, `/dev/tcp`, `stratum+tcp`, ni IP C2). Reste la surface de code-exec `appuser` la plus puissante (webhooks non authentifiés, CVE éventuelle, identifiants owner), mais sans preuve. |
+
+> Constat n8n : `965 × n8n-nodes-base.code` (usage légitime normal du nœud *Code*),
+> et **zéro** indicateur de compromission. La piste n8n est plausible mais
+> **non démontrée**.
+
 ## 4. Périmètre — ce qui a été écarté
 
 - **INEE (backend NestJS)** : aucun appel `child_process`/`exec`/`eval`, aucun
