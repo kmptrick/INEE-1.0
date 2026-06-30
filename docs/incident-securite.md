@@ -176,20 +176,21 @@ remédiation ne dépend pas de cette réponse** (voir §6–7).
 
 - [x] **Lier les backends au localhost** (`127.0.0.1`) — fait (docker-compose).
 - [x] **Bloquer l'accès direct aux frontends Next** — fait (iptables/ip6tables).
-- [ ] **Rendre les règles iptables persistantes** (survie au reboot).
-- [ ] **`SESSION_SECRET` Scolaria** : définir une valeur forte et aléatoire en
-      production ; **supprimer** le fallback `"dev-insecure-secret"` du code et
-      faire échouer le démarrage si la variable est absente.
+- [x] **Rendre les règles iptables persistantes** — fait (`netfilter-persistent`).
+- [x] **`SESSION_SECRET` Scolaria** : fallback `"dev-insecure-secret"` supprimé
+      (`middleware.ts`, `crypto.ts`) → démarrage fail-closed si secret absent.
 - [x] **Accès admin n8n** : login + **2FA déjà active** sur le compte owner → admin
       protégé sans restriction IP (accessible de partout). Webhooks publics conservés.
 - [ ] **n8n — maintien à jour** (sur le serveur neuf) pour couvrir d'éventuelles CVE.
 - [ ] **Isoler les applications** entre elles (utilisateurs/containers dédiés,
       moindre privilège ; `appuser` ne doit pas pouvoir installer de persistance
       système).
-- [ ] **Rotation de tous les secrets** :
-  - Mot de passe PostgreSQL `IneeSecure2026!` (présent en clair dans `CLAUDE.md` —
-    **à changer**).
-  - JWT secret(s), `SESSION_SECRET`, identifiants SMTP/Nodemailer, clés API.
+- [ ] **Rotation de tous les secrets** (⚠️ priorité — voir §10 pour la liste détaillée) :
+  - Mot de passe PostgreSQL `IneeSecure2026!` (présent en clair dans `CLAUDE.md`,
+    **dépôt PUBLIC `INEE-1.0`** → exposé publiquement, **à changer en TOUT premier**).
+  - Mot de passe PostgreSQL resto `R3stoDb2026xKq7`.
+  - JWT secret(s), `SESSION_SECRET` Scolaria, identifiants SMTP/Nodemailer, clés API
+    (Anthropic, Brevo…).
 - [ ] **Valider/restreindre les uploads** Scolaria (type MIME réel, taille,
       stockage hors webroot exécutable).
 - [ ] **Pare-feu par défaut DENY** entrant, n'ouvrir que 80/443 (+ SSH restreint à
@@ -224,8 +225,41 @@ données personnelles** au sens du RGPD.
 |--------|--------|-------------|
 | Confinement (kill + persistance + quarantaine + iptables) | ✅ Fait | — |
 | Confirmation indépendante (VirusTotal) | ✅ Fait | — |
+| Durcissement Scolaria + backends/frontends fermés + iptables persistant | ✅ Fait | — |
+| Sauvegarde du code des apps sur GitHub privé | ✅ Fait | — |
 | Nouveau serveur + redéploiement Git | ⬜ À faire | — |
 | Restauration DB depuis backup sain | ⬜ À faire | — |
-| Rotation de tous les secrets | ⬜ À faire | — |
-| Durcissement (binds localhost, SESSION_SECRET, n8n, pare-feu) | ⬜ À faire | — |
+| **Rotation de tous les secrets** (dont `IneeSecure2026!` public) | ⬜ **Priorité** | — |
 | Évaluation + notification CNPD si nécessaire | ⬜ À faire | — |
+
+---
+
+## 10. Sauvegarde du code & secrets découverts
+
+### Apps sauvegardées sur GitHub (dépôts **privés**, compte `kmptrick`)
+Réalisé le 2026-06-30, depuis le serveur, avec un PAT temporaire (révoqué après) jamais
+écrit sur disque (helper d'identifiant éphémère). Pour chaque app : `.gitignore`
+(exclut `.env`, `node_modules`, `.next`, `dist`, code généré Prisma), **scan anti-secrets
+bloquant** avant push, commit propre (sans historique ancien).
+
+- `scolaria`, `inee2`, `resto-pos`, `multipos`, `inee-website`, `claude-backend`
+  (+ `INEE-1.0` déjà présent, **public**).
+
+> ⚠️ Code poussé **depuis un serveur compromis** → à **réauditer** avant tout
+> redéploiement (un éventuel implant dans le source n'est pas exclu, même si aucun
+> n'a été détecté).
+
+### Secrets de production repérés pendant la migration → À CHANGER
+Le scan a empêché leur publication, mais ils existent en clair sur le serveur (et/ou
+dans des dépôts) et doivent être **rotés** :
+
+| Secret | Où | Gravité |
+|--------|-----|---------|
+| `IneeSecure2026!` (PostgreSQL INEE) | `CLAUDE.md` du dépôt **PUBLIC INEE-1.0** + docker-compose/docs | 🔴 **Public — urgent** |
+| `R3stoDb2026xKq7` (PostgreSQL resto) | `resto-pos/start-prod.sh` (exclu du push) | 🟠 Élevé |
+| `SESSION_SECRET` Scolaria (66 car.) | `/opt/scolaria/.env` | 🟠 Élevé (a transité sur machine compromise) |
+| Identifiants SMTP/Brevo, clé Anthropic | `.env` des apps | 🟠 Élevé |
+
+Fichiers laissés **hors Git** car porteurs de secrets : `docker-compose.yml`,
+`CLAUDE.md`, `context-session1.md` (inee2) ; `start-prod.sh` (resto-pos). À committer
+plus tard en versions **assainies** (mots de passe → variables d'environnement).
