@@ -79,6 +79,6 @@ pm2 restart inee-frontend
 docker compose build backend && docker compose up -d backend
 
 # Migration BDD prod
-DATABASE_URL='postgresql://inee_user:IneeSecure2026!@172.19.0.2:5432/inee_db' \
+DATABASE_URL='postgresql://inee_user:${DB_PASSWORD}@172.19.0.2:5432/inee_db' \
 npx prisma@7.8.0 migrate dev --name <nom>
 ```

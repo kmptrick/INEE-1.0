@@ -123,8 +123,10 @@ cd backend && npx prisma generate
 cd backend && npx prisma migrate dev
 
 # Prisma (SERVEUR — via IP container Docker)
-DATABASE_URL='postgresql://inee_user:IneeSecure2026!@172.19.0.2:5432/inee_db' \
+DATABASE_URL='postgresql://inee_user:${DB_PASSWORD}@172.19.0.2:5432/inee_db' \
 npx prisma@7.8.0 migrate dev --name <nom_migration>
+# ⚠️ Ne jamais coder le mot de passe en dur : le passer via une variable
+#    d'environnement (DB_PASSWORD) ou un fichier .env non versionné.
 ```
 
 ---
@@ -136,7 +138,7 @@ npx prisma@7.8.0 migrate dev --name <nom_migration>
 - **Frontend** : Next.js 16.2.6, port 3000, géré par **pm2** (`inee-frontend`)
 - **Backend** : NestJS, port 3001, géré par **Docker** (`inee-backend`)
 - **Base de données** : PostgreSQL dans Docker (`inee-postgres`)
-  - User : `inee_user` / Password : `IneeSecure2026!`
+  - User : `inee_user` / Password : *(voir `.env` non versionné — jamais en clair ici)*
   - IP container Docker : `172.19.0.2`
 - **Nginx** : reverse proxy HTTP→HTTPS, `/api` → port 3001
 - **Build** : `npx next build --webpack` (**obligatoire** — Turbopack incompatible avec next-pwa)

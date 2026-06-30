@@ -186,9 +186,9 @@ remédiation ne dépend pas de cette réponse** (voir §6–7).
       moindre privilège ; `appuser` ne doit pas pouvoir installer de persistance
       système).
 - [ ] **Rotation de tous les secrets** (⚠️ priorité — voir §10 pour la liste détaillée) :
-  - Mot de passe PostgreSQL `IneeSecure2026!` (présent en clair dans `CLAUDE.md`,
-    **dépôt PUBLIC `INEE-1.0`** → exposé publiquement, **à changer en TOUT premier**).
-  - Mot de passe PostgreSQL resto `R3stoDb2026xKq7`.
+  - Mot de passe PostgreSQL INEE (`inee_user`) — était en clair dans plusieurs fichiers
+    du **dépôt PUBLIC `INEE-1.0`** → exposé publiquement, **à changer en TOUT premier**.
+  - Mot de passe PostgreSQL resto (`resto_user`).
   - JWT secret(s), `SESSION_SECRET` Scolaria, identifiants SMTP/Nodemailer, clés API
     (Anthropic, Brevo…).
 - [ ] **Valider/restreindre les uploads** Scolaria (type MIME réel, taille,
@@ -229,7 +229,7 @@ données personnelles** au sens du RGPD.
 | Sauvegarde du code des apps sur GitHub privé | ✅ Fait | — |
 | Nouveau serveur + redéploiement Git | ⬜ À faire | — |
 | Restauration DB depuis backup sain | ⬜ À faire | — |
-| **Rotation de tous les secrets** (dont `IneeSecure2026!` public) | ⬜ **Priorité** | — |
+| **Rotation de tous les secrets** (dont le mot de passe PostgreSQL exposé publiquement) | ⬜ **Priorité** | — |
 | Évaluation + notification CNPD si nécessaire | ⬜ À faire | — |
 
 ---
@@ -255,8 +255,8 @@ dans des dépôts) et doivent être **rotés** :
 
 | Secret | Où | Gravité |
 |--------|-----|---------|
-| `IneeSecure2026!` (PostgreSQL INEE) | `CLAUDE.md` du dépôt **PUBLIC INEE-1.0** + docker-compose/docs | 🔴 **Public — urgent** |
-| `R3stoDb2026xKq7` (PostgreSQL resto) | `resto-pos/start-prod.sh` (exclu du push) | 🟠 Élevé |
+| Mot de passe PostgreSQL INEE (`inee_user`) | `CLAUDE.md` + `docker-compose.yml` + `context-session1.md` du dépôt **PUBLIC INEE-1.0** (depuis redacté ; reste dans l'historique Git) | 🔴 **Public — urgent** |
+| Mot de passe PostgreSQL resto (`resto_user`) | `resto-pos/start-prod.sh` (exclu du push) | 🟠 Élevé |
 | `SESSION_SECRET` Scolaria (66 car.) | `/opt/scolaria/.env` | 🟠 Élevé (a transité sur machine compromise) |
 | Identifiants SMTP/Brevo, clé Anthropic | `.env` des apps | 🟠 Élevé |
 

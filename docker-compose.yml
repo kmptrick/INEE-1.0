@@ -6,7 +6,7 @@ services:
     ports:
       - "3001:3001"
     environment:
-      DATABASE_URL: postgresql://inee_user:IneeSecure2026!@inee-postgres:5432/inee_db
+      DATABASE_URL: postgresql://inee_user:${POSTGRES_PASSWORD}@inee-postgres:5432/inee_db
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: 7d
       PORT: 3001
@@ -55,7 +55,7 @@ services:
     environment:
       POSTGRES_DB: inee_db
       POSTGRES_USER: inee_user
-      POSTGRES_PASSWORD: IneeSecure2026!
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
