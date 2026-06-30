@@ -7,6 +7,32 @@ Stack : **Next.js** (frontend) + **NestJS** (backend) + **PostgreSQL** (Prisma O
 
 ---
 
+## 🎯 Objectif prioritaire de l'utilisateur : Ollama / IA en interne
+
+> **À reprendre en priorité** si l'utilisateur revient sans autre consigne.
+
+L'utilisateur veut évaluer **Ollama** (IA locale, gratuite) et une solution IA interne pour INEE :
+recherches web poussées, réponses aux questions clients, gestion d'INEE. Il souhaite une
+**comparaison Ollama (modèles open source, ex. GPT-OSS) vs Z.ai (GLM) vs Claude.ai**.
+Contraintes serveur connues : Hetzner ~7,6 Go RAM, **pas de GPU** → les gros modèles locaux
+(70B+) sont hors d'atteinte ; viser de petits modèles quantifiés ou une API cloud.
+
+## ⚠️ Incident de sécurité serveur (juin 2026) — déjà traité, NE PAS refaire l'enquête
+
+Un incident a été **investigué et documenté** dans **`docs/incident-securite.md`**. État :
+- **Malware confirmé** (VirusTotal : XMRig + outil DDoS + backdoor gs-netcat) puis **confiné**
+  (processus tués, persistance retirée, IP C2 bloquées).
+- **Durci** : Scolaria (`middleware.ts`/`crypto.ts` fail-closed), backends `inee`/`claude`
+  liés à `127.0.0.1`, admin n8n protégé par **login + 2FA**.
+- **Vecteur d'entrée : indéterminé** (normal sur machine compromise — ne pas s'acharner).
+- **Reste (non urgent)** : reconstruction sur serveur neuf + rotation des secrets.
+
+**IMPORTANT** : si le sujet sécurité revient, **lire d'abord `docs/incident-securite.md`** et
+s'appuyer dessus — **ne PAS relancer des heures de forensic depuis zéro**. Le sujet a déjà été
+traité ; ce n'est pas l'objectif premier de l'utilisateur (voir Ollama ci-dessus).
+
+---
+
 ## Architecture
 
 ```
