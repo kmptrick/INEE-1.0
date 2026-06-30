@@ -70,11 +70,15 @@ Internet), **pas** un vol d'identifiants SSH.
   via pm2 — `inee-frontend`, `inee-website`, `inee2-backend`, `inee2-frontend`,
   `multipos-frontend`, `resto-frontend`, `scolaria-frontend` — **plus n8n**.
   Or le malware tournait précisément sous `appuser`/UID 1000.
-- **n8n sous `appuser` (suspect n°1) :** n8n dispose des nœuds *Execute Command*
-  et *Code* qui exécutent des commandes shell arbitraires **sous `appuser`**. Une
-  instance n8n exposée ou faiblement authentifiée est le vecteur classique des
-  compromissions « XMRig + gs-netcat as appuser ». **Authentification et exposition
-  de n8n à auditer en priorité.**
+- **n8n sous `appuser` — VECTEUR LE PLUS PROBABLE :** n8n est **exposé publiquement**
+  sur `https://n8n.inee.lu` (nginx → `localhost:5678`, certificat Let's Encrypt) et
+  ses variables d'environnement **ne contiennent ni `N8N_BASIC_AUTH_ACTIVE` ni
+  `N8N_USER_MANAGEMENT`**. Les nœuds *Code* / *Execute Command* de n8n exécutent des
+  commandes shell **sous `appuser` (UID 1000)** — exactement l'utilisateur sous lequel
+  tournaient le mineur, le watchdog et la backdoor. Une instance n8n exposée et
+  faiblement/non authentifiée est le vecteur classique des compromissions
+  « XMRig + gs-netcat as appuser ». **À confirmer par la version de n8n (CVE connues)
+  et l'historique d'exécutions.**
 - **Deux services Node tournant en `root`** (PID 47531 `node dist/src/main.js`,
   PID 166384 `node server.js`) — à identifier ; un service web exposé en root = RCE → root direct.
 - **UID orphelin :** `/opt/scolaria` appartenait à l'UID numérique `197609`
