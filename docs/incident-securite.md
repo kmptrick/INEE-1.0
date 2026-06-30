@@ -255,8 +255,8 @@ dans des dépôts) et doivent être **rotés** :
 
 | Secret | Où | Gravité |
 |--------|-----|---------|
-| Mot de passe PostgreSQL INEE (`inee_user`) | `CLAUDE.md` + `docker-compose.yml` + `context-session1.md` du dépôt **PUBLIC INEE-1.0** (depuis redacté ; reste dans l'historique Git) | 🔴 **Public — urgent** |
-| Mot de passe PostgreSQL resto (`resto_user`) | `resto-pos/start-prod.sh` (exclu du push) | 🟠 Élevé |
+| Mot de passe PostgreSQL INEE (`inee_user`) | `CLAUDE.md` + `docker-compose.yml` + `context-session1.md` du dépôt **PUBLIC INEE-1.0** (redacté ; reste dans l'historique Git) | ✅ **ROTÉ le 2026-06-30** (`ALTER USER`, nouveau mdp 48 car. ; inee-backend + claude-backend réalignés). L'ancien est mort. |
+| Mot de passe PostgreSQL resto (`resto_user`) | `resto-pos/start-prod.sh` (exclu du push) | 🟠 Élevé — à roter |
 | `SESSION_SECRET` Scolaria (66 car.) | `/opt/scolaria/.env` | 🟠 Élevé (a transité sur machine compromise) |
 | Identifiants SMTP/Brevo, clé Anthropic | `.env` des apps | 🟠 Élevé |
 
