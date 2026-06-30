@@ -60,15 +60,37 @@ Internet), **pas** un vol d'identifiants SSH.
 - IP C2 gs-netcat : `152.53.173.29`
 - Pool de minage + cible(s) DDoS : bloquées également.
 
-### Configuration à risque (vecteur probable)
+### Configuration à risque
 - **Backends exposés à Internet hors nginx :**
   - `inee-backend` → `0.0.0.0:3001`
   - `claude-backend` → `0.0.0.0:3008→3007`
   - (n8n `127.0.0.1:5678` et `inee-postgres` `127.0.0.1:5432` étaient correctement liés au localhost.)
-- **Scolaria — `SESSION_SECRET` par défaut :** `middleware.ts` utilise
-  `process.env.SESSION_SECRET || "dev-insecure-secret"`. Si la variable n'est pas
-  définie en production, **les cookies de session `sc_session` (HMAC) sont
-  forgeables** → élévation jusqu'à super-admin sans trace dans les logs.
+- **Serveur mutualisé à forte surface d'attaque :** une seule machine héberge de
+  nombreuses applications, **toutes lancées sous l'utilisateur `appuser` (UID 1000)**
+  via pm2 — `inee-frontend`, `inee-website`, `inee2-backend`, `inee2-frontend`,
+  `multipos-frontend`, `resto-frontend`, `scolaria-frontend` — **plus n8n**.
+  Or le malware tournait précisément sous `appuser`/UID 1000.
+- **n8n sous `appuser` (suspect n°1) :** n8n dispose des nœuds *Execute Command*
+  et *Code* qui exécutent des commandes shell arbitraires **sous `appuser`**. Une
+  instance n8n exposée ou faiblement authentifiée est le vecteur classique des
+  compromissions « XMRig + gs-netcat as appuser ». **Authentification et exposition
+  de n8n à auditer en priorité.**
+- **Deux services Node tournant en `root`** (PID 47531 `node dist/src/main.js`,
+  PID 166384 `node server.js`) — à identifier ; un service web exposé en root = RCE → root direct.
+- **UID orphelin :** `/opt/scolaria` appartenait à l'UID numérique `197609`
+  (sans utilisateur correspondant), signe d'un déploiement par archive extraite en
+  préservant les UID d'une autre machine. Normalisé en `appuser:appuser`.
+
+### Scolaria — fallback de secret (NON exploité, durci par précaution)
+- `middleware.ts` / `crypto.ts` contenaient `process.env.SESSION_SECRET || "dev-insecure-secret"`.
+- **Réévaluation :** `SESSION_SECRET` était en réalité **défini (66 caractères)** dans
+  `/opt/scolaria/.env`, donc le fallback ne se déclenchait jamais → **cookies non
+  forgeables**. Ce n'était **pas** le vecteur d'entrée. `session.ts` possédait déjà
+  une garde fail-closed en production.
+- **Durci malgré tout** (défense en profondeur) : fallbacks remplacés par des gardes
+  fail-closed dans `middleware.ts` et `crypto.ts` (le déchiffrement des clés Mobile
+  Money est préservé car la clé reste dérivée de `SESSION_SECRET`). Recompilé et
+  redéployé (`scolaria-frontend`).
 - **Scolaria — uploads data-URI :** `my-contract/route.ts` (~5 Mo) et
   `school-settings/route.ts` (logo `data:image/...`). Points d'entrée à durcir/valider.
 
@@ -94,6 +116,9 @@ Internet), **pas** un vol d'identifiants SSH.
 - [x] Binaires **mis en quarantaine** (chmod 000) dans `/root/quarantaine/`.
 - [x] IP C2 / pool / cibles DDoS **bloquées** via iptables.
 - [x] Compromission **confirmée indépendamment** via VirusTotal.
+- [x] **Durcissement code Scolaria** : fallbacks `dev-insecure-secret` remplacés par
+  des gardes fail-closed (`middleware.ts`, `crypto.ts`), propriété fichiers normalisée
+  (`appuser`), recompilé et redéployé.
 
 > ⚠️ Le confinement **ne suffit pas**. Une machine compromise par une backdoor
 > doit être considérée comme définitivement non fiable → reconstruction (§6).
