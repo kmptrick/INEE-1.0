@@ -96,6 +96,19 @@ export const en = {
     titleAccent: 'the latest developments',
     items: [
       {
+        date: 'Free guide — Download now',
+        category: 'RESOURCE · FINANCE',
+        title: 'Launch your business in Luxembourg without financial pitfalls',
+        summary: 'Many entrepreneurs have a great idea but fail through lack of financial preparation. Our "Finance for Entrepreneurs" guide breaks down the essentials: which structure to choose, business plan & forecasts, bank financing (the 5 Cs) and all the funding available in Luxembourg.',
+        link: '/inee-finance-for-entrepreneurs-en.pdf',
+        cta: 'Download the guide (PDF) →',
+        details: [
+          { icon: '🏛', text: 'Sole trader, SARL-S, SARL, SA: the decision table' },
+          { icon: '📊', text: 'Business plan, cash flow & break-even point' },
+          { icon: '🏦', text: 'Bank financing, Microlux, Mutualité & funding' },
+        ],
+      },
+      {
         date: '11 July 2026 — 11:30',
         category: 'TRAINING & WORKSHOP #01',
         title: 'What your accountant doesn\'t tell you!',
