@@ -126,8 +126,8 @@ export default function Events({ content }: { content: SiteContent['events'] }) 
                 )}
                 <a
                   href={article.link}
-                  target={article.link.startsWith('http') ? '_blank' : undefined}
-                  rel={article.link.startsWith('http') ? 'noopener noreferrer' : undefined}
+                  target={article.link.startsWith('http') || article.link.endsWith('.pdf') ? '_blank' : undefined}
+                  rel={article.link.startsWith('http') || article.link.endsWith('.pdf') ? 'noopener noreferrer' : undefined}
                   style={{
                     display: 'inline-block',
                     fontFamily: 'Inter, sans-serif',

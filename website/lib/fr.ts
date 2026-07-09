@@ -14,7 +14,7 @@ export const fr = {
     label: 'Vous créez. On structure. C\'est notre expertise.',
     title: ['Votre partenaire de services', 'aux entreprises au Luxembourg et', 'les trois frontières'],
     titleAccent: 'les trois frontières',
-    subtitle: 'Cabinet comptable et administratif basé à Mamer, Luxembourg. INEE accompagne les entrepreneurs, indépendants et PME du Luxembourg et de la Grande Région dans leur comptabilité, fiscalité, gestion RH, création d\'entreprise et communication digitale.',
+    subtitle: 'Cabinet de gestion et administratif basé à Mamer, Luxembourg. INEE accompagne les entrepreneurs, indépendants et PME du Luxembourg et de la Grande Région dans leur comptabilité, fiscalité, gestion RH, création d\'entreprise et communication digitale.',
     cta1: 'Prendre rendez-vous',
     cta2: 'Nos services →',
     credentials: ['Services aux entreprises', 'Grande Région & Luxembourg', 'Conseil & Accompagnement'],
@@ -24,7 +24,7 @@ export const fr = {
     title: 'Des solutions',
     titleAccent: 'complètes',
     titleEnd: 'pour votre entreprise',
-    subtitle: 'Cabinet comptable au Luxembourg : tenue comptable, déclarations TVA, optimisation fiscale, création de SARL, gestion des salaires, RH et marketing digital. INEE, votre partenaire global à Mamer.',
+    subtitle: 'Cabinet de gestion au Luxembourg : tenue comptable, déclarations TVA, optimisation fiscale, création de SARL, gestion des salaires, RH et marketing digital. INEE, votre partenaire global à Mamer.',
     prestations: 'Nos prestations',
     webDemoCaption: 'Un aperçu de ce que nous construisons pour vous',
     cta: 'Prendre rendez-vous',
@@ -96,6 +96,19 @@ export const fr = {
     titleAccent: 'nouveautés fiscales',
     items: [
       {
+        date: 'Guide gratuit — À télécharger',
+        category: 'RESSOURCE · FINANCE',
+        title: 'Se lancer au Luxembourg sans se planter financièrement',
+        summary: 'Beaucoup d\'entrepreneurs ont une super idée mais échouent par manque de préparation financière. Notre guide « Finance pour Entrepreneurs » décrypte l\'essentiel : quelle structure choisir, business plan & prévisionnel, financement bancaire (les 5C) et toutes les aides disponibles au Luxembourg.',
+        link: '/inee-finance-entrepreneurs.pdf',
+        cta: 'Télécharger le guide (PDF) →',
+        details: [
+          { icon: '🏛', text: 'Indépendant, SARL-S, SARL, SA : le tableau de décision' },
+          { icon: '📊', text: 'Business plan, trésorerie & seuil de rentabilité' },
+          { icon: '🏦', text: 'Financement bancaire, Microlux, Mutualité & aides' },
+        ],
+      },
+      {
         date: '11 Juillet 2026 — 11h30',
         category: 'FORMATION & ATELIER #01',
         title: 'Ce que ton comptable ne te dit pas !',
@@ -153,7 +166,7 @@ export const fr = {
     quote: 'Disponibles du lundi au vendredi, de 8h30 à 18h00, pour répondre à toutes vos questions.',
   },
   footer: {
-    tagline: 'Cabinet comptable à Mamer, Luxembourg. Comptabilité, déclaration TVA, fiscalité, création de société, gestion RH & salaires, conseil stratégique et communication digitale.',
+    tagline: 'Cabinet de gestion à Mamer, Luxembourg. Comptabilité, déclaration TVA, fiscalité, création de société, gestion RH & salaires, conseil stratégique et communication digitale.',
     address1: '37, Rue du Baumbusch — 8213 Mamer',
     address2: 'Grand-Duché de Luxembourg',
     vat: 'TVA : LU36332830',
