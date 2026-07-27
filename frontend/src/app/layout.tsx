@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Geist } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/lib/auth-context';
+import InstallPrompt from '@/components/InstallPrompt';
 
 const geist = Geist({ subsets: ['latin'] });
 
@@ -40,6 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className={`${geist.className} min-h-full`}>
         <AuthProvider>{children}</AuthProvider>
+        <InstallPrompt />
       </body>
     </html>
   );
