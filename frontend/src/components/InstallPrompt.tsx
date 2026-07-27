@@ -69,7 +69,7 @@ export default function InstallPrompt() {
   return (
     <div className="fixed inset-x-0 bottom-0 z-50 p-3 sm:p-4">
       <div className="mx-auto flex max-w-md items-center gap-3 rounded-2xl border border-[#C8803A]/30 bg-[#1A1008] p-4 shadow-2xl">
-        <img src="/icons/icon-192.svg" alt="" className="h-12 w-12 shrink-0 rounded-xl" />
+        <img src="/icons/icon-192.png" alt="" className="h-12 w-12 shrink-0 rounded-xl" />
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-white">Installez l&apos;application INEE</p>
           {deferred ? (
