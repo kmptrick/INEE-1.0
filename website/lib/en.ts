@@ -178,6 +178,7 @@ export const en = {
     hours: 'Mon–Fri · 8:30am–6:00pm',
     ctaBtn: 'Book a meeting',
     copyright: '© 2026 INEE S.à r.l.-S. All rights reserved.',
+    madeBy: 'Website by JDIGITAL',
     legal: [
       { label: 'Privacy Policy', href: '/privacy-policy' },
       { label: 'Terms of Use', href: '/terms-of-use' },

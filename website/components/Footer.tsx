@@ -111,6 +111,11 @@ export default function Footer({ content }: { content: SiteContent['footer'] }) 
                 {label}
               </a>
             ))}
+            <a href="https://jdigital.cm" target="_blank" rel="noopener" style={{ fontSize: '12px', color: 'var(--copper)', textDecoration: 'none', fontFamily: "'Inter', sans-serif", transition: 'color 0.2s' }}
+              onMouseEnter={e => (e.currentTarget.style.color = 'rgba(250,246,241,0.9)')}
+              onMouseLeave={e => (e.currentTarget.style.color = 'var(--copper)')}>
+              {content.madeBy}
+            </a>
           </div>
         </div>
       </div>

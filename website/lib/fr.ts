@@ -178,6 +178,7 @@ export const fr = {
     hours: 'Lun–Ven · 8h30–18h00',
     ctaBtn: 'Prendre rendez-vous',
     copyright: '© 2026 INEE S.à r.l.-S. Tous droits réservés.',
+    madeBy: 'Réalisé par JDIGITAL',
     legal: [
       { label: 'Politique de confidentialité', href: '/confidentialite' },
       { label: 'CGU', href: '/cgu' },
